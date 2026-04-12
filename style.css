@@ -1,0 +1,1426 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Know Your Charity & Company UK — SaaS Theme System
+   2 themes: Light (default), Dark
+   Variables set via :root overrides in app.py _THEME_VARS
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Performance: reduce paint & compositing overhead ── */
+*, *::before, *::after { -webkit-font-smoothing: antialiased; }
+html { scroll-behavior: smooth; }
+
+/* Streamlit iframes / blocks: reduce layout recalc during scroll */
+/* Note: contain:layout on stVerticalBlock breaks chart fullscreen overlay */
+[data-testid="stExpander"] { contain: style; }
+iframe[title="streamlit_graphviz_chart.streamlit_graphviz_chart"] {
+    contain: strict;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 400px;
+}
+
+/* ── Chart fullscreen overlay — ensure not clipped ── */
+[data-testid="StyledFullScreenButton"],
+[data-testid="stFullScreenFrame"],
+[data-testid="stModal"],
+div[data-modal-container] {
+    z-index: 999999 !important;
+    contain: none !important;
+    overflow: visible !important;
+}
+/* Plotly chart containers — allow overflow for toolbar and fullscreen */
+.stPlotlyChart,
+[data-testid="stVegaLiteChart"],
+.js-plotly-plot {
+    overflow: visible !important;
+    contain: none !important;
+}
+
+/* ── Hide default Streamlit branding ── */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* ── Base layout — tighter, more app-like ── */
+.block-container {
+    padding-top: 1.2rem;
+    padding-bottom: 0.5rem;
+    max-width: 1200px;
+}
+
+/* ── Sidebar collapse / expand arrow — ALWAYS visible ── */
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"] {
+    visibility: visible !important;
+    display: flex !important;
+    opacity: 1 !important;
+    z-index: 999999 !important;
+    pointer-events: auto !important;
+    position: fixed !important;
+    top: 0.5rem !important;
+    left: 0.5rem !important;
+}
+[data-testid="collapsedControl"] button,
+[data-testid="collapsedControl"] svg,
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="stSidebarCollapsedControl"] svg {
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+/* All header-type buttons used for sidebar expand/collapse */
+button[data-testid="baseButton-header"],
+[data-testid="stHeader"] button,
+.stApp > header button {
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 999999 !important;
+    pointer-events: auto !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    background: var(--surface-alt, #e2e8f0) !important;
+    border: 1px solid var(--border-strong, rgba(148,163,184,0.4)) !important;
+    border-radius: 8px !important;
+    padding: 6px !important;
+    cursor: pointer !important;
+}
+button[data-testid="baseButton-header"]:hover,
+[data-testid="stHeader"] button:hover,
+.stApp > header button:hover {
+    background: var(--accent-light, #cbd5e1) !important;
+}
+button[data-testid="baseButton-header"] svg,
+[data-testid="stHeader"] button svg,
+.stApp > header button svg {
+    width: 22px !important;
+    height: 22px !important;
+    color: var(--text-primary, #1e293b) !important;
+    fill: var(--text-primary, #1e293b) !important;
+    stroke: var(--text-primary, #1e293b) !important;
+    -webkit-text-fill-color: var(--text-primary, #1e293b) !important;
+}
+button[data-testid="baseButton-header"] span,
+[data-testid="stHeader"] button span,
+.stApp > header button span {
+    color: var(--text-primary, #1e293b) !important;
+    -webkit-text-fill-color: var(--text-primary, #1e293b) !important;
+}
+/* Ensure header doesn't hide the button */
+.stApp > header,
+[data-testid="stHeader"] {
+    pointer-events: none !important;
+    min-height: 2.5rem !important;
+}
+.stApp > header *,
+[data-testid="stHeader"] * {
+    pointer-events: auto !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   STREAMLIT CORE OVERRIDES — force our theme onto ALL Streamlit elements
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── App shell ── */
+.stApp,
+html, body {
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+}
+[data-testid="stAppViewContainer"],
+[data-testid="stAppViewContainer"] > .main,
+[data-testid="stVerticalBlock"],
+[data-testid="stAppViewBlockContainer"],
+[data-testid="stBottom"] {
+    background-color: var(--surface) !important;
+}
+/* Header must stay transparent so sidebar toggle button is never hidden */
+.stApp > header,
+[data-testid="stHeader"] {
+    background-color: transparent !important;
+}
+
+/* ── Sidebar — polished panel ── */
+[data-testid="stSidebar"],
+[data-testid="stSidebar"] > div,
+[data-testid="stSidebarContent"],
+section[data-testid="stSidebar"] {
+    background-color: var(--surface-alt) !important;
+    border-right: 1px solid var(--border) !important;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.03);
+}
+/* Sidebar close (collapse) button — always visible with contrast */
+[data-testid="stSidebar"] button[data-testid="baseButton-header"],
+[data-testid="stSidebarContent"] button[data-testid="baseButton-header"],
+section[data-testid="stSidebar"] [data-testid="collapsedControl"],
+[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"],
+[data-testid="stSidebar"] > div > button {
+    visibility: visible !important;
+    display: flex !important;
+    opacity: 1 !important;
+    z-index: 999999 !important;
+    pointer-events: auto !important;
+}
+/* Force sidebar collapse arrow icon/text to dark colour in Light mode */
+[data-testid="stSidebar"] button[data-testid="baseButton-header"] *,
+[data-testid="stSidebar"] button[data-testid="baseButton-headerNoPadding"] *,
+[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] *,
+[data-testid="stSidebar"] > div > button *,
+[data-testid="stSidebar"] > div > button svg,
+[data-testid="stSidebar"] > div > button span {
+    color: var(--text-primary, #1e293b) !important;
+    fill: var(--text-primary, #1e293b) !important;
+    stroke: var(--text-primary, #1e293b) !important;
+    -webkit-text-fill-color: var(--text-primary, #1e293b) !important;
+}
+[data-testid="stSidebar"] button[data-testid="baseButton-header"],
+[data-testid="stSidebar"] button[data-testid="baseButton-headerNoPadding"] {
+    background: transparent !important;
+    border: none !important;
+}
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] > div > div > div > h1,
+[data-testid="stSidebar"] > div > div > div > h2,
+[data-testid="stSidebar"] > div > div > div > h3,
+[data-testid="stSidebar"] > div > div > div > h4,
+[data-testid="stSidebar"] li {
+    color: var(--text-primary) !important;
+}
+[data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"] {
+    color: var(--text-primary) !important;
+}
+[data-testid="stSidebar"] .stSelectbox label,
+[data-testid="stSidebar"] .stRadio label,
+[data-testid="stSidebar"] .stTextInput label,
+[data-testid="stSidebar"] .stFileUploader label,
+[data-testid="stSidebar"] .stCheckbox label {
+    color: var(--text-secondary) !important;
+}
+[data-testid="stSidebar"] hr {
+    border-color: var(--border) !important;
+}
+
+/* ── Headings ── */
+.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6 {
+    color: var(--text-primary) !important;
+}
+
+/* ── Body text ── */
+.stApp p, .stApp li {
+    color: var(--text-primary) !important;
+}
+.stApp .stMarkdown,
+.stApp .stMarkdown p,
+.stApp .stMarkdown li,
+.stApp .stMarkdown span {
+    color: var(--text-primary) !important;
+}
+
+/* ── Captions ── */
+[data-testid="stCaptionContainer"],
+[data-testid="stCaptionContainer"] * {
+    color: var(--text-muted) !important;
+}
+
+/* ── Links ── */
+.stApp a {
+    color: var(--accent) !important;
+}
+.report-banner a, .donor-banner a, .co-risk-banner a, .co-hard-stop a {
+    color: #ffffff !important;
+}
+
+/* ── Dividers ── */
+.stApp hr {
+    border-color: var(--border) !important;
+}
+
+/* ── Text Inputs ── */
+.stTextInput input,
+.stNumberInput input,
+.stTextArea textarea {
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-strong) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+}
+.stTextInput input::placeholder,
+.stTextArea textarea::placeholder {
+    color: var(--text-muted) !important;
+    -webkit-text-fill-color: var(--text-muted) !important;
+}
+.stTextInput label,
+.stNumberInput label,
+.stTextArea label {
+    color: var(--text-secondary) !important;
+}
+.stTextInput input[type="password"] {
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+}
+
+/* ── Selectbox / Dropdown — DEEP targeting ── */
+.stSelectbox [data-baseweb="select"],
+.stMultiSelect [data-baseweb="select"] {
+    background-color: var(--surface) !important;
+    border-color: var(--border-strong) !important;
+}
+.stSelectbox [data-baseweb="select"] > div,
+.stSelectbox [data-baseweb="select"] > div > div,
+.stMultiSelect [data-baseweb="select"] > div,
+.stMultiSelect [data-baseweb="select"] > div > div {
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+}
+.stSelectbox [data-baseweb="select"] span,
+.stSelectbox [data-baseweb="select"] div,
+.stSelectbox [data-baseweb="select"] p,
+.stMultiSelect [data-baseweb="select"] span,
+.stMultiSelect [data-baseweb="select"] div {
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+}
+.stSelectbox label,
+.stMultiSelect label {
+    color: var(--text-secondary) !important;
+}
+/* Dropdown popover / menu */
+[data-baseweb="popover"] {
+    z-index: 999999 !important;
+    pointer-events: auto !important;
+}
+[data-baseweb="popover"],
+[data-baseweb="popover"] > div,
+[data-baseweb="menu"],
+[data-baseweb="menu"] > div,
+ul[role="listbox"],
+ul[role="listbox"] > li,
+[data-baseweb="menu"] li,
+div[data-baseweb="popover"] ul {
+    background-color: var(--surface, #ffffff) !important;
+    color: var(--text-primary, #1e293b) !important;
+    -webkit-text-fill-color: var(--text-primary, #1e293b) !important;
+}
+[data-baseweb="menu"] li,
+ul[role="listbox"] li,
+[data-baseweb="menu"] [role="option"],
+ul[role="listbox"] [role="option"] {
+    color: var(--text-primary, #1e293b) !important;
+    -webkit-text-fill-color: var(--text-primary, #1e293b) !important;
+    background-color: var(--surface, #ffffff) !important;
+}
+[data-baseweb="menu"] li *,
+ul[role="listbox"] li *,
+[data-baseweb="menu"] [role="option"] *,
+ul[role="listbox"] [role="option"] * {
+    color: var(--text-primary, #1e293b) !important;
+    -webkit-text-fill-color: var(--text-primary, #1e293b) !important;
+}
+[data-baseweb="menu"] li:hover,
+ul[role="listbox"] li:hover,
+[data-baseweb="menu"] [role="option"]:hover,
+ul[role="listbox"] [role="option"]:hover {
+    background-color: var(--accent-light, #dbeafe) !important;
+}
+[data-baseweb="menu"] li[aria-selected="true"],
+ul[role="listbox"] li[aria-selected="true"] {
+    background-color: var(--accent-light, #dbeafe) !important;
+    color: var(--text-primary, #1e293b) !important;
+    -webkit-text-fill-color: var(--text-primary, #1e293b) !important;
+}
+.stSelectbox svg,
+.stMultiSelect svg {
+    fill: var(--text-secondary) !important;
+    color: var(--text-secondary) !important;
+}
+
+/* ── Toggle switch — ensure clickable & visible ── */
+.stToggle,
+.stToggle label,
+.stToggle > div,
+[data-testid="stSidebar"] .stToggle,
+[data-testid="stSidebar"] .stToggle label {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+/* Toggle label text — must be visible in light mode */
+.stToggle label span,
+.stToggle label p,
+.stToggle [data-testid="stMarkdownContainer"],
+.stToggle [data-testid="stMarkdownContainer"] p,
+[data-testid="stSidebar"] .stToggle label span,
+[data-testid="stSidebar"] .stToggle label p,
+[data-testid="stSidebar"] .stToggle [data-testid="stMarkdownContainer"] p {
+    color: var(--text-primary, #1e293b) !important;
+    -webkit-text-fill-color: var(--text-primary, #1e293b) !important;
+}
+[data-baseweb="toggle"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+[data-baseweb="toggle"] > div {
+    pointer-events: auto !important;
+}
+/* Toggle track colours */
+[data-baseweb="toggle"] [role="checkbox"][aria-checked="false"] > div {
+    background-color: var(--border-strong) !important;
+}
+[data-baseweb="toggle"] [role="checkbox"][aria-checked="true"] > div {
+    background-color: var(--accent) !important;
+}
+
+/* ── Radio buttons ── */
+.stRadio label {
+    color: var(--text-primary) !important;
+}
+.stRadio [data-testid="stMarkdownContainer"] p {
+    color: var(--text-primary) !important;
+}
+
+/* ── Checkboxes ── */
+.stCheckbox label span {
+    color: var(--text-primary) !important;
+}
+
+/* ── Selectbox — ensure dropdown opens properly ── */
+.stSelectbox [data-baseweb="select"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+.stSelectbox [data-baseweb="select"] input {
+    pointer-events: auto !important;
+}
+[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] div {
+    pointer-events: auto !important;
+}
+
+/* ── File uploader ── */
+[data-testid="stFileUploader"],
+[data-testid="stFileUploader"] section,
+[data-testid="stFileUploader"] div {
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+}
+[data-testid="stFileUploader"] button {
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+[data-testid="stFileUploader"] small,
+[data-testid="stFileUploader"] span {
+    color: var(--text-secondary) !important;
+}
+
+/* ── Buttons — premium ── */
+.stButton button {
+    color: var(--text-primary) !important;
+    border-color: var(--border-strong) !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 500 !important;
+    transition: all var(--transition-fast);
+}
+.stButton button:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-1px);
+}
+.stButton button[kind="primary"],
+.stButton button[data-testid="stFormSubmitButton"] {
+    color: #ffffff !important;
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 1px 3px rgba(37,99,235,0.20);
+}
+.stButton button[kind="primary"]:hover,
+.stButton button[data-testid="stFormSubmitButton"]:hover {
+    background-color: var(--accent-dark) !important;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+}
+.stDownloadButton button {
+    color: var(--text-primary) !important;
+    border-color: var(--border-strong) !important;
+    background-color: var(--surface) !important;
+    border-radius: var(--radius-sm) !important;
+    transition: all var(--transition-fast);
+}
+.stDownloadButton button:hover {
+    box-shadow: var(--card-shadow-hover);
+}
+
+/* ── Status widget ── */
+[data-testid="stStatusWidget"],
+[data-testid="stStatusWidget"] * {
+    background-color: var(--surface-alt) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+}
+
+/* ── Spinner ── */
+.stSpinner > div {
+    color: var(--text-primary) !important;
+}
+
+/* ── Toast ── */
+[data-testid="stToast"] {
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+}
+
+/* ── Metric cards ── */
+[data-testid="stMetricValue"] {
+    color: var(--text-primary) !important;
+}
+[data-testid="stMetricLabel"] {
+    color: var(--text-secondary) !important;
+}
+[data-testid="stMetric"] {
+    background-color: var(--surface-alt) !important;
+}
+
+/* ── Tabs ── */
+.stTabs [data-baseweb="tab"] {
+    color: var(--text-secondary) !important;
+    background-color: transparent !important;
+}
+.stTabs [aria-selected="true"] {
+    color: var(--text-primary) !important;
+}
+.stTabs [data-baseweb="tab-panel"] {
+    color: var(--text-primary) !important;
+}
+.stTabs [data-baseweb="tab-highlight"] {
+    background-color: var(--accent) !important;
+}
+.stTabs [data-baseweb="tab-border"] {
+    background-color: var(--border) !important;
+}
+
+/* ── Expanders — clean card style ── */
+[data-testid="stExpander"] {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--card-radius) !important;
+    box-shadow: var(--card-shadow) !important;
+    margin-bottom: 0.5rem;
+    transition: box-shadow var(--transition-fast);
+}
+[data-testid="stExpander"]:hover {
+    box-shadow: var(--card-shadow-hover) !important;
+}
+[data-testid="stExpander"] summary,
+[data-testid="stExpander"] summary span,
+[data-testid="stExpander"] summary p {
+    color: var(--text-primary) !important;
+}
+[data-testid="stExpander"] [data-testid="stMarkdownContainer"] {
+    color: var(--text-primary) !important;
+}
+
+/* ── Dataframes — elevated ── */
+[data-testid="stDataFrame"] {
+    background-color: var(--surface) !important;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--card-shadow);
+}
+
+/* ── Alert boxes ── */
+.stAlert { border-radius: var(--radius-sm); }
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] span {
+    color: inherit !important;
+}
+
+/* ── Tooltip ── */
+[data-testid="stTooltipIcon"] {
+    color: var(--text-muted) !important;
+}
+
+/* ── JSON / code blocks ── */
+.stCodeBlock, .stJson {
+    background-color: var(--surface-alt) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   DEFAULT CSS VARIABLES (Light theme defaults) — SaaS grade
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  --accent:           #2563eb;
+  --accent-light:     #dbeafe;
+  --accent-dark:      #1e40af;
+  --surface:          #ffffff;
+  --surface-alt:      #f8fafc;
+  --border:           rgba(148,163,184,0.18);
+  --border-strong:    rgba(148,163,184,0.35);
+  --text-primary:     #1e293b;
+  --text-secondary:   #64748b;
+  --text-muted:       #94a3b8;
+  --success:          #16a34a;
+  --success-bg:       #f0fdf4;
+  --success-border:   #bbf7d0;
+  --warning:          #d97706;
+  --warning-bg:       #fffbeb;
+  --warning-border:   #fde68a;
+  --danger:           #dc2626;
+  --danger-bg:        #fef2f2;
+  --danger-border:    #fecaca;
+  --chart-income:     #059669;
+  --chart-expense:    #dc2626;
+  --chart-neutral:    #6366f1;
+  --chart-bg:         #f8fafc;
+  --gradient-start:   #1e40af;
+  --gradient-end:     #3b82f6;
+  --card-shadow:      0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  --card-shadow-hover:0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --card-radius:      12px;
+  --radius-sm:        8px;
+  --radius-lg:        16px;
+  --font-body:        'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:        'SF Mono', 'Menlo', 'Monaco', 'Fira Code', monospace;
+  --transition-fast:  0.15s cubic-bezier(0.4,0,0.2,1);
+  --transition-med:   0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Variables for Warm/Dark themes are set via :root override in app.py _THEME_VARS */
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   METRIC CARDS — elevated SaaS style
+   ══════════════════════════════════════════════════════════════════════ */
+[data-testid="stMetric"] {
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 16px 20px;
+    box-shadow: var(--card-shadow);
+    transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+    background: var(--surface) !important;
+}
+[data-testid="stMetric"]:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-1px);
+}
+[data-testid="stMetricLabel"] {
+    font-size: 0.70rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    opacity: 0.60;
+}
+[data-testid="stMetricValue"] {
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.3px;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   TABS — premium capsule pill style
+   ══════════════════════════════════════════════════════════════════════ */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 2px;
+    background: var(--surface-alt);
+    border-radius: var(--card-radius);
+    padding: 4px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar { display: none; }
+.stTabs [data-baseweb="tab"] {
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    background: var(--accent-light) !important;
+}
+.stTabs [aria-selected="true"] {
+    font-weight: 700;
+    background: var(--surface) !important;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border) !important;
+}
+.stTabs [data-baseweb="tab-highlight"] {
+    display: none !important;
+}
+.stTabs [data-baseweb="tab-border"] {
+    display: none !important;
+}
+.stTabs [data-baseweb="tab-panel"] {
+    padding-top: 1rem;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   REPORT BANNER — premium gradient with depth
+   ══════════════════════════════════════════════════════════════════════ */
+.report-banner {
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 50%, #818cf8 100%);
+    color: #ffffff;
+    padding: 2rem 2.4rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.4rem;
+    box-shadow: 0 4px 16px rgba(37,99,235,0.18), 0 1px 3px rgba(0,0,0,0.06);
+    position: relative;
+    overflow: hidden;
+}
+.report-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.report-banner h1 {
+    color: #ffffff !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 1.45rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.3px;
+    position: relative;
+}
+.report-banner p, .report-banner span, .report-banner div {
+    color: #ffffff !important;
+    position: relative;
+}
+.report-banner .subtitle {
+    color: rgba(255,255,255,0.92) !important;
+    font-size: 1.1rem;
+    margin-top: 0.4rem;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+.report-banner .meta {
+    color: rgba(255,255,255,0.72) !important;
+    font-size: 0.76rem;
+    margin-top: 0.7rem;
+    letter-spacing: 0.2px;
+}
+.report-banner .meta strong { color: #ffffff !important; }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   PROGRESS STEPS — sleek pipeline tracker
+   ══════════════════════════════════════════════════════════════════════ */
+.pipeline-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    margin: 3px 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: border-color var(--transition-fast), background-color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast);
+}
+.pipeline-step * {
+    color: var(--text-primary) !important;
+}
+.pipeline-step.active {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    transform: translateX(2px);
+    box-shadow: 0 0 0 1px var(--accent-light);
+}
+.pipeline-step.done {
+    border-color: var(--success-border);
+    background: var(--success-bg);
+    opacity: 0.80;
+}
+.pipeline-step .step-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.pipeline-step .step-body {
+    flex: 1;
+    min-width: 0;
+}
+.pipeline-step .step-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    color: var(--text-primary) !important;
+}
+.pipeline-step .step-desc {
+    font-size: 0.74rem;
+    color: var(--text-secondary) !important;
+    opacity: 0.85;
+    line-height: 1.4;
+    margin-top: 2px;
+}
+.pipeline-step .step-time {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted) !important;
+    opacity: 0.75;
+    flex-shrink: 0;
+    padding-top: 3px;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION CARDS & PANELS — elevated
+   ══════════════════════════════════════════════════════════════════════ */
+.section-card {
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 0.8rem;
+    box-shadow: var(--card-shadow);
+    background: var(--surface);
+    color: var(--text-primary);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 300px;
+    transition: box-shadow var(--transition-fast);
+}
+.section-card:hover {
+    box-shadow: var(--card-shadow-hover);
+}
+
+/* ── Executive Summary — hero card ── */
+.exec-summary {
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 1.6rem 1.8rem;
+    margin-bottom: 1.4rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+    background: var(--surface);
+    color: var(--text-primary);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 400px;
+}
+.exec-summary h3 {
+    margin-top: 0 !important;
+    font-size: 1.05rem !important;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   RAG RISK TILES — card-style with subtle animation
+   ══════════════════════════════════════════════════════════════════════ */
+.rag-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin: 0.8rem 0 1rem 0;
+}
+.rag-tile {
+    border-radius: var(--card-radius);
+    padding: 14px 16px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.82rem;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.rag-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow-hover);
+}
+.rag-tile .rag-label {
+    opacity: 0.80;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.rag-tile .rag-value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+.rag-green  { background: #dcfce7; color: #166534 !important; border: 1px solid #86efac; }
+.rag-amber  { background: #fef3c7; color: #92400e !important; border: 1px solid #fcd34d; }
+.rag-red    { background: #fee2e2; color: #991b1b !important; border: 1px solid #fca5a5; }
+.rag-grey   { background: #f3f4f6; color: #374151 !important; border: 1px solid #d1d5db; }
+/* Ensure all children inherit the RAG tile text colour */
+.rag-green *, .rag-green .rag-label, .rag-green .rag-value { color: #166534 !important; }
+.rag-amber *, .rag-amber .rag-label, .rag-amber .rag-value { color: #92400e !important; }
+.rag-red *, .rag-red .rag-label, .rag-red .rag-value { color: #991b1b !important; }
+.rag-grey *, .rag-grey .rag-label, .rag-grey .rag-value { color: #374151 !important; }
+
+/* Dark-theme RAG overrides in app.py _THEME_VARS["Dark"] */
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   OVERALL RISK BADGE — pill style
+   ══════════════════════════════════════════════════════════════════════ */
+.risk-badge {
+    display: inline-block;
+    padding: 8px 22px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+.risk-badge-low    { background: #dcfce7; color: #166534; border: 2px solid #86efac; }
+.risk-badge-medium { background: #fef3c7; color: #92400e; border: 2px solid #fcd34d; }
+.risk-badge-high   { background: #fee2e2; color: #991b1b; border: 2px solid #fca5a5; }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   DATA LIMITATIONS BOX — subtle info card
+   ══════════════════════════════════════════════════════════════════════ */
+.data-limits-box {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 0.9rem 1.1rem;
+    font-size: 0.8rem;
+    margin: 0.6rem 0;
+    line-height: 1.55;
+    color: var(--text-primary);
+    box-shadow: var(--card-shadow);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 80px;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   RISK FLOW DIAGRAM
+   ══════════════════════════════════════════════════════════════════════ */
+.flow-diagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 0.8rem 0 1rem 0;
+    font-size: 0.75rem;
+}
+.flow-step {
+    background: var(--accent-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    text-align: center;
+    font-weight: 600;
+    min-width: 110px;
+    color: var(--text-primary);
+}
+.flow-step .flow-icon { font-size: 1.1rem; display: block; margin-bottom: 2px; }
+.flow-step .flow-sub { font-size: 0.60rem; font-weight: 400; opacity: 0.65; margin-top: 2px; }
+.flow-arrow {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    padding: 0 4px;
+    font-weight: 700;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   CONFIDENCE METER — animated bar
+   ══════════════════════════════════════════════════════════════════════ */
+.conf-meter { margin: 0.8rem 0 0.4rem 0; }
+.conf-bar-bg {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    height: 24px;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+.conf-bar-fill {
+    height: 100%;
+    border-radius: var(--card-radius);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.conf-bar-high { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.conf-bar-med  { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.conf-bar-low  { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.conf-factors {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   VARIANCE SIMULATION BOX
+   ══════════════════════════════════════════════════════════════════════ */
+.variance-box {
+    background: rgba(99,102,241,0.05);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.8rem 1rem;
+    font-size: 0.8rem;
+    margin: 0.5rem 0;
+    line-height: 1.6;
+    color: var(--text-primary);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 80px;
+}
+.variance-box .var-header {
+    font-weight: 700;
+    font-size: 0.82rem;
+    margin-bottom: 4px;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   EVIDENCE SOURCE TAGS
+   ══════════════════════════════════════════════════════════════════════ */
+.ev-tag {
+    display: inline-block;
+    font-size: 0.60rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-left: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
+}
+.ev-tag-api  { background: #dbeafe; color: #1e40af !important; }
+.ev-tag-doc  { background: #dcfce7; color: #166534 !important; }
+.ev-tag-web  { background: #fef3c7; color: #92400e !important; }
+
+/* Dark-theme ev-tag overrides in app.py _THEME_VARS["Dark"] */
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   DATA HASH BADGE
+   ══════════════════════════════════════════════════════════════════════ */
+.data-hash {
+    display: inline-block;
+    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+    font-size: 0.70rem;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    cursor: help;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   GOVERNANCE INTELLIGENCE PANEL — card style
+   ══════════════════════════════════════════════════════════════════════ */
+.gov-intel {
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1rem;
+    background: var(--surface-alt);
+    color: var(--text-primary);
+    box-shadow: var(--card-shadow);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 200px;
+}
+.gov-intel h4 { margin: 0 0 0.6rem 0; font-size: 0.92rem; font-weight: 700; }
+.gov-intel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem;
+}
+.gov-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.76rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+}
+.gov-chip-ok   { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.06); }
+.gov-chip-warn { border-color: rgba(234,179,8,0.3); background: rgba(234,179,8,0.06); }
+.gov-chip-bad  { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); }
+.gov-timeline {
+    font-size: 0.78rem;
+    line-height: 1.7;
+    margin-top: 0.3rem;
+    color: var(--text-primary);
+}
+.gov-timeline .event {
+    padding-left: 1.2rem;
+    position: relative;
+}
+.gov-timeline .event::before {
+    content: '';
+    position: absolute;
+    left: 0.3rem;
+    top: 0.55rem;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   VALIDATION LINK BADGES
+   ══════════════════════════════════════════════════════════════════════ */
+.val-link {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.82rem;
+    margin: 3px 2px;
+    text-decoration: none !important;
+    transition: opacity 0.15s ease;
+}
+.val-link:hover {
+    opacity: 0.8;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   SIDEBAR — radio label sizing
+   ══════════════════════════════════════════════════════════════════════ */
+[data-testid="stSidebar"] .stRadio label {
+    font-size: 0.85rem;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   DONOR SNAPSHOT BANNER — premium gradient
+   ══════════════════════════════════════════════════════════════════════ */
+.donor-banner {
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 50%, #818cf8 100%);
+    color: #ffffff;
+    padding: 1.8rem 2.2rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 16px rgba(37,99,235,0.18), 0 1px 3px rgba(0,0,0,0.06);
+    position: relative;
+    overflow: hidden;
+}
+.donor-banner::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -15%;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.donor-banner h1 { color: #fff !important; margin: 0; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.3px; position: relative; }
+.donor-banner p, .donor-banner span, .donor-banner div { color: #fff !important; position: relative; }
+.donor-banner .donor-name { font-size: 1.2rem; margin-top: 0.3rem; font-weight: 600; color: #fff !important; }
+.donor-banner .donor-meta { font-size: 0.82rem; margin-top: 0.5rem; opacity: 0.88; color: rgba(255,255,255,0.9) !important; letter-spacing: 0.2px; }
+.donor-banner .donor-meta b { color: #ffffff !important; }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   TRANSPARENCY ASSESSMENT BOX — clean card style
+   ══════════════════════════════════════════════════════════════════════ */
+.transparency-box {
+    border: 2px solid var(--border-strong);
+    border-radius: var(--card-radius);
+    padding: 1.1rem 1.5rem;
+    margin-bottom: 1rem;
+    background: var(--surface-alt);
+    color: var(--text-primary);
+    box-shadow: var(--card-shadow);
+}
+.transparency-box .level { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.2px; }
+.transparency-box .disclaimer { font-size: 0.76rem; color: var(--text-muted); margin-top: 0.3rem; line-height: 1.5; }
+.transparency-red    { border-color: var(--danger) !important; }
+.transparency-amber  { border-color: var(--warning) !important; }
+.transparency-yellow { border-color: #ca8a04 !important; }
+.transparency-green  { border-color: var(--success) !important; }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   TRAFFIC LIGHT BADGES (FATF / Risk)
+   ══════════════════════════════════════════════════════════════════════ */
+.tl-badge { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.88rem; }
+.tl-dot {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+.tl-high  .tl-dot { background: var(--danger); }
+.tl-high  b       { color: var(--danger) !important; }
+.tl-med   .tl-dot { background: var(--warning); }
+.tl-med   b       { color: var(--warning) !important; }
+.tl-low   .tl-dot { background: var(--success); }
+.tl-low   b       { color: var(--success) !important; }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   COMPANY RISK BANNER — bold premium
+   ══════════════════════════════════════════════════════════════════════ */
+.co-risk-banner {
+    color: white !important;
+    padding: 14px 22px;
+    border-radius: var(--card-radius);
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    letter-spacing: -0.2px;
+}
+.co-risk-banner * { color: white !important; }
+.co-risk-critical { background: #7f1d1d; }
+.co-risk-high     { background: var(--danger); }
+.co-risk-medium   { background: var(--warning); color: #292524 !important; }
+.co-risk-medium * { color: #292524 !important; }
+.co-risk-low      { background: var(--success); }
+.co-risk-unknown  { background: var(--text-muted); }
+
+.co-hard-stop {
+    background: #7f1d1d;
+    color: white !important;
+    padding: 14px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    border: 2px solid var(--danger);
+}
+.co-hard-stop * { color: white !important; }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   FOOTER
+   ══════════════════════════════════════════════════════════════════════ */
+.app-footer {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-muted) !important;
+    margin-top: 1rem;
+}
+.app-footer * {
+    color: var(--text-muted) !important;
+}
+.app-footer a { color: var(--text-secondary) !important; text-decoration: none; }
+.app-footer a:hover { text-decoration: underline; }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   STRUCTURAL GOVERNANCE PANEL
+   ══════════════════════════════════════════════════════════════════════ */
+.struct-gov-panel {
+    border: 2px solid var(--border-strong);
+    border-left: 4px solid var(--warning);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem;
+    margin: 0.5rem 0 1rem 0;
+    background: var(--surface-alt);
+    color: var(--text-primary);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 200px;
+}
+.struct-gov-panel .sg-header {
+    font-weight: 700;
+    font-size: 0.92rem;
+    margin-bottom: 0.3rem;
+}
+.struct-gov-panel .sg-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+}
+
+.trustee-directorship {
+    border-left: 3px solid var(--text-muted);
+    padding: 0.5rem 0.8rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: var(--surface-alt);
+    font-size: 0.82rem;
+    color: var(--text-primary);
+}
+.trustee-directorship.flagged { border-left-color: var(--warning); }
+.trustee-directorship .td-detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+.sg-disclaimer { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.5rem; font-style: italic; }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   WEBSITE CREDIBILITY BANNER
+   ══════════════════════════════════════════════════════════════════════ */
+.cred-banner {
+    padding: 10px 18px;
+    border-radius: var(--card-radius);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.8rem;
+    color: white !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.cred-banner * { color: white !important; }
+.cred-high       { background: #16a34a; }
+.cred-good       { background: #22c55e; }
+.cred-moderate   { background: var(--warning); color: #292524 !important; }
+.cred-moderate * { color: #292524 !important; }
+.cred-low        { background: #ea580c; }
+.cred-very-low   { background: var(--danger); }
+.cred-unknown    { background: var(--text-muted); }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   SaaS ENHANCEMENTS — premium polish
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Smooth scrolling for entire app ── */
+.stApp { scroll-behavior: smooth; }
+
+/* ── Subtle dividers between sections ── */
+.stApp hr {
+    border: none !important;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-strong), transparent) !important;
+    margin: 1.2rem 0;
+}
+
+/* ── Alert boxes — rounded corners with subtle shadow ── */
+.stAlert {
+    border-radius: var(--card-radius) !important;
+    box-shadow: var(--card-shadow);
+}
+
+/* ── Status widget — cleaner ── */
+[data-testid="stStatusWidget"] {
+    border-radius: var(--card-radius) !important;
+    box-shadow: var(--card-shadow);
+}
+
+/* ── Toast — elevated ── */
+[data-testid="stToast"] {
+    border-radius: var(--card-radius) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+}
+
+/* ── Text input/area — focus ring ── */
+.stTextInput input:focus,
+.stTextArea textarea:focus,
+.stNumberInput input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-light) !important;
+    outline: none;
+}
+
+/* ── Selectbox — focus ring ── */
+.stSelectbox [data-baseweb="select"]:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-light) !important;
+}
+
+/* ── File uploader — dashed border style ── */
+[data-testid="stFileUploader"] section {
+    border: 2px dashed var(--border-strong) !important;
+    border-radius: var(--card-radius) !important;
+    transition: border-color var(--transition-fast);
+}
+[data-testid="stFileUploader"] section:hover {
+    border-color: var(--accent) !important;
+}
+
+/* ── Sidebar input refinement ── */
+[data-testid="stSidebar"] .stTextInput input,
+[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] {
+    border-radius: var(--radius-sm) !important;
+    font-size: 0.84rem !important;
+}
+
+/* ── Evidence tags — pill style ── */
+.ev-tag {
+    display: inline-block;
+    font-size: 0.58rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
+}
+
+/* ── Governance chips — rounded ── */
+.gov-chip {
+    border-radius: 8px;
+    transition: background var(--transition-fast);
+}
+.gov-chip:hover {
+    opacity: 0.85;
+}
+
+/* ── Flow diagram steps — subtle lift on hover ── */
+.flow-step {
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.flow-step:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--card-shadow);
+}
+
+/* ── Validation link badges — rounded pill ── */
+.val-link {
+    border-radius: 8px;
+    transition: all var(--transition-fast);
+}
+.val-link:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--card-shadow);
+}
+
+/* ── Data hash — refined mono ── */
+.data-hash {
+    font-family: var(--font-mono);
+    border-radius: 8px;
+}
+
+/* ── Structural governance panel — left accent border ── */
+.struct-gov-panel {
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+}
+
+/* ── Scrollbar styling (webkit) ── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ── Print optimisation ── */
+@media print {
+    .stTabs [data-baseweb="tab-list"] { display: none; }
+    [data-testid="stSidebar"] { display: none; }
+    .report-banner, .donor-banner { box-shadow: none; }
+    .section-card, .exec-summary { box-shadow: none; break-inside: avoid; }
+}

@@ -1,0 +1,23 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# SQLite intelligence log (local data)
+intelligence.db
+
+# IDE
+.vscode/
+.idea/
+
+# PDFs (large / sensitive uploads)
+*.pdf
+nohup.out
