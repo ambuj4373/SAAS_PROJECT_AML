@@ -5485,7 +5485,10 @@ if _co_dp and _is_company_mode:
             # Show which website was analyzed
             _website_url = co_data.get("website_url")
             if _website_url:
-                st.markdown(f"_Analyzed website: [`{_website_url}`]({_website_url})_")
+                # Ensure proper URL format for links
+                _proper_url = _website_url if _website_url.startswith(('http://', 'https://')) else f'https://{_website_url}'
+                _proper_url = _website_url if _website_url.startswith(("http://", "https://")) else f"https://{_website_url}"
+                st.markdown(f"_Analyzed website: [`{_website_url}`]({_proper_url})_")
             else:
                 st.markdown("_No website provided for analysis_")
             for f in _xref_find:
