@@ -260,18 +260,8 @@ def render_loading_step(
         status: 'active' (running), 'done' (complete), 'waiting' (pending), 'error'
         country: 'uk' or 'france' - adapts description text accordingly
     """
-    # Adapt description based on country
     adapted_desc = description
-    if country.lower() == "france":
-        # Replace UK terminology with French terminology
-        adapted_desc = adapted_desc.replace("Companies House", "INPI (Inpi.fr)")
-        adapted_desc = adapted_desc.replace("officers", "dirigeants (officers)")
-        adapted_desc = adapted_desc.replace("charges", "privilèges (charges)")
-        adapted_desc = adapted_desc.replace("SIC codes", "codes NAF (secteur d'activité)")
-        adapted_desc = adapted_desc.replace("PSC", "bénéficiaires effectifs")
-        adapted_desc = adapted_desc.replace("formalities", "formalités")
-        adapted_desc = adapted_desc.replace("comptes annuels", "financial statements")
-    
+
     status_icons = {
         "active": f'<div class="v3-spinner"></div>',
         "done": "✅",

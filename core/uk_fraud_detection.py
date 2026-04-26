@@ -3,7 +3,7 @@ uk_fraud_detection.py
 
 Lightweight Fraud Detection for UK Companies (Companies House)
 
-Mirrors french_fraud_detection.py but adapted for UK data:
+Fraud detection engines for UK company data:
   ✅ Shell Company Detection (from officer analysis, filings, accounts)
   ✅ Behaviour Monitoring (director changes, filing patterns)
   ✅ Director Network Intelligence (officer clustering, circular ownership)

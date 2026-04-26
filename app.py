@@ -157,7 +157,6 @@ from core.risk_engine import (
 )
 from core.fatf_screener import screen_entity, FATF_CATEGORIES
 from core.company_check import run_company_check
-from core.french_company_check import run_french_company_check
 from api_clients.social_media_finder import find_company_social_profiles, generate_direct_search_urls
 from core.database import init_intelligence_db, update_feedback, fetch_disliked_assessments, fetch_all_assessments
 from api_clients.adverse_media import log_ai_assessment, log_fatf_assessment
@@ -602,8 +601,8 @@ if _is_donor_mode:
     )
 elif _is_company_mode:
     st.sidebar.info(
-        "**Company Sense-Check Report** — Deep-dive into a UK or French company using "
-        "Companies House / INPI records plus website intelligence. Covers governance, ownership, adverse media & risk."
+        "**Company Sense-Check Report** — Deep-dive into a UK company using "
+        "Companies House records plus website intelligence. Covers governance, ownership, adverse media & risk."
     )
 else:
     st.sidebar.info(
@@ -613,34 +612,14 @@ else:
 
 # ── Mode-specific inputs ─────────────────────────────────────────────────────
 if _is_company_mode:
-    # Select country for company check
-    _company_country = st.sidebar.radio(
-        "Company Location",
-        ["🇬🇧 United Kingdom", "🇫🇷 France"],
-        horizontal=True,
-        key="company_country",
-        help="Select the company's country of registration"
-    )
-    _is_french_company = _company_country.startswith("🇫🇷")
-    
-    if _is_french_company:
-        _co_check_num = st.sidebar.text_input(
-            "SIREN Number", value="",
-            placeholder="e.g. 732043259 (9 digits)",
-            help="The 9-digit SIREN number from INPI (French Registry).")
-        _co_check_website = st.sidebar.text_input(
-            "Company Website", value="",
-            placeholder="e.g. https://www.example.fr",
-            help="The company's trading website. Used for cross-referencing against INPI data.")
-    else:
-        _co_check_num = st.sidebar.text_input(
-            "Companies House Number", value="",
-            placeholder="e.g. 12345678",
-            help="The 8-digit company registration number from Companies House.")
-        _co_check_website = st.sidebar.text_input(
-            "Company Website", value="",
-            placeholder="e.g. https://www.example.co.uk",
-            help="The company's trading website. Used for cross-referencing against CH data.")
+    _co_check_num = st.sidebar.text_input(
+        "Companies House Number", value="",
+        placeholder="e.g. 12345678",
+        help="The 8-digit company registration number from Companies House.")
+    _co_check_website = st.sidebar.text_input(
+        "Company Website", value="",
+        placeholder="e.g. https://www.example.co.uk",
+        help="The company's trading website. Used for cross-referencing against CH data.")
 
     st.sidebar.selectbox(
         "AI Model",
@@ -759,7 +738,6 @@ if not _is_donor_mode and not _is_company_mode:
 else:
     # Donor mode — minimal sidebar
     if not _is_company_mode:
-        _is_french_company = False
         cc_printout_file = None
         uploaded_files = None
         gov_doc_files = None
@@ -1296,10 +1274,7 @@ if run_btn and _is_company_mode:
         st.error(f"Missing API key(s): {', '.join(missing)}. Set them in your .env file.")
         st.stop()
     if not _co_check_num or not _co_check_num.strip():
-        if _is_french_company:
-            st.error("Please enter a valid SIREN number (9 digits).")
-        else:
-            st.error("Please enter a valid Companies House number (8 digits).")
+        st.error("Please enter a valid Companies House number (8 digits).")
         st.stop()
 
     _co_check_num = _co_check_num.strip().upper()
@@ -1308,36 +1283,17 @@ if run_btn and _is_company_mode:
     # VALIDATION LAYER — Format Validation
     # ═══════════════════════════════════════════════════════════════════════════
     
-    if _is_french_company:
-        # Validate SIREN format (9 digits)
-        siren_clean = _co_check_num.replace(" ", "")
-        if not siren_clean.isdigit() or len(siren_clean) != 9:
-            st.error(f"❌ Invalid SIREN format: '{_co_check_num}'")
-            st.info("ℹ️ SIREN must be exactly 9 digits")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.info("📝 **Example:** 732043259 (Michelin)")
-            with col2:
-                st.info("📝 **Example:** 498061394 (Orange)")
-            st.stop()
-        _co_check_num = siren_clean
-    else:
-        # Validate Companies House format (8 digits)
-        ch_clean = _co_check_num.replace(" ", "").replace("-", "")
-        if not ch_clean.isdigit() or len(ch_clean) != 8:
-            st.error(f"❌ Invalid Companies House format: '{_co_check_num}'")
-            st.info("ℹ️ Company number must be exactly 8 digits")
-            st.stop()
-        _co_check_num = ch_clean
+    # Validate Companies House format (8 digits)
+    ch_clean = _co_check_num.replace(" ", "").replace("-", "")
+    if not ch_clean.isdigit() or len(ch_clean) != 8:
+        st.error(f"❌ Invalid Companies House format: '{_co_check_num}'")
+        st.info("ℹ️ Company number must be exactly 8 digits")
+        st.stop()
+    _co_check_num = ch_clean
     _co_website = _co_check_website.strip() if _co_check_website else ""
     
-    # Determine check type
-    if _is_french_company:
-        check_type = "🇫🇷 French Company"
-        status_message = "🏢 Running French Company Sense-Check — typically 30–60 seconds..."
-    else:
-        check_type = "🇬🇧 UK Company"
-        status_message = "🏢 Running Company Sense-Check — typically 30–60 seconds..."
+    check_type = "🇬🇧 UK Company"
+    status_message = "🏢 Running Company Sense-Check — typically 30–60 seconds..."
 
     with st.status(status_message, expanded=True) as status:
         try:
@@ -1345,83 +1301,31 @@ if run_btn and _is_company_mode:
             _v3_co_step_times: dict[int, float] = {}
             _v3_co_step_start = _time.time()
             st.html(render_loading_css() + render_progress_header("company", "", _co_check_num))
-            st.html(render_loading_step(1, 5, COMPANY_STEPS[0]["title"], COMPANY_STEPS[0]["desc"], status="active", icon=COMPANY_STEPS[0]["icon"], country="france" if _is_french_company else "uk"))
+            st.html(render_loading_step(1, 5, COMPANY_STEPS[0]["title"], COMPANY_STEPS[0]["desc"], status="active", icon=COMPANY_STEPS[0]["icon"], country="uk"))
             try:
-                if _is_french_company:
-                    # French company check
-                    co_check_data = run_french_company_check(
-                        _co_check_num,
-                        _co_website,
-                        tavily_search_fn=search_generic,
-                        adverse_search_fn=search_adverse_media_hybrid,
-                        fatf_screen_fn=screen_entity,
-                    )
-                else:
-                    # UK company check
-                    co_check_data = run_company_check(
-                        _co_check_num,
-                        _co_website,
-                        tavily_search_fn=search_generic,
-                        adverse_search_fn=search_adverse_media_hybrid,
-                        fatf_screen_fn=screen_entity,
-                        online_presence_fn=search_online_presence,
-                        social_osint_fn=search_social_osint,
-                        social_extract_fn=lambda url: find_company_social_profiles(
-                            company_name=_co_check_num,
-                            website_url=url,
-                            search_fn=search_generic,
-                        ).get("links", {}),
-                    )
+                co_check_data = run_company_check(
+                    _co_check_num,
+                    _co_website,
+                    tavily_search_fn=search_generic,
+                    adverse_search_fn=search_adverse_media_hybrid,
+                    fatf_screen_fn=screen_entity,
+                    online_presence_fn=search_online_presence,
+                    social_osint_fn=search_social_osint,
+                    social_extract_fn=lambda url: find_company_social_profiles(
+                        company_name=_co_check_num,
+                        website_url=url,
+                        search_fn=search_generic,
+                    ).get("links", {}),
+                )
             except requests.exceptions.HTTPError as e:
                 if e.response is not None and e.response.status_code == 404:
-                    if _is_french_company:
-                        st.error(f"❌ Company with SIREN **{_co_check_num}** not found in INPI registry.")
-                        st.info("💡 This SIREN may not be registered or may be incorrect.")
-                        
-                        # Offer search fallback
-                        with st.container(border=True):
-                            st.subheader("🔍 Search by Company Name Instead")
-                            search_name = st.text_input(
-                                "Enter company name",
-                                placeholder="e.g., Michelin, Orange, etc.",
-                                key="french_company_search"
-                            )
-                            
-                            if search_name and st.button("🔍 Search INPI", key="french_search_btn"):
-                                st.info(f"Searching INPI for companies matching '{search_name}'...")
-                                try:
-                                    from api_clients.french_registry import search_french_companies
-                                    search_results = search_french_companies(search_name)
-                                    
-                                    if search_results:
-                                        st.success(f"✓ Found {len(search_results)} companies")
-                                        
-                                        # Display results
-                                        for i, result in enumerate(search_results[:10]):  # Limit to 10 results
-                                            company_name = result.get('name', 'Unknown')
-                                            siren = result.get('siren', 'N/A')
-                                            status_val = result.get('status', 'Unknown')
-                                            col1, col2, col3 = st.columns([2, 1, 1])
-                                            with col1:
-                                                st.text(f"📍 {company_name}")
-                                            with col2:
-                                                st.text(f"SIREN: {siren}")
-                                            with col3:
-                                                if st.button("✓ Use This", key=f"select_{i}"):
-                                                    st.session_state['_co_check_num'] = siren
-                                                    st.rerun()
-                                    else:
-                                        st.warning(f"No companies found matching '{search_name}'")
-                                except Exception as search_err:
-                                    st.error(f"Search failed: {str(search_err)[:100]}")
-                    else:
-                        st.error(f"❌ Company **{_co_check_num}** not found on Companies House.")
-                        st.info("This company number may not be registered or may be incorrect.")
+                    st.error(f"❌ Company **{_co_check_num}** not found on Companies House.")
+                    st.info("This company number may not be registered or may be incorrect.")
                     st.stop()
                 raise
 
             _v3_co_step_times[0] = _time.time() - _v3_co_step_start; _v3_co_step_start = _time.time()
-            st.html(render_loading_step(2, 5, COMPANY_STEPS[1]["title"], COMPANY_STEPS[1]["desc"], status="active", icon=COMPANY_STEPS[1]["icon"], country="france" if _is_french_company else "uk"))
+            st.html(render_loading_step(2, 5, COMPANY_STEPS[1]["title"], COMPANY_STEPS[1]["desc"], status="active", icon=COMPANY_STEPS[1]["icon"], country="uk"))
 
             # ══════════════════════════════════════════════════════════════
             # PRE-COMPUTED VERDICTS — deterministic, not LLM-calculated
@@ -1620,9 +1524,7 @@ if run_btn and _is_company_mode:
             # ── Build LLM prompt ──────────────────────────────────────────
             _co_data_json = json.dumps(_compact(co_check_data), indent=2, default=str)
 
-            # Determine company ID label for prompt
-            _is_french_check = "INPI" in co_check_data.get("data_source", "") or "French" in co_check_data.get("company_type", "")
-            _company_id_label = "SIREN" if _is_french_check else "Companies House No"
+            _company_id_label = "Companies House No"
 
             _co_prompt = f"""You are a **Senior Payment Underwriter & AML Analyst** writing up a Company Sense-Check for **{co_check_data['company_name']}** ({_company_id_label}. {_co_check_num}).
 
@@ -1636,7 +1538,7 @@ ABSOLUTE RULES (violation = report failure):
 3. Charges (debt/mortgages) are NOT red flags — most companies have them.
 4. Use the pre-computed category ratings in the Risk Matrix table — do not invent your own.
 5. Every claim must be traceable to the data. If info is missing, say "Not available".
-6. {"Do NOT fabricate Companies House links for directors." if not _is_french_check else "Do NOT fabricate INPI or registry links for directors."}
+6. Do NOT fabricate Companies House links for directors.
 7. If any category shows "unknown" it means the search API FAILED. Mark it as "⚠️ UNKNOWN — SYSTEM ERROR (data unavailable due to technical error)" in the table. NEVER say "No matches found" or "No issues detected" for failed searches. Say "Data unavailable due to technical error — screening could not be completed."
 8. CROSS-REFERENCE RULE: Adverse Media and FATF Screening are NOT independent. If Section 7 (Adverse Media) contains verified sanctions hits, Section 8 (FATF Screening) MUST reflect a High FATF risk for Sanctions Violations. These are the SAME risk viewed from two angles. Do NOT report them as conflicting or contradictory data.
 9. RISK SEVERITY RULE: Risk is determined by the MOST SEVERE single flag, NOT the average. If ANY category is 🔴 High/Critical, the Overall Risk cannot be lower than High. One sanctions hit outweighs ten clean categories. The pre-computed verdicts already apply this rule — do not re-average.
@@ -1745,7 +1647,7 @@ IMPORTANT TONE RULE: You are an analyst presenting findings — NOT an authority
             _co_report, _co_cost_info = llm_generate(_co_prompt)
 
             _v3_co_step_times[2] = _time.time() - _v3_co_step_start; _v3_co_step_start = _time.time()
-            st.html(render_loading_step(3, 5, COMPANY_STEPS[2]["title"], COMPANY_STEPS[2]["desc"], status="active", icon=COMPANY_STEPS[2]["icon"], country="france" if _is_french_company else "uk"))
+            st.html(render_loading_step(3, 5, COMPANY_STEPS[2]["title"], COMPANY_STEPS[2]["desc"], status="active", icon=COMPANY_STEPS[2]["icon"], country="uk"))
 
             # Log to intelligence DB
             _co_report_row_id = None
@@ -1805,9 +1707,9 @@ IMPORTANT TONE RULE: You are an analyst presenting findings — NOT an authority
             st.html(render_loading_fact())
 
             _v3_co_step_times[3] = _time.time() - _v3_co_step_start; _v3_co_step_start = _time.time()
-            st.html(render_loading_step(4, 5, COMPANY_STEPS[3]["title"], COMPANY_STEPS[3]["desc"], status="active", icon=COMPANY_STEPS[3]["icon"], country="france" if _is_french_company else "uk"))
+            st.html(render_loading_step(4, 5, COMPANY_STEPS[3]["title"], COMPANY_STEPS[3]["desc"], status="active", icon=COMPANY_STEPS[3]["icon"], country="uk"))
 
-            st.html(render_loading_step(5, 5, COMPANY_STEPS[4]["title"], COMPANY_STEPS[4]["desc"], status="active", icon=COMPANY_STEPS[4]["icon"], country="france" if _is_french_company else "uk"))
+            st.html(render_loading_step(5, 5, COMPANY_STEPS[4]["title"], COMPANY_STEPS[4]["desc"], status="active", icon=COMPANY_STEPS[4]["icon"], country="uk"))
 
             status.update(label="✅ Company Check Complete!", state="complete", expanded=False)
 
@@ -5057,10 +4959,7 @@ if _co_dp and _is_company_mode:
     st.markdown("---")
     st.markdown(f"# 🏢 Company Sense-Check Report: {co_name}")
     
-    # Determine if French or UK company for labeling
-    _is_french_report = "INPI" in co_data.get("data_source", "") or "French" in co_data.get("company_type", "")
-    _co_id_label = "SIREN" if _is_french_report else "Companies House No"
-    st.caption(f"{_co_id_label}: {co_num} · Checked: {co_data.get('checked_at', '')[:10]}")
+    st.caption(f"Companies House No: {co_num} · Checked: {co_data.get('checked_at', '')[:10]}")
 
     # ── Overall risk banner ───────────────────────────────────────────
     _co_overall = co_risk.get("overall_risk", "Unknown")
@@ -5413,224 +5312,105 @@ if _co_dp and _is_company_mode:
 
     # ── TAB: Directors & PSCs ─────────────────────────────────────────
     with co_tab_dir:
-        # Check if French or UK company
-        _is_french_tab = "INPI" in co_data.get("data_source", "") or "French" in co_data.get("company_type", "")
-        
-        if _is_french_tab:
-            # ── FRENCH COMPANY: Show Management Roles with UBO CHAIN ──
-            st.markdown("**Administrateurs, Gérants & Dirigeants**")
-            st.info(
-                "🇫🇷 **Data source**: Management information from INPI registry. "
-                "When a director is a company (legal entity), we trace its directors to find ultimate owners."
-            )
-            
-            # Try to get management roles from French data
-            # First check the new direct "directors" field, then fallback to analysis
-            _mgmt_roles = co_data.get("directors", [])
-            
-            if not _mgmt_roles:
-                # Fallback to old location for compatibility
-                _mgmt_analysis = co_data.get("analysis", {}).get("management_analysis", {})
-                _mgmt_roles = _mgmt_analysis.get("roles", [])
-            
-            if _mgmt_roles:
-                for i, role in enumerate(_mgmt_roles):
-                    _person_type = role.get("person_type", "UNKNOWN")
-                    _is_ubo = role.get("is_ultimate_owner", False)
-                    _company_siren = role.get("company_siren", "")
-                    _company_name = role.get("company_name", "")
-                    
-                    # ─── PHYSICAL PERSON ──────────────────────────────
-                    if _person_type == "INDIVIDU":
-                        _person_name = role.get("name", "Unknown")
-                        _role_name = role.get("role", "—")
-                        _birth_date = role.get("birth_date", "")
-                        _address = role.get("address", "")
-                        _source_badge = " 📋 [JSON]"
-                        
-                        st.markdown(f"**{i+1}. {_person_name}** — {_role_name}{_source_badge}")
-                        
-                        _details = []
-                        if _birth_date:
-                            _details.append(f"Birth: {_birth_date}")
-                        if _address:
-                            _details.append(f"Address: {_address}")
-                        if _details:
-                            st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;{' · '.join(_details)}")
-                    
-                    # ─── LEGAL ENTITY (COMPANY) ───────────────────────
-                    elif _person_type == "Legal Entity":
-                        _role_name = role.get("role", "—")
-                        
-                        st.markdown(
-                            f"**{i+1}. {_company_name}** (SIREN: {_company_siren}) — {_role_name} 🏢"
-                        )
-                        
-                        # ─── Show UBO Chain if available ───
-                        if role.get("has_ubo_info"):
-                            _ubo_chain = role.get("ubo_chain", [])
-                            
-                            if _ubo_chain:
-                                with st.expander(f"👤 **Ultimate Beneficial Owner(s)** — Click to expand", expanded=False):
-                                    st.markdown(
-                                        f"Directors of **{_company_name}** (SIREN {_company_siren}):"
-                                    )
-                                    
-                                    for j, ubo in enumerate(_ubo_chain, 1):
-                                        _ubo_type = ubo.get("person_type", "UNKNOWN")
-                                        
-                                        if _ubo_type == "INDIVIDU":
-                                            _ubo_name = ubo.get("name", "Unknown")
-                                            _ubo_role = ubo.get("role", "—")
-                                            _ubo_birth = ubo.get("birth_date", "")
-                                            _ubo_addr = ubo.get("address", "")
-                                            
-                                            st.markdown(
-                                                f"&nbsp;&nbsp;**{j}. {_ubo_name}** — {_ubo_role} ✅ (Ultimate Owner)"
-                                            )
-                                            
-                                            _ubo_details = []
-                                            if _ubo_birth:
-                                                _ubo_details.append(f"Birth: {_ubo_birth}")
-                                            if _ubo_addr:
-                                                _ubo_details.append(f"Address: {_ubo_addr}")
-                                            if _ubo_details:
-                                                st.markdown(
-                                                    f"&nbsp;&nbsp;&nbsp;&nbsp;{' · '.join(_ubo_details)}"
-                                                )
-                                        
-                                        elif _ubo_type == "Legal Entity":
-                                            _ubo_company = ubo.get("company_name", "Unknown")
-                                            _ubo_siren = ubo.get("company_siren", "")
-                                            _ubo_role = ubo.get("role", "—")
-                                            
-                                            st.markdown(
-                                                f"&nbsp;&nbsp;**{j}. {_ubo_company}** (SIREN: {_ubo_siren}) — {_ubo_role} 🏢"
-                                            )
-                                            
-                                            # Recursion indicator
-                                            if ubo.get("recursion_limit_reached"):
-                                                st.caption(
-                                                    "⚠️ Maximum recursion depth reached - this company's directors not fetched"
-                                                )
-                            else:
-                                st.caption("ℹ️ No beneficial owners found for this legal entity")
-                        
-                        elif role.get("recursion_limit_reached"):
-                            st.caption(
-                                f"⚠️ Could not trace UBO for {_company_name} - max recursion depth reached"
-                            )
-                        else:
-                            st.caption(
-                                f"ℹ️ No UBO information available for {_company_name}"
-                            )
-            else:
-                st.warning(
-                    "⚠️ **No management data available** - INPI did not provide director information. "
-                    "This is common for some company types. You may need to check the official RCS (Registre du Commerce et des Sociétés) record separately. "
-                    "Link: https://www.inpi.fr/services/rcs"
+        st.markdown("**Active Directors / Officers**")
+        _dir_profiles = co_directors.get("directors", [])
+        if _dir_profiles:
+            for i, d in enumerate(_dir_profiles):
+                _d_name = d.get("name", "—")
+                _d_role = d.get("role", "—")
+                _d_nat = d.get("nationality", "—")
+                _d_age = d.get("approx_age") or "—"
+                _d_other = d.get("other_active_appointments", 0)
+                _d_diss = d.get("dissolved_companies", 0)
+                _d_flags = d.get("flags", [])
+                _d_oid = d.get("officer_id", "")
+
+                # Build CH link from officer_id
+                _d_ch_link = ""
+                if _d_oid:
+                    _d_ch_link = f"https://find-and-update.company-information.service.gov.uk/officers/{_d_oid}/appointments"
+
+                # Render each director as a card
+                _flag_badge = f"  ·  ⚠️ {len(_d_flags)} flag(s)" if _d_flags else ""
+                _ch_badge = f"  ·  [View on Companies House]({_d_ch_link})" if _d_ch_link else ""
+                st.markdown(
+                    f"**{i+1}. {_d_name}** — {_d_role}{_ch_badge}{_flag_badge}\n\n"
+                    f"&nbsp;&nbsp;&nbsp;&nbsp;Nationality: {_d_nat} · "
+                    f"Approx Age: {_d_age} · "
+                    f"Other Directorships: {_d_other} · "
+                    f"Dissolved Companies: {_d_diss}"
                 )
+
+                if _d_flags:
+                    for _fl in _d_flags:
+                        st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;- {_fl}")
+
+                # Show other appointments in expander if any
+                _other = d.get("other_appointments_detail", [])
+                if _other:
+                    with st.expander(f"Other appointments for {_d_name} ({len(_other)})", expanded=False):
+                        _oa_rows = [{"Company": a.get("company_name", "—"),
+                                     "Number": a.get("company_number", ""),
+                                     "Status": a.get("company_status", "—"),
+                                     "Role": a.get("officer_role", "—")}
+                                    for a in _other[:10]]
+                        st.dataframe(pd.DataFrame(_oa_rows), use_container_width=True, hide_index=True)
         else:
-            # ── UK COMPANY: Show Directors & PSCs ──
-            st.markdown("**Active Directors / Officers**")
-            _dir_profiles = co_directors.get("directors", [])
-            if _dir_profiles:
-                for i, d in enumerate(_dir_profiles):
-                    _d_name = d.get("name", "—")
-                    _d_role = d.get("role", "—")
-                    _d_nat = d.get("nationality", "—")
-                    _d_age = d.get("approx_age") or "—"
-                    _d_other = d.get("other_active_appointments", 0)
-                    _d_diss = d.get("dissolved_companies", 0)
-                    _d_flags = d.get("flags", [])
-                    _d_oid = d.get("officer_id", "")
+            st.info("No active directors found")
 
-                    # Build CH link from officer_id
-                    _d_ch_link = ""
-                    if _d_oid:
-                        _d_ch_link = f"https://find-and-update.company-information.service.gov.uk/officers/{_d_oid}/appointments"
+        st.markdown("---")
+        st.markdown("**Persons of Significant Control (PSCs)**")
 
-                    # Render each director as a card
-                    _flag_badge = f"  ·  ⚠️ {len(_d_flags)} flag(s)" if _d_flags else ""
-                    _ch_badge = f"  ·  [View on Companies House]({_d_ch_link})" if _d_ch_link else ""
-                    st.markdown(
-                        f"**{i+1}. {_d_name}** — {_d_role}{_ch_badge}{_flag_badge}\n\n"
-                        f"&nbsp;&nbsp;&nbsp;&nbsp;Nationality: {_d_nat} · "
-                        f"Approx Age: {_d_age} · "
-                        f"Other Directorships: {_d_other} · "
-                        f"Dissolved Companies: {_d_diss}"
-                    )
+        # Active / ceased counts
+        _active_pscs_count = co_pscs.get("active_count", 0)
+        _ceased_pscs_count = co_pscs.get("ceased_count", 0)
+        if _active_pscs_count or _ceased_pscs_count:
+            st.caption(
+                f"Active: {_active_pscs_count} · "
+                f"Ceased: {_ceased_pscs_count} · "
+                f"Total on file: {co_pscs.get('psc_count', 0)}"
+            )
 
-                    if _d_flags:
-                        for _fl in _d_flags:
-                            st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;- {_fl}")
+        _psc_details = co_pscs.get("psc_details", [])
+        _active_pscs = [p for p in _psc_details if not p.get("ceased")]
+        _ceased_pscs = [p for p in _psc_details if p.get("ceased")]
 
-                    # Show other appointments in expander if any
-                    _other = d.get("other_appointments_detail", [])
-                    if _other:
-                        with st.expander(f"Other appointments for {_d_name} ({len(_other)})", expanded=False):
-                            _oa_rows = [{"Company": a.get("company_name", "—"),
-                                         "Number": a.get("company_number", ""),
-                                         "Status": a.get("company_status", "—"),
-                                         "Role": a.get("officer_role", "—")}
-                                        for a in _other[:10]]
-                            st.dataframe(pd.DataFrame(_oa_rows), use_container_width=True, hide_index=True)
-            else:
-                st.info("No active directors found")
+        if _active_pscs:
+            st.markdown("**Active PSCs** (current owners / controllers)")
+            _psc_rows = []
+            for p in _active_pscs:
+                _psc_rows.append({
+                    "Name": p.get("name", "—"),
+                    "Nationality": p.get("nationality", "—"),
+                    "Residence": p.get("country_of_residence", "—"),
+                    "Ownership": p.get("ownership_band", "—"),
+                    "Control": ", ".join(p.get("natures_of_control", []))[:80],
+                    "Type": p.get("kind", "—"),
+                    "Flags": len(p.get("flags", [])),
+                })
+            st.dataframe(pd.DataFrame(_psc_rows), use_container_width=True, hide_index=True)
+            for p in _active_pscs:
+                if p.get("flags"):
+                    for _pf in p["flags"]:
+                        st.warning(_pf)
+        elif not _psc_details:
+            st.info("No PSC data available")
+        else:
+            st.info("No active PSCs — all recorded PSCs have been ceased")
 
-            st.markdown("---")
-            st.markdown("**Persons of Significant Control (PSCs)**")
-
-            # Active / ceased counts
-            _active_pscs_count = co_pscs.get("active_count", 0)
-            _ceased_pscs_count = co_pscs.get("ceased_count", 0)
-            if _active_pscs_count or _ceased_pscs_count:
-                st.caption(
-                    f"Active: {_active_pscs_count} · "
-                    f"Ceased: {_ceased_pscs_count} · "
-                    f"Total on file: {co_pscs.get('psc_count', 0)}"
-                )
-
-            _psc_details = co_pscs.get("psc_details", [])
-            _active_pscs = [p for p in _psc_details if not p.get("ceased")]
-            _ceased_pscs = [p for p in _psc_details if p.get("ceased")]
-
-            if _active_pscs:
-                st.markdown("**Active PSCs** (current owners / controllers)")
-                _psc_rows = []
-                for p in _active_pscs:
-                    _psc_rows.append({
+        if _ceased_pscs:
+            with st.expander(f"📜 Ceased PSCs ({len(_ceased_pscs)}) — no longer current", expanded=False):
+                _cpsc_rows = []
+                for p in _ceased_pscs:
+                    _cpsc_rows.append({
                         "Name": p.get("name", "—"),
                         "Nationality": p.get("nationality", "—"),
-                        "Residence": p.get("country_of_residence", "—"),
+                        "Ceased On": p.get("ceased_on", "—"),
                         "Ownership": p.get("ownership_band", "—"),
-                        "Control": ", ".join(p.get("natures_of_control", []))[:80],
                         "Type": p.get("kind", "—"),
-                        "Flags": len(p.get("flags", [])),
                     })
-                st.dataframe(pd.DataFrame(_psc_rows), use_container_width=True, hide_index=True)
-                for p in _active_pscs:
-                    if p.get("flags"):
-                        for _pf in p["flags"]:
-                            st.warning(_pf)
-            elif not _psc_details:
-                st.info("No PSC data available")
-            else:
-                st.info("No active PSCs — all recorded PSCs have been ceased")
-
-            if _ceased_pscs:
-                with st.expander(f"📜 Ceased PSCs ({len(_ceased_pscs)}) — no longer current", expanded=False):
-                    _cpsc_rows = []
-                    for p in _ceased_pscs:
-                        _cpsc_rows.append({
-                            "Name": p.get("name", "—"),
-                            "Nationality": p.get("nationality", "—"),
-                            "Ceased On": p.get("ceased_on", "—"),
-                            "Ownership": p.get("ownership_band", "—"),
-                            "Type": p.get("kind", "—"),
-                        })
-                    st.dataframe(pd.DataFrame(_cpsc_rows), use_container_width=True, hide_index=True)
-                st.caption("Ceased PSCs are excluded from risk calculations and ownership totals.")
+                st.dataframe(pd.DataFrame(_cpsc_rows), use_container_width=True, hide_index=True)
+            st.caption("Ceased PSCs are excluded from risk calculations and ownership totals.")
 
     # ── TAB 3: Website Credibility Assessment ──────────────────────────
     with co_tab_web:
