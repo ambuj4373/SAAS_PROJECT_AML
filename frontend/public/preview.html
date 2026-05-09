@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>probitas — Confirm entity</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  .preview-wrap { padding: 64px 0 96px; }
+  .breadcrumb { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--grey); font-family: var(--mono); margin-bottom: 32px; }
+  .breadcrumb a { color: var(--grey); }
+  .breadcrumb a:hover { color: var(--ink); }
+  .breadcrumb .sep { color: var(--grey-3); }
+
+  .pv-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 56px; align-items: start; }
+
+  .pv-head { display: flex; flex-direction: column; gap: 8px; padding-bottom: 28px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+  .pv-head__meta { font-family: var(--mono); font-size: 12px; color: var(--grey); display: flex; gap: 12px; flex-wrap: wrap; }
+  .pv-head h1 { font-family: var(--serif); font-weight: 600; font-size: 44px; line-height: 1.05; letter-spacing: -0.015em; margin: 8px 0 4px; }
+  .pv-head__sub { color: var(--grey); font-size: 15px; }
+  .pv-head__pills { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+  .pv-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .pv-table tr { border-bottom: 1px solid var(--line); }
+  .pv-table tr:last-child { border-bottom: none; }
+  .pv-table th, .pv-table td { padding: 16px 0; text-align: left; vertical-align: top; }
+  .pv-table th { color: var(--grey); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; width: 200px; }
+  .pv-table td { color: var(--ink); }
+  .pv-table td .mono { font-size: 13px; }
+  .pv-table td.num { font-family: var(--mono); }
+
+  .pv-trustees { margin-top: 32px; padding: 24px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+  .pv-trustees h4 { font-family: var(--ui); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey); margin: 0 0 16px; }
+  .pv-trustees__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pv-chip { display: inline-flex; padding: 5px 11px; border-radius: 4px; background: white; border: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+
+  .pv-cta { position: sticky; top: 100px; border: 1px solid var(--ink); border-radius: 12px; padding: 32px; background: white; }
+  .pv-cta__price { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .pv-cta__price-big { font-family: var(--display); font-weight: 600; font-size: 44px; line-height: 1; letter-spacing: -0.025em; }
+  .pv-cta__price-unit { font-size: 14px; color: var(--grey); }
+  .pv-cta__sub { color: var(--grey); font-size: 14px; line-height: 1.55; margin: 0 0 24px; }
+  .pv-cta .btn { width: 100%; }
+  .pv-cta__list { list-style: none; padding: 0; margin: 24px 0 0; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; color: var(--ink-2); }
+  .pv-cta__list li { display: flex; gap: 10px; align-items: flex-start; }
+  .pv-cta__list svg { color: var(--indigo); flex-shrink: 0; margin-top: 3px; }
+
+  .pv-disclaim {
+    margin-top: 16px; padding: 12px 14px; background: var(--paper);
+    border-left: 2px solid var(--grey-3); font-size: 12.5px;
+    color: var(--grey); line-height: 1.55;
+  }
+
+  .pv-secondary { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 20px; font-size: 13px; color: var(--grey); }
+
+  .pv-bypass-link {
+    display: inline-block; margin-top: 14px; font-size: 12.5px;
+    color: var(--grey); text-decoration: none; border-bottom: 1px dashed var(--grey-3);
+    padding-bottom: 1px;
+  }
+  .pv-bypass-link:hover { color: var(--indigo); border-bottom-color: var(--indigo); }
+
+  .pv-loading { color: var(--grey); font-style: italic; padding: 24px 0; }
+  .pv-error {
+    background: var(--risk-high-bg); border: 1px solid rgba(239,68,68,0.3);
+    color: #B91C1C; padding: 16px 20px; border-radius: 8px;
+    font-size: 14px; margin: 24px 0;
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav__inner">
+    <a href="index.html" class="wordmark"><span class="wordmark__name">probitas</span></a>
+    <div class="topnav__links">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="index.html#faq">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<div class="preview-wrap">
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="index.html">Search</a>
+      <span class="sep">/</span>
+      <span id="bc-type">Charity</span>
+      <span class="sep">/</span>
+      <span class="mono" id="bc-id">220949</span>
+    </nav>
+
+    <div id="pv-loading-state" class="pv-loading">Reading public registry data…</div>
+    <div id="pv-error-state" class="pv-error" style="display:none;"></div>
+
+    <div class="pv-grid" id="pv-content" style="display:none;">
+      <div>
+        <div class="pv-head">
+          <div class="pv-head__meta">
+            <span id="pv-type-meta">CHARITY · 220949</span>
+            <span>·</span>
+            <span id="pv-status-meta">Registered status</span>
+          </div>
+          <h1 id="pv-name">Loading…</h1>
+          <p class="pv-head__sub">Public registry data, read live just now from <span id="pv-source">the source authority</span>. Confirm this is the correct entity before generating the full report.</p>
+          <div class="pv-head__pills" id="pv-pills"></div>
+        </div>
+
+        <table class="pv-table">
+          <tbody id="pv-table-body"></tbody>
+        </table>
+
+        <div class="pv-trustees">
+          <h4 id="pv-people-heading">People on register</h4>
+          <div class="pv-trustees__chips" id="pv-people-chips"></div>
+          <p class="mono" id="pv-people-note" style="font-size:11.5px; color:var(--grey); margin: 14px 0 0;">All named individuals are screened against OFSI, OFAC, UN in the full report.</p>
+        </div>
+      </div>
+
+      <aside>
+        <div class="pv-cta">
+          <span class="kicker">Generate full report</span>
+          <div class="pv-cta__price" style="margin-top:14px;">
+            <span class="pv-cta__price-big">£15</span>
+            <span class="pv-cta__price-unit">single report</span>
+          </div>
+          <p class="pv-cta__sub">25 pages, evidence-anchored, in your inbox in about 90 seconds. No subscription.</p>
+          <button class="btn btn-primary btn-lg" id="cta-pay" type="button">
+            Pay £15 &amp; generate report →
+          </button>
+          <ul class="pv-cta__list">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>Sanctions screening across OFSI, OFAC, UN</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>0–100 risk score with 6 category bars</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>Verification mark — every claim checked</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>PDF + permanent link, valid 90 days</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>Re-run free if anything's wrong</li>
+          </ul>
+          <a href="#" class="pv-bypass-link" id="bypass-trigger">Have an admin code?</a>
+          <div class="pv-disclaim">
+            This preview shows public registry data. It is <b>not</b> a Probitas report and does not include sanctions screening, adverse-media review, or the risk score.
+          </div>
+          <div class="pv-secondary">
+            Wrong entity? <a href="index.html">Back to search →</a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- Admin bypass modal -->
+<div class="modal-backdrop" id="bypass-modal">
+  <div class="modal">
+    <h3>Run with admin code</h3>
+    <p>Skip checkout and generate the report directly. Used for admin/demo runs.</p>
+    <input type="password" id="bypass-input" placeholder="Enter admin code" autocomplete="off" autofocus />
+    <div class="modal__error" id="bypass-error"></div>
+    <div class="modal__actions">
+      <button class="btn btn-ghost" type="button" id="bypass-cancel">Cancel</button>
+      <button class="btn btn-primary" type="button" id="bypass-submit">Generate report →</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__bottom" style="border-top:none; padding-top:0;">
+      <span>© 2026 Probitas Research Ltd</span>
+      <span>probitas.co.uk</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const type = (params.get('type') || 'charity').toLowerCase();
+const id = params.get('id') || (type === 'company' ? '09238471' : '220949');
+
+document.getElementById('bc-type').textContent = type.charAt(0).toUpperCase() + type.slice(1);
+document.getElementById('bc-id').textContent = id;
+
+// ----- Load preview from API ----------------------------------
+async function loadPreview() {
+  try {
+    const res = await fetch(`/api/preview/${type}/${encodeURIComponent(id)}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Lookup failed (HTTP ${res.status})`);
+    }
+    const data = await res.json();
+    renderPreview(data);
+  } catch (e) {
+    document.getElementById('pv-loading-state').style.display = 'none';
+    const errEl = document.getElementById('pv-error-state');
+    errEl.style.display = 'block';
+    errEl.innerHTML = `<b>Could not load entity ${id}.</b><br/>${e.message}<br/><br/><a href="index.html">← Back to search</a>`;
+  }
+}
+
+function renderPreview(data) {
+  document.getElementById('pv-loading-state').style.display = 'none';
+  document.getElementById('pv-content').style.display = 'grid';
+
+  document.getElementById('pv-name').textContent = data.entity_name || 'Unknown';
+  document.getElementById('pv-type-meta').textContent =
+    `${type.toUpperCase()} · ${id}`;
+  document.getElementById('pv-status-meta').textContent = data.status_meta || '';
+  document.getElementById('pv-source').textContent =
+    type === 'company' ? 'Companies House' : 'the Charity Commission API';
+
+  // Pills
+  const pillsEl = document.getElementById('pv-pills');
+  pillsEl.innerHTML = '';
+  if (data.is_active) {
+    pillsEl.insertAdjacentHTML('beforeend',
+      `<span class="pill pill--low">Active</span>`);
+  }
+  (data.tags || []).forEach(t => {
+    pillsEl.insertAdjacentHTML('beforeend',
+      `<span class="pill pill--ghost">${escape(t)}</span>`);
+  });
+
+  // Table rows
+  const tbody = document.getElementById('pv-table-body');
+  tbody.innerHTML = (data.rows || []).map(r =>
+    `<tr><th>${escape(r[0])}</th><td>${r[1]}</td></tr>`
+  ).join('');
+
+  // People (trustees / directors)
+  document.getElementById('pv-people-heading').textContent =
+    type === 'company' ? 'Directors & PSC on register' : 'Trustees on register';
+  document.getElementById('pv-people-note').textContent =
+    type === 'company'
+      ? 'The director and any PSC are screened against OFSI, OFAC, UN in the full report.'
+      : 'All trustees are screened against OFSI, OFAC, UN in the full report.';
+  const chipsEl = document.getElementById('pv-people-chips');
+  chipsEl.innerHTML = (data.people || []).map(p =>
+    `<span class="pv-chip">${escape(p)}</span>`
+  ).join('');
+  if (!data.people || data.people.length === 0) {
+    chipsEl.innerHTML = '<span class="pv-chip" style="color:var(--grey);">No named individuals on the public register</span>';
+  }
+}
+
+function escape(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+// ----- Pay path (Stripe stub) ---------------------------------
+document.getElementById('cta-pay').addEventListener('click', () => {
+  // Stripe Checkout will be wired in next session.
+  alert('Stripe Checkout is being wired up next session. For now, use the "Have an admin code?" link below to run the report.');
+});
+
+// ----- Admin bypass modal -------------------------------------
+const modal = document.getElementById('bypass-modal');
+const input = document.getElementById('bypass-input');
+const errorEl = document.getElementById('bypass-error');
+
+document.getElementById('bypass-trigger').addEventListener('click', (e) => {
+  e.preventDefault();
+  modal.dataset.open = 'true';
+  errorEl.textContent = '';
+  input.value = '';
+  setTimeout(() => input.focus(), 50);
+});
+document.getElementById('bypass-cancel').addEventListener('click', () => {
+  modal.dataset.open = 'false';
+});
+modal.addEventListener('click', (e) => {
+  if (e.target === modal) modal.dataset.open = 'false';
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') modal.dataset.open = 'false';
+  if (e.key === 'Enter' && modal.dataset.open === 'true') submitBypass();
+});
+document.getElementById('bypass-submit').addEventListener('click', submitBypass);
+
+async function submitBypass() {
+  const code = input.value.trim();
+  if (!code) {
+    errorEl.textContent = 'Enter an admin code.';
+    return;
+  }
+  errorEl.textContent = '';
+  document.getElementById('bypass-submit').disabled = true;
+  document.getElementById('bypass-submit').textContent = 'Starting run…';
+
+  try {
+    const res = await fetch('/api/runs/start', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ entity_type: type, entity_id: id, bypass_code: code })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Run could not start');
+    }
+    // Off to the live progress page
+    window.location.href = `progress.html?run_id=${encodeURIComponent(data.run_id)}`;
+  } catch (e) {
+    errorEl.textContent = e.message;
+    document.getElementById('bypass-submit').disabled = false;
+    document.getElementById('bypass-submit').textContent = 'Generate report →';
+  }
+}
+
+// ----- Kick off -----------------------------------------------
+loadPreview();
+</script>
+</body>
+</html>

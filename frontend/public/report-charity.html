@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Probitas Report</title>
+<link rel="stylesheet" href="styles.css" />
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  body { background: var(--white); }
+  .rv-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr) 320px; gap: 64px; padding: 56px 0 96px; align-items: start; }
+
+  .toc { position: sticky; top: 100px; }
+  .toc__kicker { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey); margin: 0 0 14px; }
+  .toc__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; border-left: 1px solid var(--line); }
+  .toc__list a {
+    display: block; padding: 7px 14px; margin-left: -1px;
+    border-left: 1px solid transparent; color: var(--grey); font-size: 13.5px; line-height: 1.4;
+    text-decoration: none; transition: color 120ms ease, border-color 120ms ease;
+  }
+  .toc__list a:hover { color: var(--ink); }
+  .toc__list a.is-active { color: var(--ink); border-left-color: var(--indigo); font-weight: 500; }
+  .toc__list .num { font-family: var(--mono); font-size: 11px; color: var(--grey-2); margin-right: 6px; }
+  .toc__foot { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11px; color: var(--grey); line-height: 1.6; }
+  .toc__foot a { color: var(--indigo); }
+
+  .report__head { padding-bottom: 40px; border-bottom: 1px solid var(--line); margin-bottom: 48px; }
+  .report__crumb { font-family: var(--mono); font-size: 11.5px; color: var(--grey); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 18px; display: flex; gap: 10px; align-items: center; }
+  .report__crumb .sep { color: var(--grey-3); }
+  .report__title { font-family: var(--serif); font-weight: 600; font-size: 56px; line-height: 1.04; letter-spacing: -0.018em; color: var(--ink); margin: 0; }
+  .report__sub { font-family: var(--serif); font-size: 19px; line-height: 1.5; color: var(--grey); font-style: italic; max-width: 56ch; margin: 18px 0 0; }
+  .report__meta { font-family: var(--mono); font-size: 12px; color: var(--grey); margin-top: 24px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .report__meta b { color: var(--ink); font-weight: 500; }
+
+  .rv-hero { margin-bottom: 56px; padding: 36px 40px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; }
+  .rv-hero__top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
+
+  .narr { font-family: var(--serif); font-size: 17.5px; line-height: 1.65; color: var(--ink-2); max-width: 64ch; }
+  .narr h1, .narr h2 {
+    font-family: var(--display); font-weight: 600; font-size: 13px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--grey);
+    margin: 56px 0 4px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  }
+  .narr h1:first-child, .narr h2:first-child { margin-top: 0; }
+  .narr h3 {
+    font-family: var(--serif); font-weight: 600; font-size: 30px;
+    letter-spacing: -0.015em; line-height: 1.2; color: var(--ink); margin: 12px 0 20px;
+  }
+  .narr h4 {
+    font-family: var(--display); font-weight: 600; font-size: 16px;
+    letter-spacing: -0.01em; color: var(--ink); margin: 32px 0 8px;
+  }
+  .narr p { margin: 0 0 18px; }
+  .narr ul, .narr ol { margin: 0 0 22px; padding-left: 22px; }
+  .narr ul li, .narr ol li { margin-bottom: 8px; }
+  .narr blockquote { margin: 22px 0; padding-left: 24px; border-left: 2px solid var(--indigo); font-style: italic; color: var(--ink); }
+  .narr a { color: var(--indigo-deep); text-decoration: none; border-bottom: 1px solid var(--indigo-line); }
+  .narr a:hover { border-bottom-color: var(--indigo); }
+  .narr table { width: 100%; border-collapse: collapse; font-family: var(--ui); font-size: 13.5px; margin: 22px 0; }
+  .narr th, .narr td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .narr thead th {
+    font-family: var(--ui); font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--grey); border-bottom: 1px solid var(--ink);
+  }
+  .narr tbody tr:hover { background: var(--paper); }
+  .narr code {
+    font-family: var(--mono); font-size: 12.5px; padding: 1px 6px;
+    background: var(--indigo-tint); color: var(--indigo-deep); border-radius: 3px;
+  }
+
+  .rail { position: sticky; top: 100px; display: flex; flex-direction: column; gap: 16px; }
+  .rail__card { border: 1px solid var(--line); border-radius: 10px; background: white; overflow: hidden; }
+  .rail__head { padding: 14px 18px 0; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey); }
+  .rail__body { padding: 14px 18px 18px; }
+  .rail__num { font-family: var(--display); font-weight: 600; font-size: 38px; line-height: 1; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+  .rail__row { display: flex; justify-content: space-between; padding: 10px 18px; font-size: 13px; border-top: 1px solid var(--line); color: var(--ink-2); }
+  .rail__row .v { font-family: var(--mono); color: var(--grey); font-size: 12.5px; }
+  .rail__btn { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--line); color: var(--ink); font-size: 13.5px; font-weight: 500; cursor: pointer; background: white; text-decoration: none; }
+  .rail__btn:hover { background: var(--paper); text-decoration: none; }
+  .rail__btn svg { color: var(--indigo); }
+
+  .drawer {
+    position: fixed; inset: auto 0 0 0; background: white; border-top: 1px solid var(--line);
+    box-shadow: 0 -16px 32px -8px rgba(26,29,41,0.12);
+    transform: translateY(100%); transition: transform 280ms ease;
+    z-index: 100; max-height: 70vh; overflow-y: auto;
+  }
+  .drawer[data-open="true"] { transform: translateY(0); }
+  .drawer__head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 32px; border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; background: white;
+  }
+  .drawer__title { font-family: var(--display); font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .drawer__sub { font-family: var(--mono); font-size: 12px; color: var(--grey); margin-left: 10px; }
+  .drawer__close {
+    width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; color: var(--ink); background: white;
+  }
+  .drawer__close:hover { background: var(--paper); }
+  .drawer__body { padding: 24px 32px 48px; max-width: 880px; margin: 0 auto; }
+  .claim {
+    padding: 18px 0; border-bottom: 1px solid var(--line);
+    display: grid; grid-template-columns: 100px 1fr 80px; gap: 24px; align-items: start;
+  }
+  .claim:last-child { border-bottom: none; }
+  .claim__sev { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+  .claim__sev--unsupported { color: var(--risk-high); }
+  .claim__sev--uncertain { color: var(--risk-med); }
+  .claim__text { font-family: var(--serif); font-size: 15.5px; line-height: 1.55; color: var(--ink); }
+  .claim__note { font-size: 13px; color: var(--grey); margin-top: 6px; line-height: 1.5; }
+  .claim__conf { font-family: var(--mono); font-size: 13px; color: var(--ink); text-align: right; }
+
+  .rule-row { display: grid; grid-template-columns: 1fr 80px; gap: 24px; padding: 12px 0; border-bottom: 1px solid var(--line); align-items: center; }
+  .rule-row:last-child { border-bottom: none; }
+  .rule-row__name { font-family: var(--mono); font-size: 13px; color: var(--ink); }
+  .rule-row__status { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; text-align: right; color: var(--risk-low); }
+
+  .end-rule { margin: 56px 0 0; text-align: center; color: var(--grey-3); font-family: var(--mono); letter-spacing: 0.5em; font-size: 12px; }
+
+  .rv-loading { color: var(--grey); padding: 80px 0; text-align: center; font-style: italic; }
+  .rv-error { background: var(--risk-high-bg); border: 1px solid rgba(239,68,68,0.3); color: #B91C1C; padding: 24px; border-radius: 8px; margin: 40px 0; font-size: 14px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav__inner">
+    <a href="index.html" class="wordmark"><span class="wordmark__name">probitas</span></a>
+    <div class="topnav__links">
+      <span class="mono" style="color:var(--grey); font-size:12px;">Run <span id="run-id-label">—</span></span>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="rv-loading" id="rv-loading">Loading report…</div>
+  <div class="rv-error" id="rv-error" style="display:none;"></div>
+
+  <div class="rv-grid" id="rv-content" style="display:none;">
+
+    <aside class="toc">
+      <div class="toc__kicker">Contents</div>
+      <ul class="toc__list" id="toc"></ul>
+      <div class="toc__foot" id="toc-foot"></div>
+    </aside>
+
+    <main>
+      <header class="report__head">
+        <div class="report__crumb">
+          <span>Probitas Report</span><span class="sep">/</span>
+          <span id="rep-type">Charity</span><span class="sep">/</span>
+          <span class="mono" id="rep-id">—</span>
+        </div>
+        <h1 class="report__title" id="rep-title">—</h1>
+        <p class="report__sub">A research dossier prepared from public registry data, sanctions screening across OFSI, OFAC and UN consolidated lists, and adverse-media review.</p>
+        <div class="report__meta" id="rep-meta"></div>
+      </header>
+
+      <section class="rv-hero">
+        <div class="rv-hero__top">
+          <div class="risk-hero">
+            <div class="risk-hero__score">
+              <div class="risk-hero__num" id="risk-num">—</div>
+              <div class="col gap-12">
+                <div class="risk-hero__denom">/ 100</div>
+                <div class="risk-hero__label">Overall risk</div>
+                <div class="risk-hero__pill" id="risk-pill">—</div>
+              </div>
+            </div>
+            <div class="risk-hero__divider"></div>
+            <div>
+              <div class="kicker" style="margin-bottom:18px;">Category breakdown</div>
+              <div class="cats" id="cats"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:14px; padding-top:24px; border-top:1px solid var(--line); flex-wrap: wrap;">
+          <button class="vbadge" type="button" data-drawer="claims" id="vbadge-verif">
+            <div class="vbadge__top">Verification</div>
+            <div class="vbadge__main" id="verif-main">—</div>
+            <div class="vbadge__sub" id="verif-sub">—</div>
+          </button>
+          <button class="vbadge" type="button" data-drawer="rules" id="vbadge-rules">
+            <div class="vbadge__top">Narrative checks</div>
+            <div class="vbadge__main" id="rules-main">—</div>
+            <div class="vbadge__sub" id="rules-sub">—</div>
+          </button>
+          <button class="vbadge" type="button" tabindex="-1" style="cursor:default;">
+            <div class="vbadge__top">Sanctions</div>
+            <div class="vbadge__main" id="sanc-main">—</div>
+            <div class="vbadge__sub" id="sanc-sub">OFSI · OFAC · UN</div>
+          </button>
+        </div>
+      </section>
+
+      <article class="narr" id="narrative"></article>
+      <div class="end-rule">— END OF REPORT —</div>
+    </main>
+
+    <aside class="rail">
+      <div class="rail__card">
+        <div class="rail__head" style="padding-bottom:8px;">Risk score</div>
+        <div class="rail__body" style="display:flex; align-items:flex-end; gap:10px; padding-top:0;">
+          <span class="rail__num" id="rail-num">—</span>
+          <span class="mono" style="color:var(--grey); font-size:11.5px; padding-bottom:6px;">/ 100</span>
+          <span class="risk-hero__pill" id="rail-pill" style="margin-left:auto; height:24px; padding: 0 10px; font-size:11px;">—</span>
+        </div>
+        <div class="rail__row"><span>Verification</span><span class="v" id="rail-verif">—</span></div>
+        <div class="rail__row"><span>Sanctions hits</span><span class="v" id="rail-sanc">—</span></div>
+        <div class="rail__row"><span>Narrative checks</span><span class="v" id="rail-checks">—</span></div>
+      </div>
+
+      <div class="rail__card">
+        <a class="rail__btn" href="#" id="dl-pdf">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Download PDF (next session)
+        </a>
+        <a class="rail__btn" href="#" id="email-copy">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="m22 6-10 7L2 6"/></svg>
+          Email me a copy (next session)
+        </a>
+        <a class="rail__btn" href="index.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 19-7-7 7-7M5 12h14"/></svg>
+          New report
+        </a>
+      </div>
+
+      <div class="rail__card">
+        <div class="rail__head">Run</div>
+        <div class="rail__body" style="font-family:var(--mono); font-size:11.5px; color:var(--grey); line-height:1.7; padding-top:6px;" id="rail-run-info">—</div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="drawer" id="drawer-claims">
+  <div class="drawer__head">
+    <div><span class="drawer__title">Claim verification</span><span class="drawer__sub" id="claims-summary">—</span></div>
+    <button class="drawer__close" data-close="claims"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="drawer__body" id="claims-body"></div>
+</div>
+
+<div class="drawer" id="drawer-rules">
+  <div class="drawer__head">
+    <div><span class="drawer__title">Deterministic narrative checks</span><span class="drawer__sub" id="rules-summary">—</span></div>
+    <button class="drawer__close" data-close="rules"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="drawer__body" id="rules-body"></div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const runId = params.get('run_id');
+
+if (!runId) {
+  document.getElementById('rv-loading').style.display = 'none';
+  const errEl = document.getElementById('rv-error');
+  errEl.style.display = 'block';
+  errEl.innerHTML = '<b>No run_id provided.</b><br/>This page renders a generated report. Start one from the <a href="index.html">search page</a>.';
+} else {
+  document.getElementById('run-id-label').textContent = runId;
+  document.getElementById('rep-id').textContent = runId;
+  loadReport();
+}
+
+function escape(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function levelClass(level) {
+  return 'risk-hero__pill--' + (level || 'low').toLowerCase().replace(/[^a-z]/g,'').slice(0, 4);
+}
+
+function fillClass(score) {
+  const s = Number(score) || 0;
+  if (s >= 65) return 'cat__fill--crit';
+  if (s >= 40) return 'cat__fill--high';
+  if (s >= 20) return 'cat__fill--med';
+  return 'cat__fill--low';
+}
+
+async function loadReport() {
+  try {
+    const res = await fetch(`/api/runs/${encodeURIComponent(runId)}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+    const bundle = await res.json();
+    render(bundle);
+  } catch (e) {
+    document.getElementById('rv-loading').style.display = 'none';
+    const errEl = document.getElementById('rv-error');
+    errEl.style.display = 'block';
+    errEl.innerHTML = `<b>Could not load report ${runId}.</b><br/>${escape(e.message)}<br/><br/><a href="index.html">← New search</a>`;
+  }
+}
+
+function render(bundle) {
+  document.getElementById('rv-loading').style.display = 'none';
+  document.getElementById('rv-content').style.display = 'grid';
+
+  // Header
+  const isCompany = !!bundle.company_number;
+  document.getElementById('rep-type').textContent = isCompany ? 'Company' : 'Charity';
+  document.getElementById('rep-id').textContent = bundle.charity_number || bundle.company_number || runId;
+  document.getElementById('rep-title').textContent = bundle.entity_name || 'Unknown entity';
+
+  // Meta
+  const cost = (bundle.cost_info && bundle.cost_info.cost_usd) || 0;
+  const model = (bundle.cost_info && bundle.cost_info.model) || '—';
+  const total_s = bundle.timings ? Object.values(bundle.timings).reduce((a, b) => a + (Number(b) || 0), 0) : 0;
+  document.getElementById('rep-meta').innerHTML = `
+    <span><b>Generated</b> ${escape(bundle.generated_at || new Date().toISOString().slice(0, 19).replace('T', ' ') + ' UTC')}</span>
+    <span>·</span>
+    <span><b>Run</b> ${escape(runId)}</span>
+    <span>·</span>
+    <span><b>Read time</b> ${total_s.toFixed(1)}s</span>
+    <span>·</span>
+    <span><b>Cost</b> $${cost.toFixed(3)}</span>
+  `;
+
+  // Risk score
+  const rs = bundle.state?.risk_score || {};
+  const score = rs.overall_score ?? 0;
+  const level = (rs.overall_level || 'Low').toString();
+  document.getElementById('risk-num').textContent = Math.round(score);
+  document.getElementById('rail-num').textContent = Math.round(score);
+
+  const pill = document.getElementById('risk-pill');
+  pill.textContent = level;
+  pill.className = 'risk-hero__pill ' + levelClass(level);
+
+  const railPill = document.getElementById('rail-pill');
+  railPill.textContent = level;
+  railPill.className = 'risk-hero__pill ' + levelClass(level);
+
+  // Categories
+  const cats = rs.categories || [];
+  document.getElementById('cats').innerHTML = cats.map(c => {
+    const s = Number(c.score) || 0;
+    return `
+      <div class="cat">
+        <span class="cat__name">${escape(c.name)}</span>
+        <div class="cat__track"><div class="cat__fill ${fillClass(s)}" style="width:${Math.min(100, s)}%"></div></div>
+        <span class="cat__num">${Math.round(s)}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Verification badge
+  const v = bundle.verification || {};
+  const reliability = (v.overall_reliability || 0);
+  const reliPct = Math.round(reliability * 100);
+  const reliLabel = v.reliability_label || (reliPct >= 85 ? 'High' : reliPct >= 65 ? 'Good' : reliPct >= 45 ? 'Moderate' : 'Low');
+  document.getElementById('verif-main').innerHTML = `${escape(reliLabel)} · ${reliPct}<em>%</em>`;
+  document.getElementById('verif-sub').textContent = `${v.claims_supported || 0} OF ${v.claims_checked || 0} CLAIMS BACKED`;
+  document.getElementById('rail-verif').textContent = `${escape(reliLabel)} · ${reliPct}%`;
+
+  // Narrative checks badge
+  const nc = bundle.narrative_check || {};
+  document.getElementById('rules-main').innerHTML = `<em>${nc.critical_count || 0}</em> critical · <em>${nc.warning_count || 0}</em> warnings`;
+  document.getElementById('rules-sub').textContent = `${(nc.rules_run || []).length} RULES RUN`;
+  document.getElementById('rail-checks').textContent = `${nc.critical_count || 0} crit · ${nc.warning_count || 0} warn`;
+
+  // Sanctions badge
+  const ss = bundle.state?.sanctions_screening || {};
+  const entityHits = (ss.entity || []).length;
+  let trusteeHits = 0;
+  if (ss.trustees) Object.values(ss.trustees).forEach(arr => trusteeHits += (arr || []).length);
+  const totalHits = entityHits + trusteeHits;
+  const subjects = 1 + (bundle.state?.trustees || []).length;
+  document.getElementById('sanc-main').innerHTML = `<em>${totalHits}</em> ${totalHits === 1 ? 'hit' : 'hits'}`;
+  document.getElementById('sanc-sub').textContent = `OFSI · OFAC · UN · ${subjects} SUBJECT${subjects === 1 ? '' : 'S'}`;
+  document.getElementById('rail-sanc').textContent = `${totalHits} / ${subjects} subjects`;
+
+  // Narrative
+  const md = bundle.narrative_report || '';
+  marked.setOptions({ gfm: true, breaks: false });
+  document.getElementById('narrative').innerHTML = marked.parse(md);
+
+  // TOC from h2 headings in narrative
+  const headings = document.querySelectorAll('#narrative h1, #narrative h2');
+  const toc = document.getElementById('toc');
+  toc.innerHTML = Array.from(headings).map((h, i) => {
+    if (!h.id) h.id = `sec-${i + 1}`;
+    return `<li><a href="#${h.id}" data-sec="${h.id}"><span class="num">${String(i + 1).padStart(2, '0')}</span>${escape(h.textContent)}</a></li>`;
+  }).join('');
+
+  document.getElementById('toc-foot').innerHTML = `
+    Run · ${escape(runId)}<br/>
+    Reading time · ~${Math.max(5, Math.ceil((md.length / 1500)))} min<br/>
+    <a href="index.html" style="display:inline-block;margin-top:10px;">New search →</a>
+  `;
+
+  // Rail run info
+  document.getElementById('rail-run-info').innerHTML = `
+    run · ${escape(runId)}<br/>
+    model · ${escape(model)}<br/>
+    cost · $${cost.toFixed(3)}<br/>
+    pipeline · ${total_s.toFixed(1)}s
+  `;
+
+  // Claims drawer
+  const allClaims = [...(v.unsupported_claims || []), ...(v.uncertain_claims || [])];
+  document.getElementById('claims-summary').textContent =
+    `${v.claims_supported || 0} supported · ${v.claims_uncertain || 0} uncertain · ${v.claims_unsupported || 0} unsupported`;
+  if (allClaims.length === 0) {
+    document.getElementById('claims-body').innerHTML =
+      '<p style="color:var(--grey);">No unsupported or uncertain claims to surface.</p>';
+  } else {
+    document.getElementById('claims-body').innerHTML = allClaims.map(c => {
+      const sev = c.supported === false ? 'unsupported' : 'uncertain';
+      const conf = c.confidence != null ? Math.round(c.confidence * 100) + '%' : '—';
+      return `
+        <div class="claim">
+          <span class="claim__sev claim__sev--${sev}">${sev}</span>
+          <div>
+            <div class="claim__text">${escape(c.claim || '')}</div>
+            <div class="claim__note">${escape(c.note || c.evidence_ref || '')}</div>
+          </div>
+          <span class="claim__conf">conf · ${conf}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Rules drawer
+  const issues = nc.issues || [];
+  const rulesRun = nc.rules_run || [];
+  document.getElementById('rules-summary').textContent =
+    `${rulesRun.length} rules run · ${(rulesRun.length - issues.length)} passed · ${nc.critical_count || 0} critical · ${nc.warning_count || 0} warnings`;
+  document.getElementById('rules-body').innerHTML = `
+    <p style="color:var(--grey); font-size:14px; line-height:1.6; max-width:64ch; margin: 0 0 28px;">
+      Before the report is released, the narrative is run through a deterministic rule set.
+      ${issues.length === 0 ? 'All rules passed on this run.' : 'See flagged rules below.'}
+    </p>
+    ${rulesRun.map(rule => {
+      const issue = issues.find(i => i.rule === rule);
+      const status = issue ? issue.severity.toUpperCase() : 'PASS';
+      const colour = issue ? (issue.severity === 'critical' ? 'var(--risk-high)' : 'var(--risk-med)') : 'var(--risk-low)';
+      return `
+        <div class="rule-row">
+          <div class="rule-row__name">${escape(rule)}</div>
+          <div class="rule-row__status" style="color:${colour}">${status}</div>
+        </div>
+        ${issue ? `<div style="font-family:var(--ui); font-size:13px; color:var(--grey); padding-bottom:12px; line-height:1.5;">${escape(issue.detail || '')}</div>` : ''}
+      `;
+    }).join('')}
+  `;
+
+  // Drawer behaviour
+  document.querySelectorAll('[data-drawer]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('drawer-' + btn.dataset.drawer).dataset.open = 'true';
+    });
+  });
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('drawer-' + btn.dataset.close).dataset.open = 'false';
+    });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.drawer').forEach(d => d.dataset.open = 'false');
+  });
+
+  // TOC scroll-sync
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll('#toc a').forEach(a => {
+          a.classList.toggle('is-active', a.dataset.sec === entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  headings.forEach(h => obs.observe(h));
+
+  document.querySelectorAll('#toc a').forEach(a => a.addEventListener('click', e => {
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (target) {
+      e.preventDefault();
+      window.scrollTo({ top: target.offsetTop - 84, behavior: 'smooth' });
+      history.replaceState(null, '', `#${id}`);
+    }
+  }));
+}
+</script>
+</body>
+</html>

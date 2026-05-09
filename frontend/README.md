@@ -1,81 +1,79 @@
-# Know Your Charity - Frontend
+# Probitas frontend
 
-Modern Next.js frontend for the AML SaaS platform.
+Static HTML + FastAPI bridge that wraps the Python intelligence pipeline.
 
-## Features
-
-- 🎨 **Responsive Design** - Mobile-first Tailwind CSS
-- ⚡ **Next.js 15** - React 18 with App Router
-- 🔐 **Type-Safe** - Full TypeScript support
-- 🎯 **Professional UI** - Clean, modern interface
-- 📊 **Dashboard** - Report generation and management
-- 💳 **Pricing Page** - Simple pay-as-you-go & subscription
-
-## Quick Start
-
-### Install Dependencies
-```bash
-npm install
-```
-
-### Development
-```bash
-npm run dev
-```
-
-Open http://localhost:3000
-
-### Build
-```bash
-npm run build
-npm start
-```
-
-## Project Structure
+## What's in this folder
 
 ```
-src/
-├── app/
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Homepage
-│   ├── globals.css        # Global styles
-│   └── dashboard/
-│       └── page.tsx       # Dashboard page
-└── components/            # Reusable components (future)
+public/         Static HTML + CSS (the designs)
+  index.html        Landing page
+  preview.html      Entity preview (after search, before payment)
+  progress.html     Live 7-stage pipeline progress with SSE
+  report-*.html     Report viewer (charity / company)
+  styles.css        Shared design system
+
+api/            FastAPI bridge
+  main.py           Routes + static serving
+  runner.py         Background pipeline executor
+  preview_lookup.py Fast entity preview using existing api_clients/
+  serialize.py      Bundle → JSON
+  db.py             SQLite storage
+
+data/           SQLite database lives here (gitignored)
+run.sh          Local dev launcher
 ```
 
-## Technology Stack
+## Quick start
 
-- **Framework**: Next.js 15
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Package Manager**: npm
+1. **Set the admin bypass code** in the project root `.env`:
 
-## Pages
+   ```
+   PROBITAS_ADMIN_CODE=your-secret-here
+   ```
 
-- **/** - Landing page with features & pricing
-- **/dashboard** - Report search & listing
-- **/login** - (Coming soon)
-- **/signup** - (Coming soon)
+   Pick anything random — this is the password that lets you run reports
+   without going through Stripe Checkout. Only you should know it.
 
-## API Integration
+2. **Install Python deps** (one-time):
 
-Backend API: http://localhost:8000
+   ```
+   python3 -m pip install fastapi 'uvicorn[standard]' python-dotenv
+   ```
 
-Set in `.env.local`:
-```
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
+3. **Launch**:
 
-## Deployment
+   ```
+   ./frontend/run.sh
+   ```
 
-Ready for deployment on:
-- Vercel (recommended)
-- Netlify
-- AWS
-- Google Cloud
+   Open http://localhost:8000 in a browser.
 
-## License
+## Using it
 
-Proprietary
+- Type a UK charity number (e.g. `220949` for British Red Cross) or company
+  number (e.g. `00445790` for Tesco PLC) and hit Search.
+- Confirm the entity on the preview page.
+- Click **"Have an admin code?"** in the corner of the CTA card.
+- Enter the code from your `.env`. The pipeline starts immediately —
+  no Stripe, no payment.
+- Watch the 7-stage progress page. About 90 seconds.
+- Final report renders with risk score, sanctions screening, narrative,
+  verification badge, deterministic checks.
+
+## API surface
+
+| Endpoint | Purpose |
+|---|---|
+| `GET  /api/preview/{type}/{id}` | Free entity preview — registry data only |
+| `POST /api/runs/start` | Start a pipeline run (admin bypass, Stripe TBD) |
+| `GET  /api/runs/{run_id}` | Fetch the completed bundle as JSON |
+| `GET  /api/runs/{run_id}/stream` | SSE: live stage progress |
+| `GET  /api/health` | Liveness + admin-bypass-configured flag |
+
+## What's coming next session
+
+- Stripe Checkout for paid path (admin bypass stays for testing)
+- Resend transactional email with signed report links
+- PDF export via Puppeteer
+- Postgres migration (SQLite is fine for v1 local)
+- Deployment to Vercel + Railway/Fly

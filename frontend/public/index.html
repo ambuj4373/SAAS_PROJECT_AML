@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>probitas — A probity check on any UK company or charity.</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  .hero { padding: 88px 0 0; }
+  .hero__lockup { display: flex; flex-direction: column; gap: 12px; }
+  .hero__eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 12px; color: var(--grey);
+    letter-spacing: 0; margin-bottom: 12px;
+  }
+  .hero__eyebrow span { width: 6px; height: 6px; border-radius: 3px; background: var(--indigo); display: inline-block; }
+  .hero__sub {
+    font-family: var(--ui); font-size: 19px; line-height: 1.55;
+    color: var(--grey); max-width: 60ch; margin: 28px 0 36px;
+  }
+  .hero__sub b { color: var(--ink); font-weight: 500; }
+  .hero__price {
+    display: inline-flex; align-items: baseline; gap: 6px;
+    color: var(--ink); font-weight: 600;
+    border-left: 2px solid var(--ink); padding-left: 10px; margin-left: 6px;
+  }
+  .hero__meta {
+    display: flex; align-items: center; gap: 24px; margin-top: 18px;
+    font-size: 13px; color: var(--grey); flex-wrap: wrap;
+  }
+  .hero__meta strong { color: var(--ink); font-weight: 500; }
+  .hero__meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--grey-3); }
+
+  .sample { margin-top: 88px; position: relative; }
+  .sample__caption { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .sample__caption .kicker { color: var(--ink-2); }
+  .sample__caption .meta { color: var(--grey); font-family: var(--mono); font-size: 12px; }
+
+  .sample__frame {
+    position: relative; border: 1px solid var(--line); border-radius: 12px 12px 0 0;
+    background: white; overflow: hidden;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 24px 48px -16px rgba(26,29,41,0.12);
+  }
+  .sample__chrome {
+    display: flex; align-items: center; gap: 12px; padding: 12px 18px;
+    border-bottom: 1px solid var(--line); background: var(--paper);
+  }
+  .sample__dots { display: flex; gap: 6px; }
+  .sample__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--grey-3); }
+  .sample__url {
+    flex: 1; font-family: var(--mono); font-size: 12px; color: var(--grey);
+    background: white; border: 1px solid var(--line); border-radius: 6px;
+    padding: 5px 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .sample__url svg { color: var(--risk-low); flex-shrink: 0; }
+
+  .sample__body { padding: 56px 64px 80px; }
+  .sample__head { display: flex; justify-content: space-between; gap: 32px; align-items: flex-start; padding-bottom: 32px; border-bottom: 1px solid var(--line); }
+  .sample__title-block { max-width: 60%; }
+  .sample__title-meta {
+    font-family: var(--mono); font-size: 12px; color: var(--grey);
+    margin-bottom: 12px; display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .sample__title {
+    font-family: var(--serif); font-size: 44px; line-height: 1.05;
+    letter-spacing: -0.015em; color: var(--ink); font-weight: 600; margin: 0;
+  }
+  .sample__sub {
+    font-family: var(--serif); font-size: 17px; line-height: 1.55;
+    color: var(--grey); margin: 14px 0 0; font-style: italic;
+  }
+  .sample__verif { flex-shrink: 0; }
+
+  .sample__risk { margin-top: 40px; }
+  .sample__sections { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 36px 48px; }
+  .sample-section h4 {
+    font-family: var(--ui); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey);
+    margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sample-section h4 .num { font-family: var(--mono); color: var(--grey-2); font-weight: 500; letter-spacing: 0; }
+  .sample-section p { font-family: var(--serif); font-size: 15px; line-height: 1.6; margin: 0 0 12px; color: var(--ink-2); }
+  .sample-section p .cite { font-family: var(--mono); }
+
+  .sample__fade {
+    height: 200px; margin-top: -200px;
+    background: linear-gradient(to bottom, transparent, white 75%);
+    pointer-events: none; position: relative; z-index: 2;
+  }
+  .sample__cta-row { margin-top: 24px; display: flex; justify-content: center; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .sample__cta-row span { color: var(--grey); font-size: 13.5px; }
+
+  .sources-section { padding: 56px 0; }
+
+  .how { display: grid; grid-template-columns: minmax(260px, 1fr) 2fr; gap: 64px; align-items: start; }
+  .how__steps { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+  .how__step {
+    display: grid; grid-template-columns: 64px 1fr; gap: 24px;
+    padding: 28px 0; border-bottom: 1px solid var(--line); align-items: start;
+  }
+  .how__num { font-family: var(--mono); font-size: 12px; color: var(--indigo); letter-spacing: 0.05em; padding-top: 4px; }
+  .how__step h3 { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -0.015em; margin: 0 0 8px; }
+  .how__step p { color: var(--grey); margin: 0; font-size: 14.5px; line-height: 1.55; }
+  .pipeline { margin-top: 48px; padding: 28px 0 0; border-top: 1px solid var(--line); }
+  .pipeline__label {
+    font-family: var(--ui); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey); margin-bottom: 16px;
+  }
+  .pipeline__list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 32px; counter-reset: stage; }
+  .pipeline__item {
+    display: flex; align-items: baseline; gap: 10px; padding: 8px 0;
+    color: var(--ink-2); font-size: 13.5px; border-bottom: 1px dashed var(--line);
+  }
+  .pipeline__item::before {
+    counter-increment: stage; content: "0" counter(stage);
+    font-family: var(--mono); font-size: 11px; color: var(--grey-2);
+  }
+
+  .anatomy { display: grid; grid-template-columns: 1.1fr 1fr; gap: 64px; align-items: start; }
+  .anatomy__list { display: flex; flex-direction: column; }
+  .anatomy-feature {
+    padding: 24px 0; border-bottom: 1px solid var(--line);
+    display: grid; grid-template-columns: 32px 1fr; gap: 16px; align-items: start;
+  }
+  .anatomy-feature:first-of-type { border-top: 1px solid var(--line); }
+  .anatomy-feature__icon {
+    width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; color: var(--indigo);
+  }
+  .anatomy-feature h4 { font-family: var(--display); font-size: 16px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .anatomy-feature p { font-size: 14px; color: var(--grey); margin: 0; line-height: 1.55; }
+  .anatomy__visual {
+    border: 1px solid var(--line); border-radius: 12px; background: var(--paper);
+    padding: 32px; position: sticky; top: 100px;
+  }
+
+  .price-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 0; border: 1px solid var(--ink); border-radius: 12px; overflow: hidden; }
+  .price-card { padding: 32px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 16px; }
+  .price-card:last-child { border-right: none; }
+  .price-card--feature { background: var(--ink); color: white; }
+  .price-card--feature .kicker { color: var(--indigo-tint); }
+  .price-card h3 { font-family: var(--display); font-size: 20px; font-weight: 600; margin: 0; letter-spacing: -0.015em; }
+  .price-card p { margin: 0; font-size: 13.5px; color: var(--grey); }
+  .price-card--feature p { color: rgba(255,255,255,0.65); }
+  .price-amount { display: flex; align-items: baseline; gap: 6px; font-family: var(--display); font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
+  .price-card--feature .price-amount { color: white; }
+  .price-amount__big { font-size: 48px; line-height: 1; }
+  .price-amount__unit { font-size: 13px; color: var(--grey); font-weight: 400; }
+  .price-card--feature .price-amount__unit { color: rgba(255,255,255,0.6); }
+  .price-card ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--ink-2); }
+  .price-card--feature ul { color: rgba(255,255,255,0.85); }
+  .price-card ul li { display: flex; align-items: flex-start; gap: 8px; }
+  .price-card ul li::before { content: ""; width: 4px; height: 4px; background: var(--indigo); border-radius: 50%; margin-top: 8px; flex-shrink: 0; }
+  .price-card--feature ul li::before { background: var(--indigo-tint); }
+
+  .faq-list { border-top: 1px solid var(--line); }
+  .faq-item { border-bottom: 1px solid var(--line); }
+  .faq-q {
+    width: 100%; text-align: left; padding: 24px 0; background: none; border: none;
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--display); font-size: 18px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em;
+  }
+  .faq-q__icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: var(--grey); transition: transform 200ms ease; }
+  .faq-item[data-open="true"] .faq-q__icon { transform: rotate(45deg); color: var(--indigo); }
+  .faq-a { overflow: hidden; max-height: 0; transition: max-height 240ms ease; }
+  .faq-item[data-open="true"] .faq-a { max-height: 200px; }
+  .faq-a p { margin: 0 0 24px; color: var(--grey); font-size: 15px; line-height: 1.6; max-width: 60ch; }
+
+  .trust { background: var(--paper-warm); border-radius: 14px; padding: 56px 64px; border: 1px solid var(--line); }
+  .trust__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; margin-bottom: 32px; }
+  .trust__stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid var(--line); }
+  .trust__stat { padding: 20px 24px 0 0; border-right: 1px solid var(--line); }
+  .trust__stat:last-child { border-right: none; padding-right: 0; }
+  .trust__num { font-family: var(--display); font-weight: 600; font-size: 36px; letter-spacing: -0.025em; color: var(--ink); line-height: 1; }
+  .trust__lab { font-size: 13px; color: var(--grey); margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav__inner">
+    <a href="index.html" class="wordmark"><span class="wordmark__name">probitas</span></a>
+    <div class="topnav__links">
+      <a href="#sample">Sample report</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="preview.html?type=charity&id=220949" class="btn btn-ghost btn-sm">Search →</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero__lockup">
+      <div class="hero__eyebrow">
+        <span></span>
+        Research-grade due-diligence reports
+      </div>
+      <h1 class="editorial-h1">A probity check on any UK&nbsp;company or charity.</h1>
+      <p class="hero__sub">
+        The same sources regulators use — <b>Companies House, Charity Commission, OFSI, OFAC, UN</b> — read into a 25-page evidence-anchored report. Delivered in <b>90 seconds.</b><span class="hero__price">£15</span>
+      </p>
+
+      <form class="search" id="searchForm" autocomplete="off">
+        <div class="search__icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+        <input class="search__input" name="q" type="text"
+          placeholder="Enter a UK company number (8 digits) or charity number"
+          aria-label="Company or charity number" spellcheck="false" autocapitalize="off" />
+        <button class="search__btn" type="submit">Search →</button>
+      </form>
+      <div class="hero__meta">
+        <span><strong>No signup.</strong> No subscription.</span>
+        <span class="dot"></span>
+        <span>Sample report below ↓</span>
+        <span class="dot"></span>
+        <span class="mono">try: <a href="preview.html?type=charity&id=220949" style="color:var(--indigo);">220949</a> · <a href="preview.html?type=company&id=09238471" style="color:var(--indigo);">09238471</a></span>
+      </div>
+    </div>
+
+    <div class="sample" id="sample">
+      <div class="sample__caption">
+        <span class="kicker">Sample report</span>
+        <span class="meta">Charity 220949 · British Red Cross · evidence-anchored</span>
+      </div>
+
+      <div class="sample__frame">
+        <div class="sample__chrome">
+          <div class="sample__dots"><span class="sample__dot"></span><span class="sample__dot"></span><span class="sample__dot"></span></div>
+          <div class="sample__url">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            probitas.co.uk/report/r_8w3kqf2x
+          </div>
+          <div class="mono" style="font-size:11px;color:var(--grey-2);">PDF · 25 pages</div>
+        </div>
+
+        <div class="sample__body">
+          <div class="sample__head">
+            <div class="sample__title-block">
+              <div class="sample__title-meta">
+                <span>CHARITY · 220949</span><span>·</span><span>Registered 30 January 1908</span><span>·</span><span>Status: Live</span>
+              </div>
+              <h2 class="sample__title">The British Red Cross&nbsp;Society</h2>
+              <p class="sample__sub">A research dossier prepared from Charity Commission filings, sanctions screening, and adverse-media review.</p>
+            </div>
+            <button class="vbadge sample__verif" type="button" tabindex="-1">
+              <div class="vbadge__top">Verification</div>
+              <div class="vbadge__main">Good · 80<em>%</em></div>
+              <div class="vbadge__sub">24 OF 30 CLAIMS BACKED</div>
+            </button>
+          </div>
+
+          <div class="sample__risk">
+            <div class="risk-hero">
+              <div class="risk-hero__score">
+                <div class="risk-hero__num">18</div>
+                <div class="col gap-12">
+                  <div class="risk-hero__denom">/ 100</div>
+                  <div class="risk-hero__label">Overall risk</div>
+                  <div class="risk-hero__pill risk-hero__pill--low">Low</div>
+                </div>
+              </div>
+              <div class="risk-hero__divider"></div>
+              <div>
+                <div class="kicker" style="margin-bottom:18px;">Category breakdown</div>
+                <div class="cats">
+                  <div class="cat"><span class="cat__name">Geography</span><div class="cat__track"><div class="cat__fill cat__fill--low" style="width:12%"></div></div><span class="cat__num">12</span></div>
+                  <div class="cat"><span class="cat__name">Financial</span><div class="cat__track"><div class="cat__fill cat__fill--low" style="width:35%"></div></div><span class="cat__num">35</span></div>
+                  <div class="cat"><span class="cat__name">Governance</span><div class="cat__track"><div class="cat__fill cat__fill--low" style="width:10%"></div></div><span class="cat__num">10</span></div>
+                  <div class="cat"><span class="cat__name">Sanctions</span><div class="cat__track"><div class="cat__fill cat__fill--low" style="width:0%"></div></div><span class="cat__num">0</span></div>
+                  <div class="cat"><span class="cat__name">Adverse media</span><div class="cat__track"><div class="cat__fill cat__fill--low" style="width:8%"></div></div><span class="cat__num">8</span></div>
+                  <div class="cat"><span class="cat__name">Operational</span><div class="cat__track"><div class="cat__fill cat__fill--low" style="width:22%"></div></div><span class="cat__num">22</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sample__sections">
+            <div class="sample-section">
+              <h4>Executive summary <span class="num">§ 1</span></h4>
+              <p>The British Red Cross Society is a 117-year-old auxiliary to the public authorities under the Geneva Conventions, registered with the Charity Commission since 1908. Filings show 24 trustees, total income of £301.4m for FY 2024, and an unqualified audit opinion <a class="cite" href="#">CC API · §3.2</a>. Sanctions screening across OFSI, OFAC and UN consolidated lists returned no matches for the entity or its 24 trustees <a class="cite" href="#">OFSI · §6B</a>.</p>
+              <p>One operational note: the charity reports activity in 14 jurisdictions, four of which carry elevated geographic risk under FATF guidance. These are reflected in the geography sub-score (12/100) and addressed in §4.</p>
+            </div>
+            <div class="sample-section">
+              <h4>Governance &amp; trustees <span class="num">§ 5</span></h4>
+              <p>Charity Commission records list 24 trustees as at the date of the most recent return <a class="cite" href="#">CC API · 2024</a>. The board is chaired by the President of the Society. All trustees were verified against OFSI, OFAC and UN sanctions lists; no matches.</p>
+              <p>The 2023 governance review, filed alongside the annual return, identifies independent trustee assessment, an active audit committee, and rotation cycles consistent with the Charity Governance Code.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sample__fade"></div>
+      <div class="sample__cta-row">
+        <a href="preview.html?type=charity&id=220949" class="btn btn-primary">Read the full report →</a>
+        <span>or</span>
+        <a href="preview.html?type=company&id=09238471" class="btn-link">see a company sample →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sources-section">
+  <div class="container">
+    <div class="sources-strip">
+      <div class="sources-strip__label">Sources read</div>
+      <div class="sources-strip__items">
+        <span class="sources-strip__item">Companies House</span>
+        <span class="sources-strip__item">Charity Commission</span>
+        <span class="sources-strip__item">OFSI</span>
+        <span class="sources-strip__item">OFAC</span>
+        <span class="sources-strip__item">United Nations</span>
+        <span class="sources-strip__item">FCA Register</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="container">
+    <div class="how">
+      <div>
+        <span class="kicker">How it works</span>
+        <h2 class="editorial-h2" style="margin-top:16px;">Three steps. Ninety seconds.</h2>
+        <p class="lede">No account, no onboarding, no upsell. Type a number, pay, get a report. The link is permanent for 90 days.</p>
+      </div>
+      <div>
+        <div class="how__steps">
+          <div class="how__step">
+            <span class="how__num">01</span>
+            <div><h3>Search</h3><p>UK company number (8 digits) or charity number (1–7 digits). Auto-detected. Free preview confirms the entity before you pay.</p></div>
+          </div>
+          <div class="how__step">
+            <span class="how__num">02</span>
+            <div><h3>Pay £15</h3><p>Stripe Checkout. Visa, Mastercard, Amex, Apple Pay, Google Pay. No subscription unless you choose one.</p></div>
+          </div>
+          <div class="how__step">
+            <span class="how__num">03</span>
+            <div><h3>Get your report</h3><p>Watch the seven-stage pipeline run live. PDF and a permanent web link arrive by email — valid 90 days.</p></div>
+          </div>
+        </div>
+
+        <div class="pipeline">
+          <div class="pipeline__label">What runs in those 90 seconds</div>
+          <ol class="pipeline__list">
+            <li class="pipeline__item">Charity Commission &amp; Companies House records</li>
+            <li class="pipeline__item">Document extraction &amp; enrichment</li>
+            <li class="pipeline__item">Web intelligence &amp; OSINT</li>
+            <li class="pipeline__item">Governance &amp; financial analysis</li>
+            <li class="pipeline__item">Sanctions screening (OFSI, OFAC, UN)</li>
+            <li class="pipeline__item">Risk scoring across six categories</li>
+            <li class="pipeline__item">LLM narrative with claim verification</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:40px; gap:32px; flex-wrap:wrap;">
+      <div>
+        <span class="kicker">Pricing</span>
+        <h2 class="editorial-h2" style="margin-top:16px;">£15 a report. Pay only when you use it.</h2>
+      </div>
+      <p style="color:var(--grey); max-width:42ch; margin:0; font-size:15px;">Most users buy reports one at a time. The pack and firm options exist for accountancy practices doing volume.</p>
+    </div>
+
+    <div class="price-grid">
+      <div class="price-card price-card--feature">
+        <span class="kicker">Most popular</span>
+        <h3>Single report</h3>
+        <p>One full 25-page Probitas report on any UK company or charity.</p>
+        <div style="flex:1;"></div>
+        <div class="price-amount"><span class="price-amount__big">£15</span><span class="price-amount__unit">per report</span></div>
+        <ul><li>PDF + permanent web link</li><li>Re-run free if anything's wrong</li></ul>
+      </div>
+      <div class="price-card">
+        <h3>Pack of 5</h3><p>Five reports, no expiry.</p>
+        <div style="flex:1;"></div>
+        <div class="price-amount"><span class="price-amount__big">£55</span><span class="price-amount__unit">/ pack — £11 ea</span></div>
+        <ul><li>Same reports, 27% off</li></ul>
+      </div>
+      <div class="price-card">
+        <h3>Pack of 20</h3><p>Twenty reports, no expiry.</p>
+        <div style="flex:1;"></div>
+        <div class="price-amount"><span class="price-amount__big">£180</span><span class="price-amount__unit">/ pack — £9 ea</span></div>
+        <ul><li>Same reports, 40% off</li></ul>
+      </div>
+      <div class="price-card">
+        <h3>Firm</h3><p>For accountancy practices.</p>
+        <div style="flex:1;"></div>
+        <div class="price-amount"><span class="price-amount__big">£400</span><span class="price-amount__unit">/ month</span></div>
+        <ul><li>Up to 100 reports / mo</li><li>Single invoice</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <div class="container-narrow">
+    <div style="margin-bottom:40px;">
+      <span class="kicker">Questions</span>
+      <h2 class="editorial-h2" style="margin-top:16px;">Five things people ask first.</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item" data-open="true">
+        <button class="faq-q" type="button"><span>How long does a report take?</span><span class="faq-q__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="faq-a"><p>About 90 seconds. The seven-stage pipeline runs in real time on the progress page so you can watch each step finish.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button"><span>Is the data current?</span><span class="faq-q__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="faq-a"><p>Yes. Each report pulls live data at the moment of generation: Companies House and Charity Commission via their public APIs, OFSI weekly, OFAC daily, UN consolidated weekly.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button"><span>Which sanctions lists do you check?</span><span class="faq-q__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="faq-a"><p>OFSI consolidated list (UK Treasury, ~5,135 entries), OFAC SDN (US Treasury, ~16,000 entries), and the UN Security Council consolidated list (~700 entries). The entity and every named trustee, director, or person of significant control.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button"><span>Who sees what I search?</span><span class="faq-q__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="faq-a"><p>No one. There is no account. Reports are accessed via signed link. We log nothing about which reports you read after delivery; the search and report path don't run analytics.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button"><span>What if there's an issue with the report?</span><span class="faq-q__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="faq-a"><p>Reply to the email. We'll re-run it for free. The report is research, not regulated advice — if you're carrying out CDD under MLR 2017, apply your own procedures on top.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="trust">
+      <div class="trust__head">
+        <div>
+          <span class="kicker">A note on what this is</span>
+          <h2 class="editorial-h2" style="margin-top:16px;max-width:24ch;">Research-grade intelligence. Not regulated advice.</h2>
+          <p class="lede" style="max-width:54ch;">Probitas reads the sources regulators use and prepares a research dossier. It is not a substitute for the customer due diligence procedures required under the Money Laundering Regulations 2017. Use it as the evidence layer underneath your own judgement.</p>
+        </div>
+      </div>
+      <div class="trust__stats">
+        <div class="trust__stat"><div class="trust__num">5,135</div><div class="trust__lab">OFSI consolidated entries read</div></div>
+        <div class="trust__stat"><div class="trust__num">3</div><div class="trust__lab">sanctions lists per report</div></div>
+        <div class="trust__stat"><div class="trust__num">25</div><div class="trust__lab">pages of evidence-anchored narrative</div></div>
+        <div class="trust__stat"><div class="trust__num">90s</div><div class="trust__lab">target report time</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__top">
+      <div>
+        <a href="index.html" class="wordmark wordmark--lg"><span class="wordmark__name">probitas</span></a>
+        <p style="margin-top:20px; max-width:32ch; color:var(--grey-2); font-size:13.5px;">Research-grade due-diligence reports on UK companies and charities.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="index.html#sample">Sample report</a></li>
+          <li><a href="index.html#how">How it works</a></li>
+          <li><a href="index.html#pricing">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Sources</h4>
+        <ul>
+          <li>Companies House</li>
+          <li>Charity Commission</li>
+          <li>OFSI · OFAC · UN</li>
+          <li>FCA Register</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Sources &amp; methodology</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 Probitas Research Ltd</span>
+      <span>probitas.co.uk</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('searchForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const q = (this.q.value || '').trim().replace(/\s/g,'');
+    if(!q) {
+      window.location.href = 'preview.html?type=charity&id=220949';
+      return;
+    }
+    // 8-digit numeric or alphanumeric (e.g. SC123456) = company; otherwise charity
+    const digitsOnly = q.replace(/[A-Za-z]/g, '');
+    const isCompany = digitsOnly.length >= 7 && /^[A-Za-z]{0,2}\d+$/.test(q);
+    const type = isCompany ? 'company' : 'charity';
+    window.location.href = `preview.html?type=${type}&id=${encodeURIComponent(q)}`;
+  });
+
+  document.querySelectorAll('.faq-q').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      item.dataset.open = item.dataset.open === 'true' ? 'false' : 'true';
+    });
+  });
+</script>
+</body>
+</html>

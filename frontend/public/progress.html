@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>probitas — Generating report…</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body { background: var(--paper); }
+  .run-wrap { padding: 64px 0 96px; min-height: calc(100vh - 68px); }
+  .run-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 80px; align-items: start; }
+
+  .run-meta__kicker {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 12px; color: var(--grey); margin-bottom: 32px;
+  }
+  .run-meta__kicker .live-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--indigo);
+    box-shadow: 0 0 0 0 rgba(61,61,220,0.4); animation: pulse 1.6s ease-out infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(61,61,220,0.5); }
+    70% { box-shadow: 0 0 0 14px rgba(61,61,220,0); }
+    100% { box-shadow: 0 0 0 0 rgba(61,61,220,0); }
+  }
+
+  .run-meta h1 { font-family: var(--serif); font-weight: 600; font-size: 44px; line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 14px; }
+  .run-meta__entity { color: var(--grey); font-size: 16px; margin: 0 0 32px; line-height: 1.5; }
+  .run-meta__entity b { color: var(--ink); font-weight: 500; }
+
+  .run-clock { display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px; }
+  .run-clock__big {
+    font-family: var(--display); font-weight: 600; font-size: 80px; line-height: 1;
+    letter-spacing: -0.04em; color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+  .run-clock__unit { font-family: var(--mono); font-size: 13px; color: var(--grey); margin-left: 4px; }
+  .run-clock__sub { font-family: var(--mono); font-size: 12px; color: var(--grey); margin-bottom: 36px; }
+
+  .run-card { border: 1px solid var(--line); border-radius: 10px; padding: 20px; background: white; margin-top: 32px; }
+  .run-card h4 { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey); margin: 0 0 12px; }
+  .run-card p { margin: 0; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; }
+  .run-card p + p { margin-top: 10px; }
+
+  .stages { background: white; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .stages__head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 24px; border-bottom: 1px solid var(--line); background: var(--paper);
+  }
+  .stages__title { font-size: 13px; font-weight: 600; letter-spacing: -0.005em; }
+  .stages__progress { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 12px; color: var(--grey); }
+  .stages__bar { width: 120px; height: 4px; background: var(--line-soft); border-radius: 2px; overflow: hidden; }
+  .stages__bar-fill { height: 100%; width: 0%; background: var(--indigo); transition: width 600ms ease; }
+
+  .stage {
+    display: grid; grid-template-columns: 28px 1fr auto auto; gap: 16px; align-items: center;
+    padding: 18px 24px; border-bottom: 1px solid var(--line); transition: background 240ms ease;
+  }
+  .stage:last-child { border-bottom: none; }
+
+  .stage__num { font-family: var(--mono); font-size: 11px; color: var(--grey-2); font-weight: 500; }
+  .stage__name { font-size: 14.5px; color: var(--ink); letter-spacing: -0.005em; font-weight: 500; }
+  .stage__status {
+    font-family: var(--mono); font-size: 11px; color: var(--grey-2);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    min-width: 92px; text-align: right; font-weight: 500;
+  }
+  .stage__elapsed {
+    font-family: var(--mono); font-size: 12px; color: var(--grey);
+    min-width: 60px; text-align: right; font-variant-numeric: tabular-nums;
+  }
+  .stage__indicator {
+    width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--grey-3);
+    display: flex; align-items: center; justify-content: center; color: var(--grey-2);
+    flex-shrink: 0; background: white;
+    transition: border-color 240ms ease, background 240ms ease;
+  }
+
+  .stage[data-state="pending"] .stage__name { color: var(--grey-2); }
+
+  .stage[data-state="running"] {
+    background: linear-gradient(90deg, var(--indigo-tint) 0%, transparent 100%);
+  }
+  .stage[data-state="running"] .stage__indicator {
+    border-color: var(--indigo); background: white; position: relative;
+  }
+  .stage[data-state="running"] .stage__indicator::after {
+    content: ""; position: absolute; inset: -3px; border-radius: 50%;
+    border: 1.5px solid var(--indigo); border-top-color: transparent;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .stage[data-state="running"] .stage__status { color: var(--indigo); }
+  .stage[data-state="running"] .stage__name { color: var(--ink); }
+
+  .stage[data-state="done"] .stage__indicator { background: var(--ink); border-color: var(--ink); color: white; }
+  .stage[data-state="done"] .stage__indicator::after { content: "✓"; font-size: 12px; line-height: 1; color: white; }
+  .stage[data-state="done"] .stage__status { color: var(--grey); }
+
+  .stage[data-state="failed"] .stage__indicator { background: var(--risk-high); border-color: var(--risk-high); color: white; }
+  .stage[data-state="failed"] .stage__indicator::after { content: "✗"; font-size: 12px; line-height: 1; color: white; }
+  .stage[data-state="failed"] .stage__status { color: var(--risk-high); }
+
+  .stage__detail {
+    grid-column: 2 / -1; font-family: var(--mono); font-size: 11.5px;
+    color: var(--grey); line-height: 1.5; margin-top: 6px; overflow: hidden;
+    max-height: 0; transition: max-height 320ms ease, margin 320ms ease;
+  }
+  .stage[data-state="running"] .stage__detail,
+  .stage[data-state="done"] .stage__detail { max-height: 60px; }
+
+  .trace {
+    margin-top: 24px; padding: 16px 20px; background: white; border: 1px solid var(--line);
+    border-radius: 10px; font-family: var(--mono); font-size: 11.5px; color: var(--grey);
+    height: 200px; overflow: hidden; position: relative; line-height: 1.7;
+  }
+  .trace::after {
+    content: ""; position: absolute; inset: auto 0 0 0; height: 40px;
+    background: linear-gradient(transparent, white); pointer-events: none;
+  }
+  .trace__line { display: flex; gap: 12px; }
+  .trace__time { color: var(--grey-2); white-space: nowrap; }
+  .trace__msg { color: var(--ink-2); }
+
+  body[data-finished="true"] .run-clock__big { color: var(--ink); }
+  body[data-failed="true"] .run-clock__big { color: var(--risk-high); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav__inner">
+    <a href="index.html" class="wordmark"><span class="wordmark__name">probitas</span></a>
+    <div class="topnav__links">
+      <span class="mono" style="color:var(--grey); font-size:12px;">Run <span id="run-id">—</span></span>
+    </div>
+  </div>
+</nav>
+
+<div class="run-wrap">
+  <div class="container">
+    <div class="run-grid">
+      <aside class="run-meta">
+        <div class="run-meta__kicker">
+          <span class="live-dot"></span>
+          <span id="kicker-text">Generating your report</span>
+        </div>
+        <h1 id="entity-name">Loading…</h1>
+        <p class="run-meta__entity">
+          <b id="entity-type-meta">—</b> · 7-stage pipeline running. Once complete, the report loads automatically.
+        </p>
+
+        <div class="run-clock">
+          <span class="run-clock__big" id="clock">0.0</span>
+          <span class="run-clock__unit">s elapsed</span>
+        </div>
+        <div class="run-clock__sub">Median run time: ~90s</div>
+
+        <div class="run-card">
+          <h4>While you wait</h4>
+          <p>Probitas reads <b>5,135 OFSI entries</b>, <b>16,000+ OFAC SDN entries</b>, and the <b>UN consolidated list</b> for the entity and every named trustee or director.</p>
+          <p>Three sanctions lists. One report. £15.</p>
+        </div>
+
+        <div class="trace" id="trace">
+          <div class="trace__line">
+            <span class="trace__time">00:00.00</span>
+            <span class="trace__msg">connecting…</span>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div class="stages" id="stages">
+          <div class="stages__head">
+            <div class="stages__title">Pipeline · 7 stages</div>
+            <div class="stages__progress">
+              <span><span id="done-count">0</span> / 7 done</span>
+              <div class="stages__bar"><div class="stages__bar-fill" id="bar-fill"></div></div>
+            </div>
+          </div>
+          <div class="stage" data-state="pending" data-stage="fetch_registry">
+            <span class="stage__num">01</span>
+            <span class="stage__name">Charity Commission &amp; Companies House records</span>
+            <span class="stage__status">Waiting</span>
+            <span class="stage__elapsed">—</span>
+            <div class="stage__detail">Reading official register · entity profile · trustees · filed accounts.</div>
+          </div>
+          <div class="stage" data-state="pending" data-stage="extract_documents">
+            <span class="stage__num">02</span>
+            <span class="stage__name">Document extraction &amp; enrichment</span>
+            <span class="stage__status">Waiting</span>
+            <span class="stage__elapsed">—</span>
+            <div class="stage__detail">Pulling latest annual return PDF · trustees' report · governance review.</div>
+          </div>
+          <div class="stage" data-state="pending" data-stage="web_intelligence">
+            <span class="stage__num">03</span>
+            <span class="stage__name">Web intelligence &amp; OSINT</span>
+            <span class="stage__status">Waiting</span>
+            <span class="stage__elapsed">—</span>
+            <div class="stage__detail">Cross-referencing entity website, news, regulatory notices.</div>
+          </div>
+          <div class="stage" data-state="pending" data-stage="analysis_engines">
+            <span class="stage__num">04</span>
+            <span class="stage__name">Governance &amp; financial analysis</span>
+            <span class="stage__status">Waiting</span>
+            <span class="stage__elapsed">—</span>
+            <div class="stage__detail">Income / expenditure trend · audit opinion · governance code adherence.</div>
+          </div>
+          <div class="stage" data-state="pending" data-stage="screen_sanctions">
+            <span class="stage__num">05</span>
+            <span class="stage__name">Sanctions screening — OFSI · OFAC · UN</span>
+            <span class="stage__status">Waiting</span>
+            <span class="stage__elapsed">—</span>
+            <div class="stage__detail">Entity + every named trustee or director against three consolidated lists.</div>
+          </div>
+          <div class="stage" data-state="pending" data-stage="compute_risk_score">
+            <span class="stage__num">06</span>
+            <span class="stage__name">Risk scoring across 6 categories</span>
+            <span class="stage__status">Waiting</span>
+            <span class="stage__elapsed">—</span>
+            <div class="stage__detail">Geography · Financial · Governance · Sanctions · Adverse Media · Operational.</div>
+          </div>
+          <div class="stage" data-state="pending" data-stage="generate_report">
+            <span class="stage__num">07</span>
+            <span class="stage__name">Building analysis prompt &amp; LLM narrative</span>
+            <span class="stage__status">Waiting</span>
+            <span class="stage__elapsed">—</span>
+            <div class="stage__detail">Drafting 25-page narrative · running claim verification · checking rules.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const runId = params.get('run_id');
+if (!runId) {
+  document.getElementById('kicker-text').textContent = 'No run_id supplied';
+  document.body.dataset.failed = 'true';
+} else {
+  document.getElementById('run-id').textContent = runId;
+}
+
+const STAGE_ORDER = [
+  'fetch_registry', 'extract_documents', 'web_intelligence',
+  'analysis_engines', 'screen_sanctions', 'compute_risk_score', 'generate_report'
+];
+const stageEls = {};
+document.querySelectorAll('.stage').forEach(el => {
+  stageEls[el.dataset.stage] = el;
+});
+
+const traceEl = document.getElementById('trace');
+const clockEl = document.getElementById('clock');
+const barFill = document.getElementById('bar-fill');
+const doneCount = document.getElementById('done-count');
+
+let runStartMs = null;
+let stageStartMs = {};
+let doneStages = 0;
+let stageElapsedTimer = null;
+let runningStage = null;
+
+function fmtTrace(ms) {
+  const total = ms / 1000;
+  const m = Math.floor(total / 60).toString().padStart(2,'0');
+  const s = (total % 60).toFixed(2).padStart(5,'0');
+  return `${m}:${s}`;
+}
+
+function pushTrace(msg) {
+  const ms = runStartMs ? (performance.now() - runStartMs) : 0;
+  const div = document.createElement('div');
+  div.className = 'trace__line';
+  div.innerHTML = `<span class="trace__time">${fmtTrace(ms)}</span><span class="trace__msg">${msg}</span>`;
+  traceEl.appendChild(div);
+  traceEl.scrollTop = traceEl.scrollHeight;
+}
+
+function tickClock() {
+  if (!runStartMs) { requestAnimationFrame(tickClock); return; }
+  if (document.body.dataset.finished === 'true' || document.body.dataset.failed === 'true') return;
+  const elapsed = performance.now() - runStartMs;
+  clockEl.textContent = (elapsed / 1000).toFixed(1);
+  // per-stage elapsed
+  if (runningStage) {
+    const el = stageEls[runningStage];
+    if (el && stageStartMs[runningStage]) {
+      const sElapsed = (performance.now() - stageStartMs[runningStage]) / 1000;
+      el.querySelector('.stage__elapsed').textContent = sElapsed.toFixed(1) + 's';
+    }
+  }
+  requestAnimationFrame(tickClock);
+}
+requestAnimationFrame(tickClock);
+
+function setStage(stageName, state) {
+  const el = stageEls[stageName];
+  if (!el) return;
+  el.dataset.state = state;
+  if (state === 'running') {
+    el.querySelector('.stage__status').textContent = 'Running';
+    el.querySelector('.stage__elapsed').textContent = '0.0s';
+    runningStage = stageName;
+    stageStartMs[stageName] = performance.now();
+  } else if (state === 'done') {
+    el.querySelector('.stage__status').textContent = 'Done';
+    if (runningStage === stageName) runningStage = null;
+    doneStages++;
+    doneCount.textContent = doneStages;
+    barFill.style.width = `${(doneStages / 7) * 100}%`;
+  } else if (state === 'failed') {
+    el.querySelector('.stage__status').textContent = 'Failed';
+    if (runningStage === stageName) runningStage = null;
+  }
+}
+
+// ----- SSE connection -----------------------------------------
+function connect() {
+  if (!runId) return;
+  pushTrace(`pipeline.connecting · run_id=${runId}`);
+  const sse = new EventSource(`/api/runs/${encodeURIComponent(runId)}/stream`);
+
+  sse.addEventListener('start', (ev) => {
+    const data = JSON.parse(ev.data);
+    runStartMs = performance.now();
+    if (data.entity_name) document.getElementById('entity-name').textContent = data.entity_name;
+    if (data.entity_type_label) document.getElementById('entity-type-meta').textContent = data.entity_type_label;
+    pushTrace(`pipeline.start · ${data.entity_type}/${data.entity_id}`);
+  });
+
+  sse.addEventListener('stage_start', (ev) => {
+    const data = JSON.parse(ev.data);
+    setStage(data.stage, 'running');
+    pushTrace(`<b style="color:var(--ink)">${data.stage}.start</b>`);
+  });
+
+  sse.addEventListener('stage_end', (ev) => {
+    const data = JSON.parse(ev.data);
+    setStage(data.stage, 'done');
+    const el = stageEls[data.stage];
+    if (el) el.querySelector('.stage__elapsed').textContent = (data.elapsed_s || 0).toFixed(1) + 's';
+    pushTrace(`<b style="color:var(--ink)">${data.stage}.end</b> · ${(data.elapsed_s || 0).toFixed(2)}s`);
+  });
+
+  sse.addEventListener('log', (ev) => {
+    const data = JSON.parse(ev.data);
+    pushTrace(data.message);
+  });
+
+  sse.addEventListener('done', (ev) => {
+    const data = JSON.parse(ev.data);
+    document.body.dataset.finished = 'true';
+    document.getElementById('kicker-text').textContent = 'Report ready · redirecting…';
+    pushTrace(`<b style="color:var(--risk-low)">pipeline.complete</b> · ${(data.total_s || 0).toFixed(1)}s`);
+    sse.close();
+    setTimeout(() => {
+      const target = (data.entity_type === 'company')
+        ? `report-company.html?run_id=${encodeURIComponent(runId)}`
+        : `report-charity.html?run_id=${encodeURIComponent(runId)}`;
+      window.location.href = target;
+    }, 1200);
+  });
+
+  sse.addEventListener('error_event', (ev) => {
+    const data = JSON.parse(ev.data);
+    document.body.dataset.failed = 'true';
+    document.getElementById('kicker-text').textContent = 'Run failed';
+    pushTrace(`<b style="color:var(--risk-high)">pipeline.failed</b> · ${data.message || 'unknown error'}`);
+    if (data.stage) setStage(data.stage, 'failed');
+    sse.close();
+  });
+
+  sse.onerror = () => {
+    if (document.body.dataset.finished === 'true') return;
+    pushTrace('connection lost — reconnecting…');
+    sse.close();
+    setTimeout(connect, 2000);
+  };
+}
+
+connect();
+</script>
+</body>
+</html>

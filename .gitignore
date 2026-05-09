@@ -29,3 +29,7 @@ data/sanctions/
 
 # Test cache
 .pytest_cache/
+
+# Frontend SQLite DB (local dev only)
+frontend/data/*.db
+frontend/data/*.db-journal
