@@ -77,6 +77,7 @@ from pipeline.nodes import (
     extract_documents,
     run_web_intelligence,
     run_analysis_engines,
+    screen_sanctions,
     compute_risk_score,
     generate_llm_report,
 )
@@ -88,6 +89,7 @@ CHARITY_NODES = [
     ("extract_documents", extract_documents),
     ("web_intelligence", run_web_intelligence),
     ("analysis_engines", run_analysis_engines),
+    ("screen_sanctions", screen_sanctions),
     ("compute_risk_score", compute_risk_score),
     ("generate_llm_report", generate_llm_report),
 ]
@@ -96,7 +98,7 @@ CHARITY_NODES = [
 CHARITY_STAGE_LABELS = {
     "fetch_registry": {
         "icon": "🔍",
-        "step": "1/6",
+        "step": "1/7",
         "title": "Charity Commission & Companies House records",
         "desc": (
             "Retrieving the charity's official record, trustees, "
@@ -107,7 +109,7 @@ CHARITY_STAGE_LABELS = {
     },
     "extract_documents": {
         "icon": "📄",
-        "step": "2/6",
+        "step": "2/7",
         "title": "Document extraction & enrichment",
         "desc": (
             "Parsing uploaded PDFs: CC printout, accounts, "
@@ -118,7 +120,7 @@ CHARITY_STAGE_LABELS = {
     },
     "web_intelligence": {
         "icon": "🌐",
-        "step": "3/6",
+        "step": "3/7",
         "title": "Web intelligence & OSINT",
         "desc": (
             "Running parallel adverse-media checks, positive media, "
@@ -129,7 +131,7 @@ CHARITY_STAGE_LABELS = {
     },
     "analysis_engines": {
         "icon": "⚙️",
-        "step": "4/6",
+        "step": "4/7",
         "title": "Governance & financial analysis",
         "desc": (
             "Assessing governance indicators, structural governance, "
@@ -138,9 +140,20 @@ CHARITY_STAGE_LABELS = {
         ),
         "est_time": "~5s",
     },
+    "screen_sanctions": {
+        "icon": "🛡️",
+        "step": "5/7",
+        "title": "Sanctions screening",
+        "desc": (
+            "Matching the charity and every trustee against the OFSI "
+            "UK consolidated sanctions list (HM Treasury). Designed "
+            "to extend to OFAC, EU, UN, and OpenSanctions."
+        ),
+        "est_time": "~3s",
+    },
     "compute_risk_score": {
         "icon": "📊",
-        "step": "5/6",
+        "step": "6/7",
         "title": "Risk scoring",
         "desc": (
             "Computing numerical risk score (0–100) across six "
@@ -151,7 +164,7 @@ CHARITY_STAGE_LABELS = {
     },
     "generate_llm_report": {
         "icon": "🤖",
-        "step": "6/6",
+        "step": "7/7",
         "title": "Building analysis prompt",
         "desc": (
             "Assembling all gathered intelligence into the structured "
@@ -262,8 +275,8 @@ def run_charity_pipeline(
     dict
         Final pipeline state with all collected intelligence.
     """
-    metrics = PipelineMetrics()
-    metrics.start("charity_pipeline")
+    metrics = PipelineMetrics(pipeline_name="charity_pipeline")
+    metrics.start()
 
     # Initialise state
     state = dict(CHARITY_STATE_DEFAULTS)
@@ -316,13 +329,13 @@ def run_charity_pipeline(
 
     metrics.finish()
     state["pipeline_metrics"] = {
-        "total_seconds": metrics.total_seconds,
+        "total_seconds": metrics.total_duration_s,
         "stage_count": len(CHARITY_NODES),
         "error_count": len(state.get("errors", [])),
     }
 
     log.info(
-        f"Charity pipeline completed in {metrics.total_seconds:.1f}s "
+        f"Charity pipeline completed in {metrics.total_duration_s:.1f}s "
         f"with {len(state.get('errors', []))} errors"
     )
     return state

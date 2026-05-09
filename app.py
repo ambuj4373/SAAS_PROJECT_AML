@@ -225,35 +225,38 @@ _v3_log = get_logger("app")
 init_intelligence_db()
 
 # ─── API CALL CACHING ────────────────────────────────────────────────────────
-# Wrap every function that makes an external HTTP / API call with
-# @st.cache_data so that identical calls within the TTL window return
-# instantly from memory.  This prevents duplicate API spend when the
-# pipeline is re-run (e.g. after a crash at a later step).
+# Wrap every function that makes an external HTTP / API call with the
+# Streamlit-independent core.cache.cached decorator so identical calls
+# within the TTL window return instantly from memory. Prevents duplicate
+# API spend when the pipeline is re-run (e.g. after a crash at a later
+# step) and works the same way regardless of whether Streamlit is the
+# caller or a FastAPI handler / pytest test is.
+from core.cache import cached as _cached
 _CACHE_TTL = 3600  # seconds (1 hour)
 
-fetch_charity_data       = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(fetch_charity_data)
-fetch_financial_history   = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(fetch_financial_history)
-download_cc_latest_tar    = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(download_cc_latest_tar)
-build_cc_governance_intel = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(build_cc_governance_intel)
-fetch_ch_data             = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(fetch_ch_data)
-fetch_trustee_appointments = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(fetch_trustee_appointments)
-search_adverse_media      = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_adverse_media)
-search_adverse_media_hybrid = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_adverse_media_hybrid)
-search_adverse_media_serper = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_adverse_media_serper)
-search_generic            = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_generic)
-search_website_projects   = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_website_projects)
-search_positive_media     = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_positive_media)
-search_online_presence    = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_online_presence)
-search_policies           = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_policies)
-search_partnerships       = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_partnerships)
-search_social_osint       = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_social_osint)
-search_country_risk_batch = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_country_risk_batch)
-search_country_kyc_profile = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(search_country_kyc_profile)
-extract_social_media_from_website = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(extract_social_media_from_website)
-screen_entity             = st.cache_data(ttl=_CACHE_TTL, show_spinner=False)(screen_entity)
+fetch_charity_data       = _cached(ttl=_CACHE_TTL)(fetch_charity_data)
+fetch_financial_history   = _cached(ttl=_CACHE_TTL)(fetch_financial_history)
+download_cc_latest_tar    = _cached(ttl=_CACHE_TTL)(download_cc_latest_tar)
+build_cc_governance_intel = _cached(ttl=_CACHE_TTL)(build_cc_governance_intel)
+fetch_ch_data             = _cached(ttl=_CACHE_TTL)(fetch_ch_data)
+fetch_trustee_appointments = _cached(ttl=_CACHE_TTL)(fetch_trustee_appointments)
+search_adverse_media      = _cached(ttl=_CACHE_TTL)(search_adverse_media)
+search_adverse_media_hybrid = _cached(ttl=_CACHE_TTL)(search_adverse_media_hybrid)
+search_adverse_media_serper = _cached(ttl=_CACHE_TTL)(search_adverse_media_serper)
+search_generic            = _cached(ttl=_CACHE_TTL)(search_generic)
+search_website_projects   = _cached(ttl=_CACHE_TTL)(search_website_projects)
+search_positive_media     = _cached(ttl=_CACHE_TTL)(search_positive_media)
+search_online_presence    = _cached(ttl=_CACHE_TTL)(search_online_presence)
+search_policies           = _cached(ttl=_CACHE_TTL)(search_policies)
+search_partnerships       = _cached(ttl=_CACHE_TTL)(search_partnerships)
+search_social_osint       = _cached(ttl=_CACHE_TTL)(search_social_osint)
+search_country_risk_batch = _cached(ttl=_CACHE_TTL)(search_country_risk_batch)
+search_country_kyc_profile = _cached(ttl=_CACHE_TTL)(search_country_kyc_profile)
+extract_social_media_from_website = _cached(ttl=_CACHE_TTL)(extract_social_media_from_website)
+screen_entity             = _cached(ttl=_CACHE_TTL)(screen_entity)
 
 
-@st.cache_data(ttl=_CACHE_TTL, show_spinner=False)
+@_cached(ttl=_CACHE_TTL)
 def _cached_extract_pdf_with_vision(file_bytes, filename="document.pdf", max_pages=15):
     """Cached wrapper for extract_pdf_with_vision.
 

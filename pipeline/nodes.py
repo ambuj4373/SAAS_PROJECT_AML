@@ -19,6 +19,31 @@ from core.validators import compact, slim_search, safe_list
 log = get_logger("pipeline.nodes")
 
 
+# ─── State read helpers — guard against None coming through ────────────────
+# CHARITY_STATE_DEFAULTS pre-populates many keys with None or empty
+# containers. ``state.get(key, default)`` returns the *stored* None when
+# the key is present, not the default. These helpers coerce None → the
+# safe empty type so downstream code never NoneType-crashes when an
+# upstream node failed to populate the field.
+
+def _dict(state: dict, key: str) -> dict:
+    """Return state[key] if it's a dict, else {}."""
+    v = state.get(key)
+    return v if isinstance(v, dict) else {}
+
+
+def _list(state: dict, key: str) -> list:
+    """Return state[key] if it's a list, else []."""
+    v = state.get(key)
+    return v if isinstance(v, list) else []
+
+
+def _str(state: dict, key: str) -> str:
+    """Return state[key] if it's a non-empty string, else ''."""
+    v = state.get(key)
+    return v if isinstance(v, str) else ""
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # CHARITY PIPELINE NODES
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -50,17 +75,26 @@ def fetch_registry_data(state: dict) -> dict:
             or charity_data.get("web", "")
         )
 
-        # Trustees
-        trustees = [t.get("trustee_name", "") for t in (
-            charity_data.get("trustees") or []) if t.get("trustee_name")]
+        # Trustees — CC API returns list[str] of names; older code assumed
+        # list[dict]. Accept either shape defensively.
+        raw_trustees = charity_data.get("trustees") or []
+        trustees = []
+        for t in raw_trustees:
+            if isinstance(t, str):
+                if t:
+                    trustees.append(t)
+            elif isinstance(t, dict):
+                name = t.get("trustee_name") or t.get("name") or ""
+                if name:
+                    trustees.append(name)
         updates["trustees"] = trustees
 
         # Financial history
         fin_hist = fetch_financial_history(charity_num)
         updates["financial_history"] = fin_hist or []
 
-        # CC governance
-        cc_gov = build_cc_governance_intel(charity_num)
+        # CC governance — takes the charity_data dict, not the number
+        cc_gov = build_cc_governance_intel(charity_data)
         updates["cc_governance"] = cc_gov or {}
 
         # Companies House cross-reference
@@ -279,12 +313,32 @@ def run_analysis_engines(state: dict) -> dict:
     updates: dict[str, Any] = {"stage_timings": dict(state.get("stage_timings", {}))}
     t0 = time.time()
 
-    charity_data = state.get("charity_data", {})
-    cc_governance = state.get("cc_governance", {})
-    ch_data = state.get("ch_data")
-    trustees = state.get("trustees", [])
-    financial_history = state.get("financial_history", [])
-    trustee_appointments = state.get("trustee_appointments", {})
+    charity_data = _dict(state, "charity_data")
+    cc_governance = _dict(state, "cc_governance")
+    ch_data = state.get("ch_data")  # may legitimately be None when no linked company
+    trustees = _list(state, "trustees")
+    financial_history = _list(state, "financial_history")
+    trustee_appointments = _dict(state, "trustee_appointments")
+
+    # Early bail: if registry fetch failed, charity_data will be empty.
+    # Run downstream analysis with empty inputs so the rest of the
+    # pipeline gets safe defaults — but skip the heavy lifting and
+    # record a warning so the report can flag the gap.
+    if not charity_data:
+        log.warning(
+            "analysis_engines: charity_data is empty (likely registry fetch "
+            "failure); producing empty analysis defaults."
+        )
+        updates["governance_indicators"] = {}
+        updates["structural_governance"] = {}
+        updates["financial_anomalies"] = {}
+        updates["country_risk_classified"] = []
+        updates["fca_details"] = None
+        updates["warnings"] = state.get("warnings", []) + [
+            "Analysis engines skipped: registry data unavailable"
+        ]
+        updates["stage_timings"]["analysis_engines"] = round(time.time() - t0, 2)
+        return updates
 
     # Governance indicators
     try:
@@ -362,6 +416,80 @@ def run_analysis_engines(state: dict) -> dict:
     return updates
 
 
+def screen_sanctions(state: dict) -> dict:
+    """Pipeline node: Screen the entity and trustees against sanctions lists.
+
+    Currently uses OFSI (UK Treasury consolidated list). Designed via the
+    SanctionsProvider abstraction so OFAC, EU, UN, OpenSanctions can be
+    added without changing this node.
+
+    Output schema:
+        sanctions_screening: {
+            "entity": [SanctionsHit.to_dict(), ...],   # hits for the org
+            "trustees": {                              # one entry per trustee
+                "<name>": [SanctionsHit.to_dict(), ...],
+                ...
+            },
+            "providers": ["OFSI", ...],
+            "any_high_confidence": bool,
+        }
+    """
+    from core.sanctions import default_providers, screen_against_providers
+
+    updates: dict[str, Any] = {"stage_timings": dict(state.get("stage_timings", {}))}
+    t0 = time.time()
+
+    providers = default_providers()
+    if not providers:
+        updates["sanctions_screening"] = {
+            "entity": [], "trustees": {}, "providers": [],
+            "any_high_confidence": False,
+        }
+        updates["stage_timings"]["screen_sanctions"] = round(time.time() - t0, 2)
+        return updates
+
+    entity_name = state.get("entity_name", "")
+    trustees = state.get("trustees", []) or []
+    any_high = False
+
+    entity_hits = []
+    if entity_name:
+        try:
+            hits = screen_against_providers(entity_name, schema="entity", providers=providers)
+            entity_hits = [h.to_dict() for h in hits]
+            if any(h.confidence == "high" for h in hits):
+                any_high = True
+        except Exception as e:
+            log.warning(f"Entity sanctions screening failed: {e}")
+
+    trustee_hits: dict[str, list] = {}
+    for t_name in trustees:
+        try:
+            hits = screen_against_providers(t_name, schema="person", providers=providers)
+            trustee_hits[t_name] = [h.to_dict() for h in hits]
+            if any(h.confidence == "high" for h in hits):
+                any_high = True
+        except Exception as e:
+            log.warning(f"Trustee sanctions screening failed for {t_name!r}: {e}")
+            trustee_hits[t_name] = []
+
+    updates["sanctions_screening"] = {
+        "entity": entity_hits,
+        "trustees": trustee_hits,
+        "providers": [p.name for p in providers],
+        "any_high_confidence": any_high,
+    }
+
+    log.info(
+        f"Sanctions screening complete: entity_hits={len(entity_hits)}, "
+        f"trustees_with_hits={sum(1 for h in trustee_hits.values() if h)}, "
+        f"any_high_confidence={any_high}"
+    )
+
+    updates["stage_timings"]["screen_sanctions"] = round(time.time() - t0, 2)
+    return updates
+
+
 def compute_risk_score(state: dict) -> dict:
     """Node 5: Compute the V3 numerical risk score."""
     from core.risk_scorer import score_charity
@@ -371,21 +499,21 @@ def compute_risk_score(state: dict) -> dict:
 
     try:
         score = score_charity(
-            charity_data=state.get("charity_data", {}),
-            financial_history=state.get("financial_history", []),
-            financial_anomalies=state.get("financial_anomalies", {}),
-            governance_indicators=state.get("governance_indicators", {}),
-            structural_governance=state.get("structural_governance", {}),
-            country_risk_classified=state.get("country_risk_classified", []),
-            adverse_org=state.get("adverse_org", []),
-            adverse_trustees=state.get("adverse_trustees", {}),
+            charity_data=_dict(state, "charity_data"),
+            financial_history=_list(state, "financial_history"),
+            financial_anomalies=_dict(state, "financial_anomalies"),
+            governance_indicators=_dict(state, "governance_indicators"),
+            structural_governance=_dict(state, "structural_governance"),
+            country_risk_classified=_list(state, "country_risk_classified"),
+            adverse_org=_list(state, "adverse_org"),
+            adverse_trustees=_dict(state, "adverse_trustees"),
             fatf_org_screen=state.get("fatf_org_screen"),
-            fatf_trustee_screens=state.get("fatf_trustee_screens", {}),
-            hrcob_core_controls=state.get("hrcob_core_controls", {}),
-            policy_classification=state.get("policy_classification", []),
-            social_links=state.get("social_links", {}),
-            online_presence=state.get("online_presence", []),
-            cc_governance=state.get("cc_governance", {}),
+            fatf_trustee_screens=_dict(state, "fatf_trustee_screens"),
+            hrcob_core_controls=_dict(state, "hrcob_core_controls"),
+            policy_classification=_list(state, "policy_classification"),
+            social_links=_dict(state, "social_links"),
+            online_presence=_list(state, "online_presence"),
+            cc_governance=_dict(state, "cc_governance"),
             ch_data=state.get("ch_data"),
             fca_details=state.get("fca_details"),
         )
@@ -407,32 +535,34 @@ def generate_llm_report(state: dict) -> dict:
     updates: dict[str, Any] = {"stage_timings": dict(state.get("stage_timings", {}))}
     t0 = time.time()
 
-    # Build data payload
+    # Build data payload — every read is None-safe so a registry-fetch
+    # failure upstream still produces a coherent (if mostly empty) prompt.
     data_payload = compact({
-        "charity_data": state.get("charity_data", {}),
-        "cc_governance_intelligence": state.get("cc_governance", {}),
-        "governance_indicators": state.get("governance_indicators", {}),
-        "structural_governance": state.get("structural_governance", {}),
-        "financial_history": state.get("financial_history", []),
-        "financial_anomalies": state.get("financial_anomalies", {}),
+        "charity_data": _dict(state, "charity_data"),
+        "cc_governance_intelligence": _dict(state, "cc_governance"),
+        "governance_indicators": _dict(state, "governance_indicators"),
+        "structural_governance": _dict(state, "structural_governance"),
+        "financial_history": _list(state, "financial_history"),
+        "financial_anomalies": _dict(state, "financial_anomalies"),
         "ch_data": state.get("ch_data"),
-        "adverse_org_results": slim_search(state.get("adverse_org", [])),
+        "adverse_org_results": slim_search(_list(state, "adverse_org")),
         "adverse_trustee_results": {
-            k: slim_search(v) for k, v in state.get("adverse_trustees", {}).items()
+            k: slim_search(v) for k, v in _dict(state, "adverse_trustees").items()
         },
-        "positive_media": slim_search(state.get("positive_media", [])),
-        "online_presence": slim_search(state.get("online_presence", [])),
-        "policies_found": slim_search(state.get("policy_results", [])),
-        "policy_classification": state.get("policy_classification", []),
-        "policy_doc_links": state.get("policy_doc_links", []),
-        "hrcob_core_controls": state.get("hrcob_core_controls", {}),
-        "social_media_links": state.get("social_links", {}),
-        "partnership_results": slim_search(state.get("partnership_results", [])),
+        "positive_media": slim_search(_list(state, "positive_media")),
+        "online_presence": slim_search(_list(state, "online_presence")),
+        "policies_found": slim_search(_list(state, "policy_results")),
+        "policy_classification": _list(state, "policy_classification"),
+        "policy_doc_links": _list(state, "policy_doc_links"),
+        "hrcob_core_controls": _dict(state, "hrcob_core_controls"),
+        "social_media_links": _dict(state, "social_links"),
+        "partnership_results": slim_search(_list(state, "partnership_results")),
         "fatf_org_screen": state.get("fatf_org_screen"),
-        "fatf_trustee_screens": state.get("fatf_trustee_screens", {}),
-        "country_risk_classified": state.get("country_risk_classified", []),
-        "risk_score_v3": state.get("risk_score", {}),
-        "search_failures": state.get("search_failures", []),
+        "fatf_trustee_screens": _dict(state, "fatf_trustee_screens"),
+        "sanctions_screening": _dict(state, "sanctions_screening"),
+        "country_risk_classified": _list(state, "country_risk_classified"),
+        "risk_score_v3": _dict(state, "risk_score"),
+        "search_failures": _list(state, "search_failures"),
     })
 
     all_data = json.dumps(data_payload, indent=2, default=str)

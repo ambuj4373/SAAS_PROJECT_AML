@@ -280,10 +280,12 @@ def generate_financial_trend_comment(history):
 
 
 # ─── FINANCIAL ANOMALY DETECTION ─────────────────────────────────────────────
-# Thresholds (proportional — expressed as fractions)
-_ANOMALY_YOY_JUMP = 0.30        # 30 % year-on-year change
-_ANOMALY_RATIO_SHIFT = 0.15     # 15 pp shift in expenditure-to-income ratio
-_ANOMALY_VOLATILITY = 0.25      # CV (coefficient of variation) threshold
+# Thresholds live in core.scoring_config — see that module for rationale.
+from core.scoring_config import (
+    ANOMALY_YOY_JUMP as _ANOMALY_YOY_JUMP,
+    ANOMALY_RATIO_SHIFT as _ANOMALY_RATIO_SHIFT,
+    ANOMALY_VOLATILITY_CV as _ANOMALY_VOLATILITY,
+)
 
 
 def detect_financial_anomalies(history):

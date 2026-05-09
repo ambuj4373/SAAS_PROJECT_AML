@@ -22,22 +22,29 @@ Two public entry points:
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from core.models import RiskLevel, RiskScore, RiskSignal
+from core.scoring_config import (
+    CRITICAL_SCORE_THRESHOLD,
+    HIGH_SCORE_THRESHOLD,
+    MEDIUM_SCORE_THRESHOLD,
+    SEVERITY_POINTS,
+)
 from core.validators import safe_get, safe_int, safe_float, safe_list
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SCORE THRESHOLDS
+# SCORE THRESHOLDS — sourced from core.scoring_config (documented rationale).
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _level_from_score(score: float) -> RiskLevel:
-    if score >= 65:
+    if score >= CRITICAL_SCORE_THRESHOLD:
         return RiskLevel.CRITICAL
-    if score >= 40:
+    if score >= HIGH_SCORE_THRESHOLD:
         return RiskLevel.HIGH
-    if score >= 20:
+    if score >= MEDIUM_SCORE_THRESHOLD:
         return RiskLevel.MEDIUM
     return RiskLevel.LOW
 
@@ -630,7 +637,9 @@ def _score_financial_charity(
     pattern_report = anomalies.get("_pattern_report")  # PatternReport dict
     if pattern_report and isinstance(pattern_report, dict):
         patterns = pattern_report.get("patterns", [])
-        _sev_points = {"critical": 15, "high": 10, "medium": 5, "low": 2, "info": 0}
+        # Severity → score points mapping comes from core.scoring_config so the
+        # rationale is documented in one place and tunable centrally.
+        _sev_points = SEVERITY_POINTS
         _sev_levels = {
             "critical": RiskLevel.CRITICAL, "high": RiskLevel.HIGH,
             "medium": RiskLevel.MEDIUM, "low": RiskLevel.LOW,

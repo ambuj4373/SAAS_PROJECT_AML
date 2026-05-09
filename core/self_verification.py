@@ -131,17 +131,45 @@ def build_verification_prompt(
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def parse_verification_result(raw_text: str) -> VerificationResult:
-    """Parse the verification LLM response into a VerificationResult."""
-    # Extract JSON block
+    """Parse the verification LLM response into a VerificationResult.
+
+    Resilient by design: a malformed nested claim (e.g. ``"supported": "true/false"``)
+    will not nuke the top-level scalars. We progressively degrade — first the
+    full model, then a top-level-only model, then a regex scrape over the raw
+    text. This protects the verification badge from being silently zeroed.
+    """
+    # Extract the LAST ```json ... ``` block (LLMs sometimes echo the schema)
     pattern = r"```json\s*\n?(.*?)```"
     matches = re.findall(pattern, raw_text, re.DOTALL)
 
-    if matches:
-        json_str = matches[-1].strip()
+    json_str = matches[-1].strip() if matches else None
+    data: dict | None = None
+    if json_str:
         try:
             data = json.loads(json_str)
+        except json.JSONDecodeError:
+            data = None
+
+    if isinstance(data, dict):
+        # Try strict validation first
+        try:
             return VerificationResult.model_validate(data)
-        except (json.JSONDecodeError, Exception):
+        except Exception:
+            pass
+        # Drop the nested claim arrays (most likely culprit) and retry
+        scalar_only = {
+            k: v for k, v in data.items()
+            if k not in {"unsupported_claims", "all_claims"}
+        }
+        try:
+            res = VerificationResult.model_validate(scalar_only)
+            # Best-effort repair of nested claims, item by item
+            for raw_claim in (data.get("unsupported_claims") or []):
+                _try_append_claim(raw_claim, res.unsupported_claims)
+            for raw_claim in (data.get("all_claims") or []):
+                _try_append_claim(raw_claim, res.all_claims)
+            return res
+        except Exception:
             pass
 
     # Fallback: extract numbers from text
@@ -168,6 +196,33 @@ def parse_verification_result(raw_text: str) -> VerificationResult:
         result.overall_reliability = result.claims_supported / result.claims_checked
 
     return result
+
+
+def _try_append_claim(raw: Any, target: list[ClaimVerification]) -> None:
+    """Best-effort coercion of an LLM-emitted claim dict into ClaimVerification.
+
+    Skips instead of raising on a malformed entry so one bad claim doesn't
+    discard the rest.
+    """
+    if not isinstance(raw, dict):
+        return
+    coerced = dict(raw)
+    # 'supported' sometimes comes back as 'true/false' string from instruction-following
+    sup = coerced.get("supported")
+    if isinstance(sup, str):
+        coerced["supported"] = sup.strip().lower() in {"true", "yes", "1"}
+    # 'confidence' sometimes comes back as a percent string
+    conf = coerced.get("confidence")
+    if isinstance(conf, str):
+        try:
+            v = float(conf.strip().rstrip("%"))
+            coerced["confidence"] = v / 100 if v > 1 else v
+        except ValueError:
+            coerced["confidence"] = 0.5
+    try:
+        target.append(ClaimVerification.model_validate(coerced))
+    except Exception:
+        return
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

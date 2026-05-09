@@ -158,8 +158,8 @@ def run_company_pipeline(
         Final pipeline state including ``company_check``, ``risk_score``,
         and ``llm_prompt``.
     """
-    metrics = PipelineMetrics()
-    metrics.start("company_pipeline")
+    metrics = PipelineMetrics(pipeline_name="company_pipeline")
+    metrics.start()
 
     state = dict(COMPANY_STATE_DEFAULTS)
     state["company_number"] = company_number
@@ -184,13 +184,13 @@ def run_company_pipeline(
 
     metrics.finish()
     state["pipeline_metrics"] = {
-        "total_seconds": metrics.total_seconds,
+        "total_seconds": metrics.total_duration_s,
         "stage_count": len(COMPANY_NODES),
         "error_count": len(state.get("errors", [])),
     }
 
     log.info(
-        f"Company pipeline completed in {metrics.total_seconds:.1f}s "
+        f"Company pipeline completed in {metrics.total_duration_s:.1f}s "
         f"with {len(state.get('errors', []))} errors"
     )
     return state

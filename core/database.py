@@ -56,6 +56,11 @@ def init_intelligence_db() -> None:
         con.close()
 
 
+# Auto-initialise on first import so write helpers don't fail when the
+# DB file is fresh. Cheap (CREATE TABLE IF NOT EXISTS) and idempotent.
+init_intelligence_db()
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # WRITE HELPERS
 # ══════════════════════════════════════════════════════════════════════════════

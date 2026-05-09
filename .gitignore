@@ -17,7 +17,15 @@ intelligence.db
 # IDE
 .vscode/
 .idea/
+.claude/
 
 # PDFs (large / sensitive uploads)
 *.pdf
 nohup.out
+verification_runs/
+
+# Cached sanctions data (re-downloaded on demand from public sources)
+data/sanctions/
+
+# Test cache
+.pytest_cache/
