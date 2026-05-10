@@ -716,6 +716,18 @@ def run_company_check_node(state: dict) -> dict:
             log.warning("Website intel failed: %s", we)
             result["website_intel"] = {"ok": False, "error": str(we)}
 
+        # ── Frontend-friendly network JSON (UBO + directors + cross-appts)
+        # The existing network_graph_dot is consumed by Graphviz to render a
+        # static SVG. The frontend wants an interactive vis-network graph,
+        # so we also emit a {nodes, edges, meta} JSON shape that translates
+        # 1:1 to vis-network's data model.
+        try:
+            from core.network_data import build_company_network_json
+            result["network_graph_json"] = build_company_network_json(result)
+        except Exception as ne:
+            log.warning("Network JSON build failed: %s", ne)
+            result["network_graph_json"] = {"nodes": [], "edges": [], "meta": {"error": str(ne)}}
+
         updates["company_check"] = result
 
         # Add FCA details to company_check if present

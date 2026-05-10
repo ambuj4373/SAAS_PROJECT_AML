@@ -6,7 +6,8 @@
 <title>Probitas Report</title>
 <link rel="stylesheet" href="styles.css" />
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3.5.0/lib/viz-standalone.js"></script>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   body { background: var(--white); }
   /* Wider main column · slimmer rails so the narrative + tables breathe */
@@ -206,21 +207,39 @@
 
       <article class="narr" id="narrative"></article>
 
-      <!-- Ownership / director network graph (rendered client-side from DOT) -->
-      <section id="network-section" style="display:none; margin: 64px 0 0; padding: 32px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px;">
+      <!-- Financial trend (Chart.js) — multi-year if available -->
+      <section id="financial-section" style="display:none; margin: 56px 0 0; padding: 28px 32px; background: white; border: 1px solid var(--line); border-radius: 12px;">
         <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 12px;">
-          <h2 style="font-family: var(--display); font-size: 22px; font-weight: 600; letter-spacing: -0.015em; margin: 0;">Ownership &amp; director network</h2>
-          <span class="mono" style="font-size: 11.5px; color: var(--grey);">UBO chain · directors · cross-appointments</span>
+          <h2 style="font-family: var(--display); font-size: 22px; font-weight: 600; letter-spacing: -0.015em; margin: 0;">Financial trend</h2>
+          <span class="mono" id="financial-meta" style="font-size: 11.5px; color: var(--grey);"></span>
         </div>
-        <p style="color: var(--grey); font-size: 14px; line-height: 1.55; margin: 0 0 20px; max-width: 64ch;">
-          Visual map of the entity's people of significant control, directors, and the other UK companies they're connected to. Built from Companies House records — every line on this diagram is a registered relationship.
+        <p style="color: var(--grey); font-size: 14px; line-height: 1.55; margin: 0 0 18px; max-width: 64ch;">
+          Income and expenditure across reporting years filed with the regulator. Hover for exact figures.
         </p>
-        <div id="network-graph" style="width: 100%; overflow: auto; padding: 16px; background: white; border: 1px solid var(--line); border-radius: 8px; min-height: 100px;">
-          <div class="mono" style="font-size: 12px; color: var(--grey); padding: 28px; text-align: center;">Rendering network…</div>
+        <div style="position: relative; height: 320px; padding: 8px 0;">
+          <canvas id="financial-chart"></canvas>
         </div>
       </section>
 
-      <div class="end-rule">— END OF REPORT —</div>
+      <!-- Ownership / director network — interactive vis-network graph -->
+      <section id="network-section" style="display:none; margin: 56px 0 0; padding: 28px 32px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 12px;">
+          <h2 style="font-family: var(--display); font-size: 22px; font-weight: 600; letter-spacing: -0.015em; margin: 0;">Ownership &amp; director network</h2>
+          <span class="mono" id="network-meta" style="font-size: 11.5px; color: var(--grey);"></span>
+        </div>
+        <p style="color: var(--grey); font-size: 14px; line-height: 1.55; margin: 0 0 16px; max-width: 64ch;">
+          Drag any node to rearrange · scroll to zoom · click a node to see details. The orange triangle is the ultimate beneficial owner. Indigo nodes are directors. Pale boxes are other UK companies the directors sit on the board of (dashed = dissolved).
+        </p>
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
+          <button id="net-fit"   class="btn btn-ghost btn-sm" type="button">Fit to view</button>
+          <button id="net-hier"  class="btn btn-ghost btn-sm" type="button">Hierarchical</button>
+          <button id="net-physics" class="btn btn-ghost btn-sm" type="button">Free physics</button>
+          <span id="net-info" class="mono" style="font-size:11.5px; color:var(--grey); margin-left:auto;"></span>
+        </div>
+        <div id="network-graph" style="width: 100%; height: 580px; background: white; border: 1px solid var(--line); border-radius: 8px;"></div>
+      </section>
+
+      <div class="end-rule" style="margin-top: 56px;">— END OF REPORT —</div>
     </main>
 
     <aside class="rail">
@@ -484,30 +503,18 @@ function render(bundle) {
     if (e.key === 'Escape') document.querySelectorAll('.drawer').forEach(d => d.dataset.open = 'false');
   });
 
-  // Network graph (UBO + directors) — render client-side from DOT
-  const dot = bundle.state?.company_check?.network_graph_dot
-           || bundle.state?.network_graph_dot
-           || '';
-  if (dot && dot.length > 50 && typeof Viz !== 'undefined') {
-    document.getElementById('network-section').style.display = 'block';
-    Viz.instance().then(viz => {
-      try {
-        const svg = viz.renderSVGElement(dot);
-        const target = document.getElementById('network-graph');
-        target.innerHTML = '';
-        // Constrain width — keep readable on standard laptop
-        svg.style.maxWidth = '100%';
-        svg.style.height = 'auto';
-        svg.style.display = 'block';
-        target.appendChild(svg);
-      } catch (e) {
-        document.getElementById('network-graph').innerHTML =
-          `<div style="color:var(--grey); font-family:var(--mono); font-size:12px; padding:24px;">Could not render network graph: ${escape(String(e))}</div>`;
-      }
-    }).catch(e => {
-      document.getElementById('network-graph').innerHTML =
-        `<div style="color:var(--grey); font-family:var(--mono); font-size:12px; padding:24px;">Graph engine failed to load.</div>`;
-    });
+  // ── Interactive ownership + director network (vis-network) ────────
+  const networkData = bundle.state?.company_check?.network_graph_json
+                   || bundle.state?.network_graph_json
+                   || null;
+  if (networkData && networkData.nodes && networkData.nodes.length > 1 && typeof vis !== 'undefined') {
+    renderNetwork(networkData);
+  }
+
+  // ── Financial trend chart (Chart.js) ────────────────────────────────
+  const finData = extractFinancialSeries(bundle);
+  if (finData && finData.years.length > 0 && typeof Chart !== 'undefined') {
+    renderFinancialChart(finData);
   }
 
   // TOC scroll-sync
@@ -531,6 +538,222 @@ function render(bundle) {
       history.replaceState(null, '', `#${id}`);
     }
   }));
+}
+
+// ─── Interactive network rendering ───────────────────────────────────
+let networkInstance = null;
+
+function renderNetwork(data) {
+  document.getElementById('network-section').style.display = 'block';
+  document.getElementById('network-meta').textContent =
+    `${data.meta?.node_count ?? data.nodes.length} nodes · ${data.meta?.edge_count ?? data.edges.length} relationships`;
+
+  // Group styling — matches Probitas brand palette
+  const groupStyles = {
+    subject: {
+      shape: 'box',
+      color: { background: '#3D3DDC', border: '#2828B5' },
+      font: { color: 'white', size: 14, face: 'Inter, system-ui', multi: 'html', bold: { color: 'white' } },
+      borderWidth: 2, shadow: { enabled: true, color: 'rgba(61,61,220,0.18)', size: 12, x: 0, y: 4 },
+    },
+    ubo: {
+      shape: 'triangle',
+      color: { background: '#F59E0B', border: '#B45309' },
+      font: { color: '#1A1D29', size: 12, face: 'Inter, system-ui' },
+      size: 26,
+    },
+    psc: {
+      shape: 'diamond',
+      color: { background: '#FBBF24', border: '#B45309' },
+      font: { color: '#1A1D29', size: 12, face: 'Inter, system-ui' },
+    },
+    director: {
+      shape: 'ellipse',
+      color: { background: '#EFEFFB', border: '#3D3DDC' },
+      font: { color: '#1A1D29', size: 12, face: 'Inter, system-ui' },
+      borderWidth: 1.5,
+    },
+    director_dissolved: {
+      shape: 'ellipse',
+      color: { background: '#FEF3C7', border: '#F59E0B' },
+      font: { color: '#1A1D29', size: 12, face: 'Inter, system-ui' },
+      borderWidth: 2,
+    },
+    other_company: {
+      shape: 'box',
+      color: { background: '#FAFAFA', border: '#9CA3AF' },
+      font: { color: '#6B7280', size: 11, face: 'Inter, system-ui' },
+      shapeProperties: { borderRadius: 6 },
+    },
+    other_company_dissolved: {
+      shape: 'box',
+      color: { background: '#FEF2F2', border: '#EF4444' },
+      font: { color: '#B91C1C', size: 11, face: 'Inter, system-ui' },
+      shapeProperties: { borderRadius: 6 },
+      borderWidth: 1.5,
+    },
+  };
+
+  const visData = {
+    nodes: new vis.DataSet(data.nodes.map(n => ({
+      ...n,
+      title: n.title ? new DOMParser().parseFromString(n.title, 'text/html').body : undefined,
+    }))),
+    edges: new vis.DataSet(data.edges.map((e, i) => ({ id: 'e' + i, ...e, font: { size: 10, color: '#9CA3AF', face: 'JetBrains Mono, monospace' } }))),
+  };
+
+  const container = document.getElementById('network-graph');
+  const options = {
+    layout: {
+      hierarchical: {
+        enabled: true,
+        direction: 'UD',
+        sortMethod: 'directed',
+        nodeSpacing: 180,
+        levelSeparation: 130,
+        treeSpacing: 200,
+      },
+    },
+    physics: {
+      enabled: true,
+      hierarchicalRepulsion: { nodeDistance: 180, springLength: 140, damping: 0.35 },
+      stabilization: { iterations: 220, fit: true },
+    },
+    nodes: { borderWidth: 1, shadow: false, margin: 10, widthConstraint: { maximum: 180 } },
+    edges: { smooth: { type: 'cubicBezier', forceDirection: 'vertical', roundness: 0.5 }, arrows: { to: { enabled: true, scaleFactor: 0.6 } } },
+    groups: groupStyles,
+    interaction: { hover: true, tooltipDelay: 120, navigationButtons: false, keyboard: false, zoomView: true, dragView: true },
+  };
+
+  networkInstance = new vis.Network(container, visData, options);
+
+  // Toolbar handlers
+  document.getElementById('net-fit').addEventListener('click', () => {
+    networkInstance.fit({ animation: { duration: 320 } });
+  });
+  document.getElementById('net-hier').addEventListener('click', () => {
+    networkInstance.setOptions({
+      layout: { hierarchical: { enabled: true, direction: 'UD', sortMethod: 'directed', nodeSpacing: 180, levelSeparation: 130 } },
+      physics: { hierarchicalRepulsion: { nodeDistance: 180 }, stabilization: { iterations: 220, fit: true } },
+    });
+  });
+  document.getElementById('net-physics').addEventListener('click', () => {
+    networkInstance.setOptions({
+      layout: { hierarchical: { enabled: false } },
+      physics: { enabled: true, barnesHut: { gravitationalConstant: -10000, springLength: 140, springConstant: 0.04, damping: 0.4 }, stabilization: { iterations: 200, fit: true } },
+    });
+  });
+
+  // Click → show node info in toolbar strip
+  networkInstance.on('selectNode', (params) => {
+    if (!params.nodes.length) return;
+    const node = visData.nodes.get(params.nodes[0]);
+    const info = document.getElementById('net-info');
+    info.innerHTML = `<b style="color:var(--ink);">${escape(node.label.split('\n')[0])}</b> · ${node.group}`;
+  });
+  networkInstance.on('deselectNode', () => {
+    document.getElementById('net-info').innerHTML = '';
+  });
+}
+
+// ─── Financial trend chart ──────────────────────────────────────────
+function extractFinancialSeries(bundle) {
+  const state = bundle.state || {};
+
+  // CHARITY: financial_history is a list of years
+  const fh = state.financial_history;
+  if (Array.isArray(fh) && fh.length > 0) {
+    const sorted = [...fh].sort((a, b) =>
+      String(a.year || a.fy_end || '').localeCompare(String(b.year || b.fy_end || '')));
+    return {
+      years: sorted.map(r => String(r.year || r.fy_end || '').slice(0, 7)),
+      income: sorted.map(r => Number(r.income || r.total_income || 0)),
+      expenditure: sorted.map(r => Number(r.expenditure || r.total_expenditure || 0)),
+      currency: '£',
+      source: 'Charity Commission filings',
+    };
+  }
+
+  // COMPANY: accounts_data may include current + prior years
+  const acc = state.company_check?.accounts_data;
+  if (acc && Array.isArray(acc.history) && acc.history.length > 0) {
+    const sorted = [...acc.history].sort((a, b) =>
+      String(a.year || a.fy_end || '').localeCompare(String(b.year || b.fy_end || '')));
+    return {
+      years: sorted.map(r => String(r.year || r.fy_end || '').slice(0, 7)),
+      income: sorted.map(r => Number(r.turnover || r.income || 0)),
+      expenditure: sorted.map(r => Number(r.expenses || r.costs || 0)),
+      currency: '£',
+      source: 'Companies House filings',
+    };
+  }
+  return null;
+}
+
+function renderFinancialChart(d) {
+  document.getElementById('financial-section').style.display = 'block';
+  document.getElementById('financial-meta').textContent =
+    `${d.years.length} year${d.years.length === 1 ? '' : 's'} · source: ${d.source}`;
+
+  const ctx = document.getElementById('financial-chart').getContext('2d');
+  const inkColour = '#3D3DDC';
+  const expColour = '#F59E0B';
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: d.years,
+      datasets: [
+        {
+          label: 'Income',
+          data: d.income,
+          backgroundColor: inkColour + 'B3',
+          borderColor: inkColour,
+          borderWidth: 1.5,
+          borderRadius: 4,
+        },
+        {
+          label: 'Expenditure',
+          data: d.expenditure,
+          backgroundColor: expColour + 'B3',
+          borderColor: expColour,
+          borderWidth: 1.5,
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', align: 'end', labels: { font: { family: 'Inter, system-ui', size: 12 }, color: '#1A1D29' } },
+        tooltip: {
+          backgroundColor: '#1A1D29',
+          titleFont: { family: 'Inter, system-ui', weight: '600' },
+          bodyFont: { family: 'Inter, system-ui' },
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${formatGBP(ctx.parsed.y, d.currency)}`,
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#6B7280', font: { family: 'JetBrains Mono, monospace', size: 11 } } },
+        y: { grid: { color: '#EEF0F3' }, ticks: { color: '#6B7280', font: { family: 'JetBrains Mono, monospace', size: 11 }, callback: (v) => formatGBP(v, d.currency, true) } },
+      },
+    },
+  });
+}
+
+function formatGBP(v, prefix = '£', short = false) {
+  const n = Number(v) || 0;
+  const abs = Math.abs(n);
+  if (short) {
+    if (abs >= 1e9) return prefix + (n / 1e9).toFixed(1) + 'bn';
+    if (abs >= 1e6) return prefix + (n / 1e6).toFixed(1) + 'm';
+    if (abs >= 1e3) return prefix + (n / 1e3).toFixed(0) + 'k';
+    return prefix + n.toFixed(0);
+  }
+  return prefix + n.toLocaleString('en-GB', { maximumFractionDigits: 0 });
 }
 </script>
 </body>
