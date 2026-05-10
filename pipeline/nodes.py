@@ -616,24 +616,33 @@ def run_company_check_node(state: dict) -> dict:
     t0 = time.time()
 
     try:
+        # Keyword names must match core.company_check.run_company_check
+        # signature exactly. Previous code passed search_fn / social_search_fn /
+        # online_search_fn — those parameters don't exist on the function and
+        # the call raised TypeError, which the bare except below swallowed.
+        # Result: every company report came back "Unknown entity" with empty
+        # data, while the LLM hallucinated narrative around the void.
         result = run_company_check(
             state["company_number"],
             state.get("website_url", ""),
-            search_fn=search_generic,
+            tavily_search_fn=search_generic,
             adverse_search_fn=search_adverse_media_hybrid,
-            social_search_fn=search_social_osint,
-            online_search_fn=search_online_presence,
+            social_osint_fn=search_social_osint,
+            online_presence_fn=search_online_presence,
             fatf_screen_fn=screen_entity,
         )
         updates["company_check"] = result
-        
+
         # Add FCA details to company_check
         fca_details = state.get("fca_details")
         if fca_details:
             updates["company_check"]["fca_details"] = fca_details
     except Exception as e:
-        log.error(f"Company check failed: {e}")
-        updates["errors"] = state.get("errors", []) + [str(e)]
+        log.exception("Company check failed for %s",
+                      state.get("company_number"))
+        updates["errors"] = state.get("errors", []) + [
+            f"Company check failed: {type(e).__name__}: {e}"
+        ]
         updates["company_check"] = {}
 
     updates["stage_timings"]["company_check"] = round(time.time() - t0, 2)

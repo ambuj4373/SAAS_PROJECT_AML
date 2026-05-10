@@ -285,8 +285,17 @@ def score_company(check: dict) -> RiskScore:
              RiskLevel.MEDIUM, "fatf_screening", 8)
 
     # ── Adverse Media ────────────────────────────────────────────────
-    adverse = safe_get(check, "adverse_media") or {}
-    adv_count = safe_int(adverse.get("true_adverse_count", adverse.get("adverse_count")))
+    # adverse_media in company_check can be either a dict (summary) or a
+    # list of hits (current shape). Handle both.
+    adverse = safe_get(check, "adverse_media")
+    if isinstance(adverse, list):
+        adv_count = sum(1 for h in adverse if isinstance(h, dict)
+                        and h.get("verified_adverse"))
+    elif isinstance(adverse, dict):
+        adv_count = safe_int(adverse.get("true_adverse_count",
+                                         adverse.get("adverse_count")))
+    else:
+        adv_count = 0
     if adv_count >= 3:
         _add(signals, category_scores, "Media & Screening",
              f"{adv_count} adverse media hits found",

@@ -19,6 +19,10 @@ from typing import Any, Callable, Optional
 
 from core.llm_client import RateLimitCallback, llm_generate
 from core.logging_config import get_logger
+from core.narrative_verifier import (
+    NarrativeVerifierResult,
+    verify_narrative,
+)
 from core.self_verification import (
     VerificationResult,
     build_verification_prompt,
@@ -47,6 +51,7 @@ class CompanyReportBundle:
 
     verification: Optional[VerificationResult] = None
     structured_report: Optional[StructuredCompanyReport] = None
+    narrative_check: Optional[NarrativeVerifierResult] = None
     db_row_id: Optional[int] = None
 
     errors: list[str] = field(default_factory=list)
@@ -143,6 +148,19 @@ def generate_company_report(
         except Exception as e:
             log.warning(f"Structured parsing failed: {e}")
             bundle.warnings.append(f"Structured parsing: {e}")
+
+    # Programmatic narrative verifier — same deterministic checks as charity
+    try:
+        bundle.narrative_check = verify_narrative(narrative, state)
+        if not bundle.narrative_check.is_clean:
+            bundle.warnings.append(
+                f"Narrative verifier flagged "
+                f"{bundle.narrative_check.critical_count} critical, "
+                f"{bundle.narrative_check.warning_count} warning issues"
+            )
+    except Exception as e:
+        log.warning(f"Narrative verifier failed: {e}")
+        bundle.warnings.append(f"Narrative verifier: {e}")
 
     if not skip_db_log:
         try:
