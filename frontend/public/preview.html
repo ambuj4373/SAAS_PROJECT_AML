@@ -135,17 +135,18 @@
             <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>PDF + permanent link, valid 90 days</li>
             <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>Re-run free if anything's wrong</li>
           </ul>
-          <details style="margin-top:16px;">
-            <summary style="cursor:pointer; font-size:12.5px; color:var(--grey); list-style:none; user-select:none;">
-              <span style="border-bottom:1px dashed var(--grey-3);">Optional · paste a website to improve OSINT accuracy</span>
-            </summary>
-            <input id="website-override" type="url" placeholder="https://example.org"
-                   style="width:100%; margin-top:10px; padding:8px 12px; border:1px solid var(--line); border-radius:6px; font-family:var(--mono); font-size:12.5px; outline:none;" />
-            <p style="font-size:11.5px; color:var(--grey); margin:8px 0 0; line-height:1.5;">
-              We auto-discover the entity's website. If we get the wrong one (or nothing), paste the correct URL here and the OSINT/social-media stage will use it directly.
+          <div style="margin-top:24px; padding-top:24px; border-top:1px solid var(--line);">
+            <label style="display:block; font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--grey); margin-bottom:8px;">
+              Entity website (optional, but strongly recommended)
+            </label>
+            <input id="website-override" type="url"
+                   placeholder="https://example.org"
+                   style="width:100%; padding:11px 14px; border:1px solid var(--line); border-radius:8px; font-family:var(--mono); font-size:13px; outline:none; transition:border-color 120ms ease;" />
+            <p style="font-size:12px; color:var(--grey); margin:10px 0 0; line-height:1.5;">
+              <strong style="color:var(--ink);">Why this matters:</strong> with the website we extract live OSINT — verified social-media accounts, on-site policies (Privacy, Modern Slavery Act, T&Cs), domain age, contact details, and Open Graph metadata. Without it the report relies on text search which is hit-or-miss. Adding the website typically adds <strong style="color:var(--ink);">5–15 verified data points</strong> to the report.
             </p>
-          </details>
-          <a href="#" class="pv-bypass-link" id="bypass-trigger">Have an admin code?</a>
+          </div>
+          <a href="#" class="pv-bypass-link" id="bypass-trigger" style="margin-top:18px;">Have an admin code?</a>
           <div class="pv-disclaim">
             This preview shows public registry data. It is <b>not</b> a Probitas report and does not include sanctions screening, adverse-media review, or the risk score.
           </div>

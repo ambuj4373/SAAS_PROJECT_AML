@@ -38,6 +38,39 @@ def _list(state: dict, key: str) -> list:
     return v if isinstance(v, list) else []
 
 
+def _discover_website_url(check_result: dict) -> str:
+    """Find a usable website URL from the company-check sub-results."""
+    if not isinstance(check_result, dict):
+        return ""
+
+    # Try the cross_reference block (web search → likely site)
+    xref = check_result.get("cross_reference") or {}
+    candidates: list[str] = []
+
+    domain_info = xref.get("domain_info") or {}
+    if isinstance(domain_info, dict) and domain_info.get("domain"):
+        candidates.append(str(domain_info["domain"]))
+
+    if xref.get("primary_url"):
+        candidates.append(str(xref["primary_url"]))
+    if xref.get("website_url"):
+        candidates.append(str(xref["website_url"]))
+
+    # Online presence often contains a discovered URL
+    op = check_result.get("online_presence") or []
+    if isinstance(op, list):
+        for hit in op[:3]:
+            if isinstance(hit, dict) and hit.get("url"):
+                candidates.append(str(hit["url"]))
+
+    # First reasonable candidate wins
+    for c in candidates:
+        c = c.strip()
+        if c and "." in c and "@" not in c:
+            return c
+    return ""
+
+
 def _str(state: dict, key: str) -> str:
     """Return state[key] if it's a non-empty string, else ''."""
     v = state.get(key)
@@ -204,10 +237,27 @@ def run_web_intelligence(state: dict) -> dict:
     website_url = state.get("website_url", "")
     trustees = state.get("trustees", [])
     search_failures = []
-    
+
     # ─── FCA AWARENESS ────────────────────────────────────────────────
     fca_details = state.get("fca_details", {})
     is_fca_regulated = fca_details.get("industry_regulated", False)
+
+    # ─── Deep website OSINT (charity pipeline) ────────────────────────
+    # Same as the company side: scrape og: tags, social accounts, key
+    # compliance pages, contact info, SSL. Adds real value vs only
+    # relying on Tavily/Serper text search.
+    if website_url:
+        try:
+            from core.website_intel import fetch_website_intelligence
+            log.info("Scraping charity website OSINT: %s", website_url)
+            updates["website_intel"] = fetch_website_intelligence(
+                website_url, max_pages=5
+            )
+        except Exception as we:
+            log.warning("Charity website intel failed: %s", we)
+            updates["website_intel"] = {"ok": False, "error": str(we)}
+    else:
+        updates["website_intel"] = {"ok": False, "error": "no website url available"}
 
     futures = {}
     with ThreadPoolExecutor(max_workers=10) as pool:
@@ -646,6 +696,25 @@ def run_company_check_node(state: dict) -> dict:
         except Exception as ce:
             log.warning("Compliance guidance failed: %s", ce)
             result["compliance_guidance"] = {}
+
+        # ── Deep website OSINT ─────────────────────────────────────────
+        # If a website URL is available (user-supplied OR auto-discovered
+        # from cross_reference/online_presence), scrape it for og: tags,
+        # social accounts, key compliance pages, contact info, SSL, and
+        # domain age. This is what turns the report from "looked up" into
+        # "verified". Failures are non-fatal; logged + skipped.
+        try:
+            from core.website_intel import fetch_website_intelligence
+            url = state.get("website_url") or _discover_website_url(result)
+            if url:
+                log.info("Scraping website OSINT for %s: %s",
+                         state.get("company_number"), url)
+                result["website_intel"] = fetch_website_intelligence(url, max_pages=5)
+            else:
+                result["website_intel"] = {"ok": False, "error": "no website url available"}
+        except Exception as we:
+            log.warning("Website intel failed: %s", we)
+            result["website_intel"] = {"ok": False, "error": str(we)}
 
         updates["company_check"] = result
 

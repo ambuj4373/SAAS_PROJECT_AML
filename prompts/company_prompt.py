@@ -18,6 +18,125 @@ _SEVERITY_ICON = {
 }
 
 
+def _render_website_intel_block(intel: dict) -> str:
+    """Pre-render Section 4 (Digital Footprint) from the website OSINT scrape.
+
+    Same idea as Section 1B: hand the LLM ready markdown so it features
+    the data instead of trying to extract it from a JSON dump.
+    """
+    if not intel or not intel.get("ok"):
+        err = (intel or {}).get("error", "no website available or fetch failed")
+        return (
+            "## 4. Digital Footprint & Website Verification\n\n"
+            f"_(No verified website data: {err}. The buyer should request the "
+            f"entity's primary URL and a copy of their privacy / terms / "
+            f"modern-slavery statements.)_\n"
+        )
+
+    url = intel.get("url", "")
+    domain = intel.get("domain", "")
+    meta = intel.get("meta") or {}
+    social = intel.get("social") or {}
+    rel_me = intel.get("social_rel_me") or []
+    pages = intel.get("compliance_pages") or {}
+    contacts = intel.get("contacts") or {}
+    ssl = intel.get("ssl") or {}
+    age = intel.get("domain_age") or {}
+    signals = intel.get("signals") or []
+
+    # Header line
+    age_part = ""
+    if age.get("age_years") is not None:
+        age_part = f"  ·  **Domain age:** {age['age_years']} years"
+
+    https_part = "✓ HTTPS" if ssl.get("https") else "✗ no HTTPS"
+    if ssl.get("issuer"):
+        https_part += f" (issued by {ssl['issuer']})"
+
+    # Social links table (render only if any)
+    if social or rel_me:
+        social_rows = ""
+        for plat, links in sorted(social.items()):
+            if not links:
+                continue
+            social_rows += f"| {plat.title()} | [{links[0]}]({links[0]}) |\n"
+        for me in rel_me[:3]:
+            social_rows += f"| (rel=me) | [{me}]({me}) |\n"
+        social_block = (
+            "**Verified social-media accounts** (extracted from the website "
+            "footer / meta tags — not guessed from text search):\n\n"
+            "| Platform | Link |\n|----------|------|\n"
+            f"{social_rows.rstrip()}\n"
+        )
+    else:
+        social_block = (
+            "**Social-media accounts:** none detected on the website. This is "
+            "informational — many B2B firms do not maintain external social presences.\n"
+        )
+
+    # Compliance pages table
+    if pages:
+        comp_rows = ""
+        for topic, href in sorted(pages.items()):
+            label = topic.replace("_", " ").title()
+            target = href if href and href != "(text mention only)" else "_(mentioned in body, no dedicated page)_"
+            comp_rows += f"| {label} | {target} |\n"
+        comp_block = (
+            "**Compliance pages found on-site:**\n\n"
+            "| Topic | Location |\n|-------|----------|\n"
+            f"{comp_rows.rstrip()}\n"
+        )
+    else:
+        comp_block = (
+            "**Compliance pages:** none detected on a 5-page crawl. "
+            "Notable absences: Privacy Policy, Cookie Policy, Modern Slavery "
+            "Statement (if turnover ≥ £36m). These are required under UK law "
+            "in many sectors.\n"
+        )
+
+    # Contacts
+    contact_lines = []
+    if contacts.get("emails"):
+        contact_lines.append(f"  - Emails: {', '.join(contacts['emails'][:3])}")
+    if contacts.get("phones"):
+        contact_lines.append(f"  - Phones: {', '.join(contacts['phones'][:2])}")
+    if contacts.get("postcodes"):
+        contact_lines.append(f"  - On-site postcodes: {', '.join(contacts['postcodes'][:3])}")
+    contact_block = "\n".join(contact_lines) if contact_lines else "  - None visible."
+
+    # Signals as bullets
+    sig_lines = "\n".join(f"- {s}" for s in signals[:6])
+
+    return f"""## 4. Digital Footprint & Website Verification
+
+> **Verified URL:** [{url}]({url})  ·  **Domain:** `{domain}`  ·  **TLS:** {https_part}{age_part}
+
+The data below was extracted directly from a live fetch of the entity's
+website (not from a third-party search index). If the entity disputes any
+of it, that is itself a useful signal.
+
+**Site identity (from meta tags):**
+- Title: {meta.get('title') or '_(no title set)_'}
+- og:title: {meta.get('og:title') or '_(not set)_'}
+- og:description: {meta.get('og:description') or '_(not set)_'}
+- og:site_name: {meta.get('og:site_name') or '_(not set)_'}
+
+{social_block}
+
+{comp_block}
+
+**Contact information found on-site:**
+{contact_block}
+
+**Site-level signals:**
+{sig_lines if sig_lines else '_(none)_'}
+
+In the analyst commentary that follows, cross-reference the on-site
+contact details against the registered office address from §1, and flag
+any social account whose handle does not match the registered name.
+"""
+
+
 def _render_compliance_block(guidance: dict) -> str:
     """Pre-render Section 1B as markdown.
 
@@ -141,6 +260,9 @@ def build_company_prompt(
     # The LLM has trouble extracting structured tables from a deep JSON dump
     # so we hand it the markdown directly. It just adapts the wording.
     compliance_block = _render_compliance_block(co_check_data.get("compliance_guidance") or {})
+
+    # ── Pre-render website OSINT block (Section 4) ────────────────────────
+    website_block = _render_website_intel_block(co_check_data.get("website_intel") or {})
 
     risk_score_block = ""
     if risk_score_summary:
@@ -270,13 +392,16 @@ If `network_graph_dot` is populated, mention that a network graph is
 available (the frontend will render it separately). Do not embed the DOT
 source in the narrative.
 
-## 4. Digital Footprint & Website Credibility
+{website_block}
 
-### 4A. Website Credibility
-Report credibility level, content depth, social links, contact info. Thin content on B2B sites is normal.
-
-### 4B. Online Presence & Social Media
-Report findings. If "osint_confidence": "low", mark links as "⚠️ Unverified".
+After the rendered Section 4 above, add a short analyst paragraph that
+cross-references the on-site evidence against the registered identity:
+- Is the site title / og:site_name consistent with the legal name in §1?
+- Is the on-site postcode the same as the registered office?
+- Do the social accounts use a handle that matches the entity name (or
+  carries credible follower counts that fit the entity's claimed size)?
+- If the site is HTTPS-broken, very young (<1 year), or has no policies,
+  surface that as a finding.
 
 ## 5. Business & Payment Profile
 Describe business model: B2B/B2C/Mixed, payment pattern, chargeback risk.

@@ -364,17 +364,56 @@ If "structural_governance" data is present and has total_flags > 0, include this
 If structural_governance.total_flags is 0, state: "No structural governance anomalies detected."
 
 ## 5. Online Presence & Digital Footprint
-- Website quality, transparency (published accounts/policies?)
-- **Social Media Verification Table** (from "social_media_links" data — these were deterministically extracted from the charity's website HTML, NOT guessed):
 
-| Platform | Verified URL | Source |
-|----------|-------------|--------|
+If the data contains a populated `website_intel` block (ok=true), use it
+DIRECTLY rather than relying on social_media_links. The website_intel
+block is the authoritative source — it was extracted via a live fetch of
+the charity's actual website pages.
 
-  For each platform in social_media_links: show the URL as a clickable link and note "Extracted from charity website".
-  For major platforms (Facebook, Twitter/X, LinkedIn, Instagram, YouTube) NOT found in the data: state "No official [platform] link detected on the charity's public website." Do NOT guess URLs or follower counts.
-  If social_media_links is empty/null: state "No social media profile links were detected on the charity's public website."
-- Charity review sites, Fundraising Regulator registration
-- **Analyst Note**: Online presence consistent with stated size? Social media gaps for a charity of this scale?
+Render Section 5 with this structure when website_intel is present:
+
+> **Verified URL:** [link]  ·  **Domain:** [domain]  ·  **TLS:** [https status]  ·  **Domain age:** [age_years if known]
+
+**Site identity (from meta tags):**
+- Title: [meta.title]
+- og:title: [meta['og:title']]
+- og:site_name: [meta['og:site_name']]
+
+**Verified social-media accounts** (extracted from the charity's website footer / meta tags — not guessed from text search):
+
+| Platform | Link |
+|----------|------|
+| [platform] | [url] |
+
+**Compliance pages found on-site:**
+
+| Topic | Location |
+|-------|----------|
+| [topic] | [path or "(text mention only)"] |
+
+For charities, the relevant topics are: privacy_policy, cookie_policy,
+terms, modern_slavery (if turnover ≥ £36m), safeguarding (especially
+for charities working with vulnerable groups), whistleblowing,
+complaints, registered_charity (statement of CC registration on the
+website itself).
+
+**Contacts found on-site:** quote any data-protection / safeguarding /
+press contact emails. Cross-reference postcodes against the registered
+office in §4.
+
+**Site-level signals:** quote signals[:5] from website_intel verbatim
+as bullets.
+
+If website_intel is missing or ok=false, fall back to:
+- "No website data available — recommend the charity provide their
+  primary URL and a copy of their privacy / safeguarding policies."
+- Use the social_media_links data if present (less reliable than
+  website_intel but still useful).
+
+**Analyst commentary** (after the rendered section):
+- Is the on-site charity number consistent with §1?
+- Is the safeguarding policy linked given the charity's reported activities?
+- Are the social handles credible for a charity of this declared scale?
 
 ## 6. Adverse Media Search
 ### Organisation
