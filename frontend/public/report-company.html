@@ -6,6 +6,7 @@
 <title>Probitas Report</title>
 <link rel="stylesheet" href="styles.css" />
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3.5.0/lib/viz-standalone.js"></script>
 <style>
   body { background: var(--white); }
   /* Wider main column · slimmer rails so the narrative + tables breathe */
@@ -204,6 +205,21 @@
       </section>
 
       <article class="narr" id="narrative"></article>
+
+      <!-- Ownership / director network graph (rendered client-side from DOT) -->
+      <section id="network-section" style="display:none; margin: 64px 0 0; padding: 32px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 12px;">
+          <h2 style="font-family: var(--display); font-size: 22px; font-weight: 600; letter-spacing: -0.015em; margin: 0;">Ownership &amp; director network</h2>
+          <span class="mono" style="font-size: 11.5px; color: var(--grey);">UBO chain · directors · cross-appointments</span>
+        </div>
+        <p style="color: var(--grey); font-size: 14px; line-height: 1.55; margin: 0 0 20px; max-width: 64ch;">
+          Visual map of the entity's people of significant control, directors, and the other UK companies they're connected to. Built from Companies House records — every line on this diagram is a registered relationship.
+        </p>
+        <div id="network-graph" style="width: 100%; overflow: auto; padding: 16px; background: white; border: 1px solid var(--line); border-radius: 8px; min-height: 100px;">
+          <div class="mono" style="font-size: 12px; color: var(--grey); padding: 28px; text-align: center;">Rendering network…</div>
+        </div>
+      </section>
+
       <div class="end-rule">— END OF REPORT —</div>
     </main>
 
@@ -467,6 +483,32 @@ function render(bundle) {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') document.querySelectorAll('.drawer').forEach(d => d.dataset.open = 'false');
   });
+
+  // Network graph (UBO + directors) — render client-side from DOT
+  const dot = bundle.state?.company_check?.network_graph_dot
+           || bundle.state?.network_graph_dot
+           || '';
+  if (dot && dot.length > 50 && typeof Viz !== 'undefined') {
+    document.getElementById('network-section').style.display = 'block';
+    Viz.instance().then(viz => {
+      try {
+        const svg = viz.renderSVGElement(dot);
+        const target = document.getElementById('network-graph');
+        target.innerHTML = '';
+        // Constrain width — keep readable on standard laptop
+        svg.style.maxWidth = '100%';
+        svg.style.height = 'auto';
+        svg.style.display = 'block';
+        target.appendChild(svg);
+      } catch (e) {
+        document.getElementById('network-graph').innerHTML =
+          `<div style="color:var(--grey); font-family:var(--mono); font-size:12px; padding:24px;">Could not render network graph: ${escape(String(e))}</div>`;
+      }
+    }).catch(e => {
+      document.getElementById('network-graph').innerHTML =
+        `<div style="color:var(--grey); font-family:var(--mono); font-size:12px; padding:24px;">Graph engine failed to load.</div>`;
+    });
+  }
 
   // TOC scroll-sync
   const obs = new IntersectionObserver(entries => {
