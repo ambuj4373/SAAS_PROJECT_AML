@@ -29,148 +29,346 @@ _VIRTUAL_OFFICE_MARKERS: list[str] = [
     "3 More London Riverside".lower(),
 ]
 
-# ── INDUSTRY RISK FOR DIRECT DEBIT (DD / Bacs) ──────────────────────────────
-# Maps SIC code prefixes → (dd_risk_level, industry_category, reason)
-# Based on UK payment processor and Bacs risk classifications.
-# HIGH = high chargeback rates, fraud susceptibility, regulatory scrutiny
-# MEDIUM = moderate chargeback or regulatory complexity
-# LOW = standard risk, well-understood sector
+# ── INDUSTRY PAYMENT-METHOD PROFILE (by SIC prefix) ────────────────────────
+# Replaces the old DD-only risk table. Each entry maps an industry to a
+# multi-method recommendation: which payment methods typically fit, which
+# work but warrant caution, and which to avoid — with a one-line reason.
+#
+# Method tags used across the system:
+#   "card"          — debit/credit card via merchant acquiring (consumer + B2B)
+#   "direct_debit"  — Bacs Direct Debit / SEPA equivalents (recurring pulls)
+#   "bank_transfer" — Faster Payments / BACS credit (B2B invoicing, ad-hoc)
+#   "open_banking"  — account-to-account push payments (low fee, modern)
+#   "standing_order"— customer-initiated fixed recurring (rent, memberships)
+#   "invoice_terms" — manual invoice + remittance, net-30/60/90 (B2B)
+#
+# overall_risk: "high" / "medium" / "low" — used as a contextual signal for
+# the AML scorer (NOT a hard-stop). Drives chargeback-risk + due-diligence
+# weighting, never a binary verdict.
 #
 # Prefix matching: 5-digit first, then 4, 3, 2 — most specific wins.
 
-_INDUSTRY_DD_RISK: dict[str, tuple[str, str, str]] = {
+# Profile keys: recommended, cautious, avoid (all lists), risk_level, category, reason.
+_INDUSTRY_PAYMENT_PROFILE: dict[str, dict] = {
     # ── 1. Financial & Regulated Services ─────────────────────────────
-    "64110": ("high",   "Financial Services",       "Central banking — heavily regulated"),
-    "64191": ("high",   "Financial Services",       "Banks — strict regulatory framework"),
-    "64192": ("high",   "Financial Services",       "Building societies — regulated financial institution"),
-    "64205": ("high",   "Financial Services",       "Financial services holding company"),
-    "64301": ("medium", "Financial Services",       "Investment trust — regulated fund"),
-    "64302": ("medium", "Financial Services",       "Unit trust — regulated fund"),
-    "64303": ("medium", "Financial Services",       "Venture / development capital"),
-    "64999": ("high",   "Financial Services",       "Financial intermediation NEC — crypto, FX platforms"),
-    "6419":  ("high",   "Financial Services",       "Monetary intermediation — payday/unsecured lending risk"),
-    "649":   ("high",   "Financial Services",       "Other financial services — potential crypto / FX / lending"),
-    "651":   ("medium", "Insurance",                "Insurance — complex products, cancellation risk"),
-    "652":   ("medium", "Insurance",                "Reinsurance"),
-    "653":   ("medium", "Insurance",                "Pension funding"),
-    "661":   ("medium", "Financial Services",       "Financial markets administration"),
-    "662":   ("low",    "Insurance Services",       "Insurance auxiliary — low DD risk"),
-    "663":   ("medium", "Financial Services",       "Fund management"),
-    "641":   ("medium", "Financial Services",       "Financial intermediation"),
-    "642":   ("low",    "Holding Companies",        "Activities of holding companies"),
-    "643":   ("medium", "Financial Services",       "Trusts & funds"),
+    "64110": {"recommended": ["bank_transfer", "open_banking"], "cautious": ["direct_debit"], "avoid": ["card"],
+              "risk_level": "high", "category": "Financial Services",
+              "reason": "Regulated banking — wholesale flows favour FPS/BACS; cards uncommon"},
+    "64191": {"recommended": ["bank_transfer", "open_banking"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "high", "category": "Financial Services",
+              "reason": "Banks — strict regulatory framework, wholesale rails preferred"},
+    "64192": {"recommended": ["bank_transfer", "direct_debit", "open_banking"], "cautious": [], "avoid": [],
+              "risk_level": "medium", "category": "Financial Services",
+              "reason": "Building societies — savings/mortgage flows fit DD + transfer"},
+    "64205": {"recommended": ["bank_transfer", "open_banking"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "medium", "category": "Holding Companies",
+              "reason": "Financial holding — intercompany flows, treasury-style payments"},
+    "64301": {"recommended": ["bank_transfer", "direct_debit"], "cautious": ["open_banking"], "avoid": [],
+              "risk_level": "medium", "category": "Investment Funds",
+              "reason": "Investment trust — subscription + redemption via authorised flows"},
+    "64302": {"recommended": ["bank_transfer", "direct_debit"], "cautious": ["open_banking"], "avoid": [],
+              "risk_level": "medium", "category": "Investment Funds",
+              "reason": "Unit trust — regulated fund subscription model"},
+    "64303": {"recommended": ["bank_transfer"], "cautious": ["open_banking"], "avoid": ["card", "direct_debit"],
+              "risk_level": "medium", "category": "Venture Capital",
+              "reason": "Venture / development capital — large bespoke flows, manual"},
+    "64999": {"recommended": ["bank_transfer"], "cautious": ["open_banking", "direct_debit"], "avoid": ["card"],
+              "risk_level": "high", "category": "Financial Services (NEC)",
+              "reason": "FX, crypto, alt-finance — enhanced AML; card heavily restricted"},
+    "6419":  {"recommended": ["bank_transfer"], "cautious": ["direct_debit", "open_banking"], "avoid": ["card"],
+              "risk_level": "high", "category": "Lending",
+              "reason": "Monetary intermediation — payday/unsecured lending exposure"},
+    "649":   {"recommended": ["bank_transfer", "open_banking"], "cautious": ["direct_debit"], "avoid": ["card"],
+              "risk_level": "high", "category": "Financial Services",
+              "reason": "Other financial services — possible crypto/FX/lending exposure"},
+    "651":   {"recommended": ["direct_debit", "bank_transfer"], "cautious": ["card"], "avoid": [],
+              "risk_level": "medium", "category": "Insurance",
+              "reason": "Insurance premiums — DD is the default rail; cancellation risk"},
+    "652":   {"recommended": ["bank_transfer"], "cautious": ["direct_debit"], "avoid": ["card"],
+              "risk_level": "medium", "category": "Reinsurance",
+              "reason": "Reinsurance — wholesale B2B, large transfers"},
+    "653":   {"recommended": ["direct_debit", "bank_transfer", "standing_order"], "cautious": [], "avoid": ["card"],
+              "risk_level": "medium", "category": "Pensions",
+              "reason": "Pension contributions — recurring DD/SO standard"},
+    "661":   {"recommended": ["bank_transfer", "open_banking"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "medium", "category": "Financial Markets",
+              "reason": "Financial markets administration — institutional flows"},
+    "662":   {"recommended": ["direct_debit", "bank_transfer", "card"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "Insurance Services",
+              "reason": "Insurance auxiliary — flexible methods, well-understood sector"},
+    "663":   {"recommended": ["bank_transfer", "direct_debit"], "cautious": ["open_banking"], "avoid": ["card"],
+              "risk_level": "medium", "category": "Fund Management",
+              "reason": "Fund management — large bespoke flows, regulated"},
+    "641":   {"recommended": ["bank_transfer", "open_banking"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "medium", "category": "Financial Services",
+              "reason": "Financial intermediation — wholesale rails preferred"},
+    "642":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Holding Companies",
+              "reason": "Activities of holding companies — intercompany transfers"},
+    "643":   {"recommended": ["bank_transfer"], "cautious": ["direct_debit", "open_banking"], "avoid": ["card"],
+              "risk_level": "medium", "category": "Trusts & Funds",
+              "reason": "Trusts and funds — manual KYC-heavy distributions"},
 
     # ── 2. Gambling & Adult (high chargeback / dispute) ───────────────
-    "92710": ("high",   "Gambling & Betting",       "Gambling — UK GC regulated, high chargeback"),
-    "927":   ("high",   "Gambling & Betting",       "Gambling & betting activities"),
-    "920":   ("high",   "Adult / Entertainment",    "Entertainment — potential adult content risk"),
-    "9234":  ("high",   "Adult / Entertainment",    "Other entertainment activities"),
+    "92710": {"recommended": ["open_banking"], "cautious": ["bank_transfer", "card"], "avoid": ["direct_debit"],
+              "risk_level": "high", "category": "Gambling & Betting",
+              "reason": "UK GC regulated — DD unsuitable (cancellation/dispute); card under heavy AML"},
+    "927":   {"recommended": ["open_banking"], "cautious": ["bank_transfer", "card"], "avoid": ["direct_debit"],
+              "risk_level": "high", "category": "Gambling & Betting",
+              "reason": "Gambling & betting — high chargeback; DD avoided"},
+    "920":   {"recommended": ["open_banking"], "cautious": ["card", "bank_transfer"], "avoid": ["direct_debit"],
+              "risk_level": "high", "category": "Adult / Entertainment",
+              "reason": "Entertainment — possible adult content; card restricted, DD avoided"},
+    "9234":  {"recommended": ["bank_transfer", "open_banking"], "cautious": ["card"], "avoid": ["direct_debit"],
+              "risk_level": "high", "category": "Adult / Entertainment",
+              "reason": "Other entertainment activities — chargeback exposure"},
 
     # ── 3. Travel & Future Delivery ───────────────────────────────────
-    "79110": ("high",   "Travel & Tourism",         "Travel agency — future delivery, high ticket value"),
-    "79120": ("high",   "Travel & Tourism",         "Tour operator — future delivery risk"),
-    "79901": ("high",   "Travel & Tourism",         "Reservation services — future delivery"),
-    "791":   ("high",   "Travel & Tourism",         "Travel agency activities"),
-    "792":   ("high",   "Travel & Tourism",         "Tour operator activities"),
-    "799":   ("high",   "Travel & Tourism",         "Reservation / booking services"),
-    "511":   ("medium", "Travel & Transport",       "Passenger air transport"),
+    "79110": {"recommended": ["card", "open_banking"], "cautious": ["bank_transfer"], "avoid": ["direct_debit"],
+              "risk_level": "high", "category": "Travel & Tourism",
+              "reason": "Travel agency — future-delivery indemnity makes DD unsuitable; card needs reserves/3DS"},
+    "79120": {"recommended": ["card", "bank_transfer"], "cautious": ["open_banking"], "avoid": ["direct_debit"],
+              "risk_level": "high", "category": "Travel & Tourism",
+              "reason": "Tour operator — future-delivery risk, high ticket value"},
+    "79901": {"recommended": ["card", "open_banking"], "cautious": ["bank_transfer"], "avoid": ["direct_debit"],
+              "risk_level": "high", "category": "Travel & Tourism",
+              "reason": "Reservation services — future-delivery, refund disputes"},
+    "791":   {"recommended": ["card", "open_banking"], "cautious": ["bank_transfer"], "avoid": ["direct_debit"],
+              "risk_level": "high", "category": "Travel & Tourism",
+              "reason": "Travel agency activities — future delivery, high ticket"},
+    "792":   {"recommended": ["card", "bank_transfer"], "cautious": ["open_banking"], "avoid": ["direct_debit"],
+              "risk_level": "high", "category": "Travel & Tourism",
+              "reason": "Tour operator activities — future delivery risk"},
+    "799":   {"recommended": ["card", "open_banking"], "cautious": ["bank_transfer"], "avoid": ["direct_debit"],
+              "risk_level": "high", "category": "Travel & Tourism",
+              "reason": "Reservation / booking services — refund-dispute exposure"},
+    "511":   {"recommended": ["card", "bank_transfer"], "cautious": ["direct_debit", "open_banking"], "avoid": [],
+              "risk_level": "medium", "category": "Travel & Transport",
+              "reason": "Passenger air transport — card primary, B2B transfer for corporates"},
 
     # ── 4. Health, Wellness & Regulated Products ──────────────────────
-    "47730": ("medium", "Pharmaceuticals",          "Dispensing chemist — regulated product sales"),
-    "47260": ("medium", "Tobacco & Vaping",         "Tobacco retail — regulatory restrictions"),
-    "2120":  ("medium", "Pharmaceuticals",          "Pharmaceutical manufacturing"),
-    "4773":  ("medium", "Pharmaceuticals",          "Pharmacy / dispensing"),
-    "8690":  ("low",    "Healthcare",               "Other human health activities"),
+    "47730": {"recommended": ["card", "bank_transfer"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "medium", "category": "Pharmaceuticals",
+              "reason": "Dispensing chemist — regulated product sales; card primary"},
+    "47260": {"recommended": ["card"], "cautious": ["bank_transfer"], "avoid": ["direct_debit"],
+              "risk_level": "medium", "category": "Tobacco & Vaping",
+              "reason": "Tobacco retail — age-restricted, regulatory limits"},
+    "2120":  {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "medium", "category": "Pharmaceuticals",
+              "reason": "Pharmaceutical manufacturing — B2B invoice flows"},
+    "4773":  {"recommended": ["card", "bank_transfer"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "medium", "category": "Pharmaceuticals",
+              "reason": "Pharmacy / dispensing — POS card primary"},
+    "8690":  {"recommended": ["card", "direct_debit", "bank_transfer"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "Healthcare",
+              "reason": "Other human health activities — flexible methods"},
 
     # ── 5. Telemarketing & Direct Sales ───────────────────────────────
-    "82990": ("medium", "Business Support",         "Other business support — telemarketing / direct sales risk"),
-    "829":   ("medium", "Business Support",         "Business support services NEC"),
+    "82990": {"recommended": ["card", "open_banking"], "cautious": ["direct_debit", "bank_transfer"], "avoid": [],
+              "risk_level": "medium", "category": "Business Support",
+              "reason": "Business support — telemarketing/direct sales; cancellation risk on DD"},
+    "829":   {"recommended": ["card", "bank_transfer", "open_banking"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "medium", "category": "Business Support",
+              "reason": "Business support services NEC — chargeback exposure on cold-acquired customers"},
 
     # ── 6. Subscription / Recurring Billing ───────────────────────────
-    "620":   ("low",    "IT & Software",            "Software / SaaS — standard DD risk"),
-    "631":   ("low",    "IT & Software",            "Data processing & hosting"),
-    "639":   ("low",    "IT & Software",            "Other information services"),
+    "620":   {"recommended": ["card", "direct_debit", "open_banking", "bank_transfer"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "IT & Software",
+              "reason": "Software / SaaS — all major rails fit; subscriptions favour DD/card"},
+    "631":   {"recommended": ["direct_debit", "card", "bank_transfer"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "IT & Software",
+              "reason": "Data processing & hosting — predictable B2B subscription"},
+    "639":   {"recommended": ["card", "direct_debit", "bank_transfer"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "IT & Software",
+              "reason": "Other information services — flexible payment mix"},
 
     # ── 7. Retail & E-Commerce ────────────────────────────────────────
-    "479":   ("medium", "E-Commerce / Mail Order",  "Internet / mail order retail — chargeback exposure"),
-    "4791":  ("medium", "E-Commerce / Mail Order",  "Online retail — non-delivery risk"),
-    "471":   ("low",    "Retail",                   "Non-specialised retail"),
-    "472":   ("low",    "Retail",                   "Food & beverage retail"),
-    "474":   ("low",    "Retail",                   "ICT equipment retail"),
-    "475":   ("low",    "Retail",                   "Other household goods retail"),
-    "4777":  ("medium", "Retail (High Value)",      "Jewellery, watches, precious metals — high value goods"),
+    "479":   {"recommended": ["card", "open_banking"], "cautious": ["direct_debit", "bank_transfer"], "avoid": [],
+              "risk_level": "medium", "category": "E-Commerce / Mail Order",
+              "reason": "Internet / mail-order retail — non-delivery chargeback risk; card primary"},
+    "4791":  {"recommended": ["card", "open_banking"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "medium", "category": "E-Commerce / Mail Order",
+              "reason": "Online retail — chargeback exposure; DD unusual for one-off retail"},
+    "471":   {"recommended": ["card", "bank_transfer"], "cautious": ["direct_debit", "open_banking"], "avoid": [],
+              "risk_level": "low", "category": "Retail",
+              "reason": "Non-specialised retail — POS card primary"},
+    "472":   {"recommended": ["card"], "cautious": ["bank_transfer"], "avoid": ["direct_debit"],
+              "risk_level": "low", "category": "Retail (Food)",
+              "reason": "Food & beverage retail — POS-only"},
+    "474":   {"recommended": ["card", "bank_transfer", "open_banking"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Retail (ICT)",
+              "reason": "ICT equipment retail — high-value items, BNPL common"},
+    "475":   {"recommended": ["card", "bank_transfer"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Retail (Household)",
+              "reason": "Household goods retail — card primary"},
+    "4777":  {"recommended": ["card", "bank_transfer", "open_banking"], "cautious": [], "avoid": ["direct_debit"],
+              "risk_level": "medium", "category": "Retail (High Value)",
+              "reason": "Jewellery, watches, precious metals — high ticket; cards under enhanced AML"},
 
     # ── 8. Charity & Non-Profit ───────────────────────────────────────
-    "889":   ("low",    "Charity / Non-Profit",     "Social work — can have high DD cancellation"),
-    "949":   ("low",    "Charity / Non-Profit",     "Other membership organisations"),
-    "9499":  ("low",    "Charity / Non-Profit",     "Other membership organisations NEC"),
-    "9411":  ("low",    "Trade / Professional Body", "Business & employer organisations"),
+    "889":   {"recommended": ["direct_debit", "card", "open_banking", "standing_order"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "Charity / Non-Profit",
+              "reason": "Social work — recurring donations; DD is the default donation rail"},
+    "949":   {"recommended": ["direct_debit", "standing_order", "card"], "cautious": ["bank_transfer"], "avoid": [],
+              "risk_level": "low", "category": "Charity / Non-Profit",
+              "reason": "Membership organisations — DD/SO ideal for subs"},
+    "9499":  {"recommended": ["direct_debit", "standing_order", "card"], "cautious": ["bank_transfer"], "avoid": [],
+              "risk_level": "low", "category": "Charity / Non-Profit",
+              "reason": "Other membership organisations NEC"},
+    "9411":  {"recommended": ["direct_debit", "bank_transfer", "card"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "Trade / Professional Body",
+              "reason": "Business & employer organisations — annual subs"},
 
     # ── 9. Professional Services (generally low risk) ─────────────────
-    "691":   ("low",    "Professional Services",    "Legal activities"),
-    "692":   ("low",    "Professional Services",    "Accounting / bookkeeping"),
-    "701":   ("low",    "Corporate",                "Head office activities"),
-    "702":   ("low",    "Professional Services",    "Management consultancy"),
-    "711":   ("low",    "Professional Services",    "Architecture / engineering"),
-    "712":   ("low",    "Professional Services",    "Technical testing"),
-    "731":   ("low",    "Marketing & Advertising",  "Advertising"),
-    "741":   ("low",    "Professional Services",    "Design activities"),
-    "782":   ("low",    "Recruitment",              "Temporary employment agency"),
-    "781":   ("low",    "Recruitment",              "Employment placement"),
+    "691":   {"recommended": ["bank_transfer", "card", "invoice_terms"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Professional Services",
+              "reason": "Legal — invoice + B2B transfer standard; client account requirements"},
+    "692":   {"recommended": ["bank_transfer", "direct_debit", "card"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "Professional Services",
+              "reason": "Accounting / bookkeeping — recurring fees fit DD"},
+    "701":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Corporate",
+              "reason": "Head office — intercompany transfers"},
+    "702":   {"recommended": ["bank_transfer", "invoice_terms", "card"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Professional Services",
+              "reason": "Management consultancy — project-based invoicing"},
+    "711":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["card", "direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Professional Services",
+              "reason": "Architecture / engineering — milestone invoicing"},
+    "712":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["card"], "avoid": [],
+              "risk_level": "low", "category": "Professional Services",
+              "reason": "Technical testing — B2B invoice flows"},
+    "731":   {"recommended": ["bank_transfer", "card", "direct_debit"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "Marketing & Advertising",
+              "reason": "Advertising — retainers fit DD; project work via invoice"},
+    "741":   {"recommended": ["card", "bank_transfer", "direct_debit"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "Professional Services",
+              "reason": "Design activities — flexible project invoicing"},
+    "782":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["card", "direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Recruitment",
+              "reason": "Temporary employment agency — large weekly payroll"},
+    "781":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Recruitment",
+              "reason": "Employment placement — placement-fee invoicing"},
 
     # ── 10. Construction & Property ───────────────────────────────────
-    "411":   ("low",    "Construction",             "Property development"),
-    "412":   ("low",    "Construction",             "Construction of buildings"),
-    "421":   ("low",    "Construction",             "Road & railway construction"),
-    "433":   ("low",    "Construction",             "Building completion"),
-    "681":   ("low",    "Real Estate",              "Buying & selling property"),
-    "682":   ("low",    "Real Estate",              "Real estate management"),
-    "683":   ("low",    "Real Estate",              "Real estate on fee / contract"),
+    "411":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["card"], "avoid": ["direct_debit"],
+              "risk_level": "low", "category": "Construction",
+              "reason": "Property development — large milestone payments via FPS"},
+    "412":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["card"], "avoid": ["direct_debit"],
+              "risk_level": "low", "category": "Construction",
+              "reason": "Construction of buildings — variable invoiced amounts"},
+    "421":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": [], "avoid": ["direct_debit", "card"],
+              "risk_level": "low", "category": "Construction",
+              "reason": "Road & railway construction — public-sector contracts"},
+    "433":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["card"], "avoid": ["direct_debit"],
+              "risk_level": "low", "category": "Construction",
+              "reason": "Building completion — sub-contractor invoicing"},
+    "681":   {"recommended": ["bank_transfer"], "cautious": ["card"], "avoid": ["direct_debit"],
+              "risk_level": "low", "category": "Real Estate",
+              "reason": "Buying & selling property — solicitor-mediated FPS"},
+    "682":   {"recommended": ["standing_order", "direct_debit", "bank_transfer"], "cautious": ["card"], "avoid": [],
+              "risk_level": "low", "category": "Real Estate",
+              "reason": "Real estate management — rent SO/DD standard"},
+    "683":   {"recommended": ["bank_transfer", "direct_debit"], "cautious": ["card"], "avoid": [],
+              "risk_level": "low", "category": "Real Estate",
+              "reason": "Real estate on fee / contract — agent flows"},
 
     # ── 11. Food & Hospitality ────────────────────────────────────────
-    "561":   ("low",    "Hospitality",              "Restaurants & food service"),
-    "562":   ("low",    "Hospitality",              "Catering"),
-    "563":   ("low",    "Hospitality",              "Bars / drinking establishments"),
-    "551":   ("low",    "Hospitality",              "Hotels & accommodation"),
+    "561":   {"recommended": ["card"], "cautious": ["bank_transfer", "open_banking"], "avoid": ["direct_debit"],
+              "risk_level": "low", "category": "Hospitality",
+              "reason": "Restaurants — POS card primary; DD unusual"},
+    "562":   {"recommended": ["bank_transfer", "card", "invoice_terms"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Hospitality (Catering)",
+              "reason": "Catering — B2B invoicing for corporates"},
+    "563":   {"recommended": ["card"], "cautious": ["bank_transfer"], "avoid": ["direct_debit"],
+              "risk_level": "low", "category": "Hospitality (Bars)",
+              "reason": "Bars — POS card primary"},
+    "551":   {"recommended": ["card", "bank_transfer"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Hospitality (Hotels)",
+              "reason": "Hotels — card primary; B2B corporate accounts"},
 
     # ── 12. Wholesale & Distribution ──────────────────────────────────
-    "461":   ("low",    "Wholesale",                "Wholesale agents"),
-    "462":   ("low",    "Wholesale",                "Agricultural raw materials wholesale"),
-    "467":   ("low",    "Wholesale",                "Other specialised wholesale"),
-    "469":   ("low",    "Wholesale",                "Non-specialised wholesale"),
+    "461":   {"recommended": ["bank_transfer", "invoice_terms", "direct_debit"], "cautious": ["card"], "avoid": [],
+              "risk_level": "low", "category": "Wholesale",
+              "reason": "Wholesale agents — net-terms invoicing; DD fits regulars"},
+    "462":   {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["direct_debit"], "avoid": ["card"],
+              "risk_level": "low", "category": "Wholesale",
+              "reason": "Agricultural raw materials wholesale — large B2B"},
+    "467":   {"recommended": ["bank_transfer", "invoice_terms", "direct_debit"], "cautious": ["card"], "avoid": [],
+              "risk_level": "low", "category": "Wholesale",
+              "reason": "Specialised wholesale — repeat-buyer DD candidates"},
+    "469":   {"recommended": ["bank_transfer", "invoice_terms", "direct_debit"], "cautious": ["card"], "avoid": [],
+              "risk_level": "low", "category": "Wholesale",
+              "reason": "Non-specialised wholesale — net-terms invoicing"},
 
     # ── 13. Education & Training ──────────────────────────────────────
-    "855":   ("low",    "Education",                "Other education"),
-    "854":   ("low",    "Education",                "Higher education"),
-    "856":   ("low",    "Education",                "Educational support"),
+    "855":   {"recommended": ["direct_debit", "standing_order", "card", "bank_transfer"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "Education",
+              "reason": "Other education — term fees fit DD/SO"},
+    "854":   {"recommended": ["bank_transfer", "direct_debit", "card"], "cautious": [], "avoid": [],
+              "risk_level": "low", "category": "Education",
+              "reason": "Higher education — institutional + student flows"},
+    "856":   {"recommended": ["bank_transfer", "direct_debit"], "cautious": ["card"], "avoid": [],
+              "risk_level": "low", "category": "Education",
+              "reason": "Educational support — recurring service fees"},
 
     # ── 14. Manufacturing ─────────────────────────────────────────────
-    "10":    ("low",    "Manufacturing",            "Food manufacturing"),
-    "22":    ("low",    "Manufacturing",            "Rubber & plastics"),
-    "25":    ("low",    "Manufacturing",            "Fabricated metal products"),
-    "28":    ("low",    "Manufacturing",            "Machinery manufacturing"),
+    "10":    {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["direct_debit"], "avoid": ["card"],
+              "risk_level": "low", "category": "Manufacturing (Food)",
+              "reason": "Food manufacturing — B2B wholesale flows"},
+    "22":    {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["direct_debit"], "avoid": ["card"],
+              "risk_level": "low", "category": "Manufacturing",
+              "reason": "Rubber & plastics — B2B contract manufacturing"},
+    "25":    {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["direct_debit"], "avoid": ["card"],
+              "risk_level": "low", "category": "Manufacturing",
+              "reason": "Fabricated metal products — B2B invoicing"},
+    "28":    {"recommended": ["bank_transfer", "invoice_terms"], "cautious": ["direct_debit"], "avoid": ["card"],
+              "risk_level": "low", "category": "Manufacturing",
+              "reason": "Machinery manufacturing — large B2B contracts"},
 
     # ── 15. Other Services NEC (broad catch-all — NOT inherently risky) ──
-    "96090": ("low",    "Other Services",           "Other services NEC — broad catch-all"),
+    "96090": {"recommended": ["card", "bank_transfer"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Other Services",
+              "reason": "Other services NEC — broad catch-all, methods depend on actual model"},
     # ── 16. Sports & Recreation ───────────────────────────────────────
-    "931":   ("low",    "Sports & Fitness",         "Sports facilities (gyms etc.)"),
-    "932":   ("low",    "Leisure & Recreation",     "Amusement & recreation"),
+    "931":   {"recommended": ["direct_debit", "standing_order", "card"], "cautious": ["bank_transfer"], "avoid": [],
+              "risk_level": "low", "category": "Sports & Fitness",
+              "reason": "Sports facilities (gyms etc.) — recurring memberships fit DD/SO"},
+    "932":   {"recommended": ["card", "bank_transfer"], "cautious": ["direct_debit"], "avoid": [],
+              "risk_level": "low", "category": "Leisure & Recreation",
+              "reason": "Amusement & recreation — POS card primary"},
 
-    # ── 17. HARD-CODED HIGH-RISK INDUSTRIES (Regulatory / AML) ───────
-    # Nuclear fuel processing
-    "24460": ("high",   "Nuclear Materials",        "Processing of nuclear fuel — proliferation risk, export controls"),
-    "244":   ("high",   "Nuclear Materials",        "Nuclear fuel processing — proliferation financing risk"),
-    # Explosives & weapons
-    "20510": ("high",   "Explosives",               "Manufacture of explosives — dual-use / weapons risk"),
-    "205":   ("high",   "Explosives",               "Explosives manufacturing — regulatory scrutiny, export controls"),
-    "25400": ("high",   "Weapons Manufacturing",    "Manufacture of weapons & ammunition — arms export controls"),
-    "254":   ("high",   "Weapons Manufacturing",    "Weapons & ammunition manufacturing — regulated sector"),
-    # Money Service Businesses (MSB)
-    "66190": ("high",   "Money Services",           "Money service business — AML-regulated, high fraud risk"),
-    # Pawnbroking
-    "64920": ("high",   "Pawnbroking / Lending",    "Pawnbroking / other credit granting — predatory lending risk"),
-    # Crypto / Digital Assets (explicit)
-    "62090": ("high",   "Crypto / Digital Assets",  "Other IT activities — includes crypto exchanges, DeFi platforms"),
+    # ── 17. HIGH-RISK INDUSTRIES (regulatory / AML signal — never hard-stop) ──
+    # The risk_level here is a CONTEXTUAL signal that drives enhanced
+    # due-diligence requirements, not a binary suitability verdict.
+    "24460": {"recommended": ["bank_transfer"], "cautious": ["invoice_terms"], "avoid": ["card", "direct_debit"],
+              "risk_level": "high", "category": "Nuclear Materials",
+              "reason": "Nuclear fuel processing — proliferation risk, export controls"},
+    "244":   {"recommended": ["bank_transfer"], "cautious": ["invoice_terms"], "avoid": ["card", "direct_debit"],
+              "risk_level": "high", "category": "Nuclear Materials",
+              "reason": "Nuclear fuel processing — proliferation financing risk"},
+    "20510": {"recommended": ["bank_transfer"], "cautious": ["invoice_terms"], "avoid": ["card", "direct_debit"],
+              "risk_level": "high", "category": "Explosives",
+              "reason": "Manufacture of explosives — dual-use / weapons risk"},
+    "205":   {"recommended": ["bank_transfer"], "cautious": ["invoice_terms"], "avoid": ["card", "direct_debit"],
+              "risk_level": "high", "category": "Explosives",
+              "reason": "Explosives manufacturing — export controls"},
+    "25400": {"recommended": ["bank_transfer"], "cautious": ["invoice_terms"], "avoid": ["card", "direct_debit"],
+              "risk_level": "high", "category": "Weapons Manufacturing",
+              "reason": "Manufacture of weapons & ammunition — arms export controls"},
+    "254":   {"recommended": ["bank_transfer"], "cautious": ["invoice_terms"], "avoid": ["card", "direct_debit"],
+              "risk_level": "high", "category": "Weapons Manufacturing",
+              "reason": "Weapons & ammunition manufacturing — regulated sector"},
+    "66190": {"recommended": ["bank_transfer"], "cautious": ["open_banking"], "avoid": ["card", "direct_debit"],
+              "risk_level": "high", "category": "Money Services",
+              "reason": "Money service business — AML-regulated, high fraud risk"},
+    "64920": {"recommended": ["bank_transfer"], "cautious": ["open_banking"], "avoid": ["card", "direct_debit"],
+              "risk_level": "high", "category": "Pawnbroking / Lending",
+              "reason": "Pawnbroking / other credit granting — predatory lending risk"},
+    "62090": {"recommended": ["bank_transfer"], "cautious": ["open_banking"], "avoid": ["card", "direct_debit"],
+              "risk_level": "high", "category": "Crypto / Digital Assets",
+              "reason": "Other IT activities — includes crypto exchanges, DeFi platforms"},
 }
 
 
@@ -374,12 +572,30 @@ def detect_virtual_office(registered_office: dict | None) -> dict:
     return {"is_virtual": False, "full_address": full_addr, "note": ""}
 
 
-def classify_sic_risk(sic_codes: list[str] | None) -> dict:
-    """Classify company industry for Direct Debit risk based on SIC codes.
+_PAYMENT_METHOD_LABELS: dict[str, str] = {
+    "card":           "Card payments (debit/credit)",
+    "direct_debit":   "Direct Debit (Bacs)",
+    "bank_transfer":  "Bank transfer (Faster Payments / BACS)",
+    "open_banking":   "Open Banking (account-to-account)",
+    "standing_order": "Standing order",
+    "invoice_terms":  "Invoice with payment terms",
+}
 
-    Instead of simply flagging SIC codes as 'high risk', this maps each code
-    to its DD industry risk category with context. Returns the highest-risk
-    classification found and the industry description.
+
+def classify_sic_risk(sic_codes: list[str] | None) -> dict:
+    """Classify a company's industry profile from SIC codes.
+
+    Replaces the previous DD-only classifier. Returns a payment-method
+    profile (recommended / cautious / avoid) plus the industry category and
+    a CONTEXTUAL risk_level used as a softer signal in the AML scorer.
+
+    The output is shaped so it can serve buyers who care about payments
+    (which methods fit) and buyers who only care about AML/KYC (the
+    risk_level + category drive due-diligence requirements).
+
+    Returns dict with:
+      codes, industry_classifications, risk_level, industry_category,
+      recommended_methods, cautious_methods, avoid_methods, note.
     """
     if not sic_codes:
         return {
@@ -387,67 +603,111 @@ def classify_sic_risk(sic_codes: list[str] | None) -> dict:
             "industry_classifications": [],
             "risk_level": "unknown",
             "industry_category": "Unknown",
-            "note": "No SIC codes registered — cannot classify industry risk",
+            "recommended_methods": [],
+            "cautious_methods": [],
+            "avoid_methods": [],
+            "note": "No SIC codes registered — cannot classify industry profile",
         }
 
     classifications: list[dict] = []
     highest_risk = "low"
     _risk_rank = {"high": 3, "medium": 2, "low": 1, "unknown": 0}
 
+    # Aggregate method recommendations across all matched codes.
+    # A method that is "avoided" by any code wins over "recommended" for that
+    # method — i.e. avoid takes priority for the union view, which keeps the
+    # advice conservative when a company has mixed activities.
+    method_votes: dict[str, str] = {}  # method -> best-known label among codes
+    _method_priority = {"avoid": 3, "cautious": 2, "recommended": 1}
+
     for code in sic_codes:
         matched = False
-        # Try most specific first (5 digits), down to 2
         for prefix_len in (5, 4, 3, 2):
             prefix = code[:prefix_len]
-            if prefix in _INDUSTRY_DD_RISK:
-                risk, category, reason = _INDUSTRY_DD_RISK[prefix]
+            profile = _INDUSTRY_PAYMENT_PROFILE.get(prefix)
+            if profile:
                 classifications.append({
                     "code": code,
-                    "dd_risk": risk,
-                    "industry": category,
-                    "reason": reason,
+                    "industry": profile["category"],
+                    "risk_level": profile["risk_level"],
+                    "recommended": list(profile.get("recommended", [])),
+                    "cautious":    list(profile.get("cautious", [])),
+                    "avoid":       list(profile.get("avoid", [])),
+                    "reason":      profile["reason"],
                 })
-                if _risk_rank.get(risk, 0) > _risk_rank.get(highest_risk, 0):
-                    highest_risk = risk
+                if _risk_rank.get(profile["risk_level"], 0) > _risk_rank.get(highest_risk, 0):
+                    highest_risk = profile["risk_level"]
+                for m in profile.get("recommended", []):
+                    if _method_priority["recommended"] >= _method_priority.get(method_votes.get(m, ""), 0):
+                        if method_votes.get(m) not in {"avoid", "cautious"}:
+                            method_votes[m] = "recommended"
+                for m in profile.get("cautious", []):
+                    if method_votes.get(m) != "avoid":
+                        method_votes[m] = "cautious"
+                for m in profile.get("avoid", []):
+                    method_votes[m] = "avoid"
                 matched = True
                 break
         if not matched:
             classifications.append({
                 "code": code,
-                "dd_risk": "low",
                 "industry": "General",
-                "reason": "Standard industry — no elevated DD risk identified",
+                "risk_level": "low",
+                "recommended": ["card", "bank_transfer"],
+                "cautious": ["direct_debit"],
+                "avoid": [],
+                "reason": "Standard industry — no specific industry profile identified",
             })
+            for m in ("card", "bank_transfer"):
+                method_votes.setdefault(m, "recommended")
+            method_votes.setdefault("direct_debit", "cautious")
 
-    # Determine primary industry from the first classification
-    primary_industry = (
-        classifications[0]["industry"] if classifications else "Unknown"
-    )
+    primary_industry = classifications[0]["industry"] if classifications else "Unknown"
 
-    # Build summary note
-    high_risk_items = [c for c in classifications if c["dd_risk"] == "high"]
-    medium_risk_items = [c for c in classifications if c["dd_risk"] == "medium"]
+    def _label(m: str) -> str:
+        return _PAYMENT_METHOD_LABELS.get(m, m.replace("_", " ").title())
+
+    recommended_methods = [
+        {"method": m, "label": _label(m)}
+        for m, v in method_votes.items() if v == "recommended"
+    ]
+    cautious_methods = [
+        {"method": m, "label": _label(m)}
+        for m, v in method_votes.items() if v == "cautious"
+    ]
+    avoid_methods = [
+        {"method": m, "label": _label(m)}
+        for m, v in method_votes.items() if v == "avoid"
+    ]
+
+    # Summary note — describes the industry profile, not a payment verdict.
+    high_risk_items = [c for c in classifications if c["risk_level"] == "high"]
+    medium_risk_items = [c for c in classifications if c["risk_level"] == "medium"]
 
     if high_risk_items:
-        industries = ", ".join(set(c["industry"] for c in high_risk_items))
+        industries = ", ".join(sorted({c["industry"] for c in high_risk_items}))
         note = (
-            f"Industry classified as HIGH risk for Direct Debit: {industries}. "
-            f"Expect higher fees, stricter terms, and potential rolling reserves."
+            f"Industry classified as HIGHER-RISK ({industries}) — expect "
+            f"enhanced due diligence, potential AML/regulatory scrutiny, and "
+            f"narrower set of suitable payment methods."
         )
     elif medium_risk_items:
-        industries = ", ".join(set(c["industry"] for c in medium_risk_items))
+        industries = ", ".join(sorted({c["industry"] for c in medium_risk_items}))
         note = (
-            f"Industry has MODERATE DD risk factors: {industries}. "
-            f"Standard processing likely with some enhanced monitoring."
+            f"Industry has MODERATE-RISK factors ({industries}) — standard "
+            f"due diligence with some enhanced monitoring recommended."
         )
     else:
-        note = "Industry is standard risk for Direct Debit — no elevated concerns."
+        note = "Industry is STANDARD-RISK — no elevated concerns identified."
 
     return {
         "codes": sic_codes,
         "industry_classifications": classifications,
         "risk_level": highest_risk,
         "industry_category": primary_industry,
+        "recommended_methods": recommended_methods,
+        "cautious_methods": cautious_methods,
+        "avoid_methods": avoid_methods,
         "note": note,
     }
 

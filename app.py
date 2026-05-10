@@ -1578,7 +1578,10 @@ Report status and age. If hard_stop_triggered is YES: display a prominent 🛑 H
 Report address type (Virtual/Commercial/Residential). Virtual office is informational, NOT a red flag. Note the website operational address.
 
 ### 2E. Industry Classification
-Report the pre-computed actual_industry classification (holistic, not SIC-only). Note if SIC and website evidence are misaligned. For each SIC code, describe the DD risk level and WHY.
+Report the pre-computed actual_industry classification (holistic, not SIC-only). Note if SIC and website evidence are misaligned. For each SIC code, describe the industry risk level and WHY (gambling, FX/crypto, weapons, telemarketing etc. drive enhanced due diligence; standard sectors are informational).
+
+### 2E.1 Payment-method suitability
+The `payment_suitability` block contains a multi-method recommendation derived from the industry profile + scraped website signals. Report the **recommended**, **cautious** and **not_advised** lists with their rationale — frame it as "this entity's profile is suitable for X / Y, with Z under enhanced monitoring". Do NOT default to a Direct-Debit-only verdict. The same analyser serves AML compliance (where the industry risk_level matters) and payment-method buyers (where the method lists matter).
 
 ### 2F. Dormancy & Shelf Company Assessment
 Report dormancy analysis.
@@ -5024,7 +5027,7 @@ if _co_dp and _is_company_mode:
         "🔗 Ownership & Network",
         "👥 Directors & PSCs",
         "🌐 Website Cross-Ref",
-        "💳 Merchant Suitability",
+        "💳 Payment Suitability",
         "🔍 Screening",
         "📝 AI Report",
         "📦 Raw Data",
@@ -5094,14 +5097,14 @@ if _co_dp and _is_company_mode:
         if co_addr_intel.get("operational_postcode"):
             st.markdown(f"📍 **Operational postcode (from website):** {co_addr_intel['operational_postcode']}")
 
-        # Industry Risk (DD)
+        # Industry profile — risk level + multi-method recommendation
         _ind_cat = co_sic.get("industry_category", "Unknown")
         _ind_risk = co_sic.get("risk_level", "unknown")
         _ind_icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(_ind_risk, "⚪")
-        st.markdown(f"{_ind_icon} **Industry (DD Risk):** {_ind_cat} — {_ind_risk.upper()}")
+        st.markdown(f"{_ind_icon} **Industry profile:** {_ind_cat} — {_ind_risk.upper()} risk")
         _ind_classifications = co_sic.get("industry_classifications", [])
         for _cls in _ind_classifications:
-            _cls_icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(_cls.get("dd_risk"), "⚪")
+            _cls_icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(_cls.get("risk_level"), "⚪")
             st.markdown(f"  {_cls_icon} SIC `{_cls.get('code')}` → {_cls.get('industry')} — {_cls.get('reason')}")
         if co_sic.get("note"):
             st.caption(co_sic["note"])
@@ -5579,7 +5582,7 @@ if _co_dp and _is_company_mode:
                 unsafe_allow_html=True,
             )
 
-    # ── TAB: Merchant Suitability ─────────────────────────────────────
+    # ── TAB: Payment Suitability ──────────────────────────────────────
     with co_tab_merchant:
         st.markdown("### 💳 Business & Payment Profile")
 
@@ -5612,10 +5615,13 @@ if _co_dp and _is_company_mode:
 
         # ── Business Model Description ────────────────────────────────
         _biz_model = co_merchant.get("business_model", "Unknown")
-        _pay_model = co_merchant.get("payment_model", "Unknown")
+        # Field renamed: payment_model → payment_pattern. Fall back for legacy data.
+        _pay_model = co_merchant.get("payment_pattern", co_merchant.get("payment_model", "Unknown"))
         _cb_risk = co_merchant.get("chargeback_risk", "unknown")
-        _dd_suit = co_merchant.get("dd_suitability", "Unknown")
-        _dd_note = co_merchant.get("dd_note", "")
+        _recommended = co_merchant.get("recommended", []) or []
+        _cautious = co_merchant.get("cautious", []) or []
+        _not_advised = co_merchant.get("not_advised", []) or []
+        _overall = co_merchant.get("overall", "")
         _sic_a = co_merchant.get("sic_analysis", {})
         _ws = co_merchant.get("website_signals", {})
 
@@ -5690,11 +5696,27 @@ if _co_dp and _is_company_mode:
             else:
                 st.info("No specific B2B/B2C or payment model signals detected on the website — classification was derived from SIC codes.")
 
-        # ── DD Note ───────────────────────────────────────────────────
-        if _dd_note:
-            st.markdown("---")
-            st.markdown("#### Direct Debit Assessment Note")
-            st.info(_dd_note)
+        # ── Payment-method recommendation ─────────────────────────────
+        st.markdown("---")
+        st.markdown("#### Payment-method suitability")
+        if _overall:
+            st.info(_overall)
+
+        def _render_method_list(title: str, methods: list, icon: str):
+            if not methods:
+                return
+            st.markdown(f"**{icon} {title}**")
+            for m in methods:
+                _label = m.get("label") or m.get("method", "")
+                _rationale = m.get("rationale")
+                if _rationale:
+                    st.markdown(f"- {_label} — _{_rationale}_")
+                else:
+                    st.markdown(f"- {_label}")
+
+        _render_method_list("Suitable", _recommended, "🟢")
+        _render_method_list("Suitable with monitoring", _cautious, "🟡")
+        _render_method_list("Not advised", _not_advised, "🔴")
 
         # Flags & Positives
         _m_flags = co_merchant.get("flags", [])
@@ -5958,7 +5980,7 @@ if _co_dp and _is_company_mode:
             st.json(co_risk)
         with st.expander("UBO Chain", expanded=False):
             st.json(co_ubo)
-        with st.expander("Merchant Suitability", expanded=False):
+        with st.expander("Payment Suitability", expanded=False):
             st.json(co_merchant)
         with st.expander("Address Intelligence", expanded=False):
             st.json(co_addr_intel)

@@ -716,6 +716,15 @@ def run_company_check_node(state: dict) -> dict:
             log.warning("Website intel failed: %s", we)
             result["website_intel"] = {"ok": False, "error": str(we)}
 
+        # Lift social-media links out of website_intel so the renderer + LLM
+        # can find them at the same top-level field the charity flow uses.
+        # Without this, socials sit nested inside website_intel.social and
+        # downstream code never surfaces them.
+        wi = result.get("website_intel") or {}
+        socials = wi.get("social") if isinstance(wi, dict) else None
+        if isinstance(socials, dict) and socials:
+            updates["social_links"] = socials
+
         # ── Frontend-friendly network JSON (UBO + directors + cross-appts)
         # The existing network_graph_dot is consumed by Graphviz to render a
         # static SVG. The frontend wants an interactive vis-network graph,

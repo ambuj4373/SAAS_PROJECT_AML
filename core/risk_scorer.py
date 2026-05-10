@@ -316,13 +316,26 @@ def score_company(check: dict) -> RiskScore:
         _add(signals, category_scores, "Transparency", flag,
              RiskLevel.MEDIUM, "cross_reference", 3)
 
-    # ── Merchant Suitability ─────────────────────────────────────────
-    merchant = safe_get(check, "merchant_suitability") or {}
-    dd_suit = (merchant.get("dd_suitability") or "").lower()
-    if dd_suit == "not suitable":
+    # ── Payment-method suitability ───────────────────────────────────
+    # Replaces the old DD-only hard-stop. Now reads the contextual
+    # industry-risk signal from the multi-method analyser. High-risk
+    # industries (gambling, FX/crypto, weapons, etc.) raise a MEDIUM
+    # operational signal — not a binary HIGH verdict.
+    payment_check = safe_get(check, "payment_suitability") or safe_get(check, "merchant_suitability") or {}
+    industry_risk = (payment_check.get("industry_risk") or payment_check.get("chargeback_risk") or "").lower()
+    industry_cats = payment_check.get("industry_categories") or []
+    if industry_risk == "high":
+        cat_label = ", ".join(industry_cats) if industry_cats else "industry profile"
         _add(signals, category_scores, "Operational",
-             "Company assessed as not suitable for Direct Debit",
-             RiskLevel.HIGH, "merchant_suitability", 10)
+             f"Higher-risk industry profile ({cat_label}) — narrower set of "
+             f"suitable payment methods, enhanced due diligence advised",
+             RiskLevel.MEDIUM, "payment_suitability", 7)
+    elif industry_risk == "medium":
+        cat_label = ", ".join(industry_cats) if industry_cats else "industry profile"
+        _add(signals, category_scores, "Operational",
+             f"Moderate-risk industry profile ({cat_label}) — standard "
+             f"due diligence with monitoring",
+             RiskLevel.LOW, "payment_suitability", 3)
 
     # ── FCA Regulation ───────────────────────────────────────────────
     fca = safe_get(check, "fca_details") or {}
@@ -435,7 +448,7 @@ _ALL_DATA_SOURCES = {
         "company_age", "status_analysis", "virtual_office", "sic_risk",
         "director_analysis", "psc_analysis", "ubo_chain", "dormancy",
         "accounts", "restricted_activities", "fatf_screening",
-        "adverse_media", "cross_reference", "merchant_suitability",
+        "adverse_media", "cross_reference", "payment_suitability",
     ],
 }
 

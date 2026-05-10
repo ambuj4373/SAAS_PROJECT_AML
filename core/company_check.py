@@ -1440,17 +1440,37 @@ _ONE_OFF_SIGNALS = [
 ]
 
 
-def analyse_merchant_suitability(
+_PAYMENT_METHOD_LABELS_LOCAL: dict[str, str] = {
+    "card":           "Card payments (debit/credit)",
+    "direct_debit":   "Direct Debit (Bacs)",
+    "bank_transfer":  "Bank transfer (Faster Payments / BACS)",
+    "open_banking":   "Open Banking (account-to-account)",
+    "standing_order": "Standing order",
+    "invoice_terms":  "Invoice with payment terms",
+}
+
+
+def _method_label(m: str) -> str:
+    return _PAYMENT_METHOD_LABELS_LOCAL.get(m, m.replace("_", " ").title())
+
+
+def analyse_payment_suitability(
     sic_codes: list[str] | None,
     website_results: list[dict],
     director_analysis: dict,
     company_age: dict,
     website_url: str,
 ) -> dict:
-    """Determine if the company is suitable for Direct Debit (Bacs/SUN).
+    """Recommend suitable payment methods for the company.
 
-    Returns dict with business_model, payment_model, chargeback_risk,
-    dd_suitability, flags, positives, and search_methodology.
+    Combines:
+      - SIC industry profile (from `_INDUSTRY_PAYMENT_PROFILE`).
+      - Scraped website signals (B2B/B2C, recurring/one-off, delivery gap).
+      - Director risk + company age (operational stability).
+
+    Returns a multi-method recommendation — `recommended`, `cautious` and
+    `not_advised` — plus business_model, payment_pattern, chargeback_risk,
+    and a contextual overall summary. NOT a binary verdict.
     """
     flags: list[str] = []
     positives: list[str] = []
@@ -1610,59 +1630,175 @@ def analyse_merchant_suitability(
             f"Company has {age_months // 12}+ years of trading history"
         )
 
-    # ── Overall DD suitability score ──────────────────────────────────
-    risk_points = 0
-    if chargeback_risk == "high":
-        risk_points += 3
-    elif chargeback_risk == "medium":
-        risk_points += 2
-    if web_payment == "One-off":
-        risk_points += 1
-    elif web_payment == "Recurring":
-        risk_points -= 1
-    if web_model == "B2B":
-        risk_points -= 1
-    if age_months is not None and age_months < 12:
-        risk_points += 1
-    if total_dissolved >= 5:
-        risk_points += 2
-    elif total_dissolved >= 2:
-        risk_points += 1
+    # ── Industry payment profile (from SIC) ───────────────────────────
+    # Pull the recommended/cautious/avoid lists from the industry table —
+    # this is the BASE recommendation. We then adjust below with website
+    # + operational signals.
+    from api_clients.companies_house import (
+        _INDUSTRY_PAYMENT_PROFILE,
+        _PAYMENT_METHOD_LABELS,
+    )
 
-    if risk_points >= 5:
-        dd_suitability = "Not Recommended"
-        dd_note = ("Multiple high-risk indicators — one-off e-commerce or "
-                   "high-chargeback industry")
-    elif risk_points >= 3:
-        dd_suitability = "Manual Review Required"
-        dd_note = ("Elevated risk — requires enhanced due diligence before "
-                   "SUN allocation")
-    elif risk_points >= 1:
-        dd_suitability = "Suitable with Enhanced Monitoring"
-        dd_note = ("Generally suitable but some risk indicators present — "
-                   "monitor chargeback rates")
-    else:
-        dd_suitability = "Suitable"
-        dd_note = "Low-risk profile suitable for Direct Debit facility"
-        positives.append("Low-risk profile for Bacs Direct Debit")
+    method_state: dict[str, str] = {}  # method -> "recommended" | "cautious" | "avoid"
+    industry_categories: list[str] = []
+    industry_reasons: list[str] = []
+
+    for code in (sic_codes or []):
+        for prefix_len in (5, 4, 3, 2):
+            prefix = code[:prefix_len]
+            prof = _INDUSTRY_PAYMENT_PROFILE.get(prefix)
+            if prof:
+                if prof["category"] not in industry_categories:
+                    industry_categories.append(prof["category"])
+                industry_reasons.append(f"{prof['category']}: {prof['reason']}")
+                for m in prof.get("recommended", []):
+                    if method_state.get(m) not in {"avoid", "cautious"}:
+                        method_state[m] = "recommended"
+                for m in prof.get("cautious", []):
+                    if method_state.get(m) != "avoid":
+                        method_state[m] = "cautious"
+                for m in prof.get("avoid", []):
+                    method_state[m] = "avoid"
+                break
+
+    # Fallback for unmatched companies — conservative default.
+    if not method_state:
+        method_state = {
+            "card":          "recommended",
+            "bank_transfer": "recommended",
+            "direct_debit":  "cautious",
+            "open_banking":  "cautious",
+        }
+        industry_categories = ["General"]
+
+    # ── Adjust based on website-derived business model ────────────────
+    method_rationales: dict[str, list[str]] = {m: [] for m in method_state}
+
+    def _ensure(m: str):
+        if m not in method_state:
+            method_state[m] = "cautious"
+            method_rationales.setdefault(m, [])
 
     if web_model == "B2B":
+        # B2B favours bank transfer / invoice; cards less common
+        _ensure("bank_transfer"); _ensure("invoice_terms")
+        if method_state["bank_transfer"] != "avoid":
+            method_state["bank_transfer"] = "recommended"
+            method_rationales["bank_transfer"].append("B2B website signals — invoice flows fit transfers")
+        if method_state.get("invoice_terms") != "avoid":
+            method_state["invoice_terms"] = "recommended"
+            method_rationales["invoice_terms"].append("B2B context — net-terms invoicing standard")
         positives.append("B2B model — typically lower chargeback rates")
+    elif web_model == "B2C":
+        _ensure("card")
+        if method_state["card"] != "avoid":
+            method_state["card"] = "recommended"
+            method_rationales["card"].append("B2C website signals — card primary for consumer checkout")
+
     if web_payment == "Recurring":
-        positives.append(
-            "Recurring/subscription model — high DD suitability"
-        )
+        # Recurring favours DD + standing order + card-on-file
+        _ensure("direct_debit"); _ensure("standing_order")
+        for m in ("direct_debit", "standing_order"):
+            if method_state[m] != "avoid":
+                method_state[m] = "recommended"
+                method_rationales[m].append("Recurring/subscription billing pattern detected")
+        positives.append("Recurring billing pattern — predictable cash flow")
+    elif web_payment == "One-off":
+        _ensure("card")
+        if method_state["card"] != "avoid":
+            method_state["card"] = "recommended"
+            method_rationales["card"].append("One-off transactional pattern — card primary")
+        # DD is poorly suited to ad-hoc one-off purchases — soften any
+        # blanket DD recommendation we got from the industry table.
+        if method_state.get("direct_debit") == "recommended":
+            method_state["direct_debit"] = "cautious"
+            method_rationales["direct_debit"].append("One-off payment pattern — DD requires recurring relationship")
+
+    # Delivery-gap and high-value commerce make card refunds expensive and
+    # DD indemnity claims more likely.
+    if any(k in web_blob for k in ["pre-order", "made to order", "bespoke"]):
+        if method_state.get("direct_debit") in {"recommended", "cautious"}:
+            method_state["direct_debit"] = "cautious"
+            method_rationales.setdefault("direct_debit", []).append("Future-delivery exposure — indemnity risk")
+        if method_state.get("card") in {"recommended", "cautious"}:
+            method_state["card"] = "cautious"
+            method_rationales.setdefault("card", []).append("Future-delivery exposure — chargeback risk")
+
+    # Young companies + serial-failure director risk: avoid DD pulls until
+    # operational track record is established.
+    operational_flags = 0
+    if age_months is not None and age_months < 12:
+        operational_flags += 1
+    if total_dissolved >= 5:
+        operational_flags += 2
+    elif total_dissolved >= 2:
+        operational_flags += 1
+    if chargeback_risk == "high":
+        operational_flags += 1
+
+    if operational_flags >= 3:
+        if method_state.get("direct_debit") == "recommended":
+            method_state["direct_debit"] = "cautious"
+            method_rationales.setdefault("direct_debit", []).append("Operational risk indicators — establish track record first")
+
+    # ── Build output groups ───────────────────────────────────────────
+    def _entry(m: str) -> dict:
+        return {
+            "method": m,
+            "label": _PAYMENT_METHOD_LABELS.get(m, _method_label(m)),
+            "rationale": "; ".join(method_rationales.get(m, [])) or None,
+        }
+
+    recommended = [_entry(m) for m, s in method_state.items() if s == "recommended"]
+    cautious    = [_entry(m) for m, s in method_state.items() if s == "cautious"]
+    not_advised = [_entry(m) for m, s in method_state.items() if s == "avoid"]
+
+    # ── Overall narrative line (no DD-specific framing) ───────────────
+    if recommended:
+        rec_labels = ", ".join(e["label"] for e in recommended)
+        overall = f"Recommended payment methods: {rec_labels}."
+        if cautious:
+            caut_labels = ", ".join(e["label"] for e in cautious)
+            overall += f" Viable with enhanced monitoring: {caut_labels}."
+        if not_advised:
+            avoid_labels = ", ".join(e["label"] for e in not_advised)
+            overall += f" Not advised given the industry profile: {avoid_labels}."
+    elif cautious:
+        caut_labels = ", ".join(e["label"] for e in cautious)
+        overall = (f"All payment methods require enhanced due diligence — "
+                   f"the company profile presents elevated risk. "
+                   f"Methods that may be viable with monitoring: {caut_labels}.")
+    else:
+        overall = "Insufficient data to recommend specific payment methods — manual review required."
+
+    # Aggregate flag for any high-risk industry indicator (replaces the
+    # old DD hard-stop). Used by the AML scorer as a contextual signal,
+    # not as a binary suitability verdict.
+    industry_risk = chargeback_risk
+    if any("high" in r.lower() for r in industry_reasons):
+        # `chargeback_risk` is web-derived; check the industry table side
+        for code in (sic_codes or []):
+            for prefix_len in (5, 4, 3, 2):
+                prof = _INDUSTRY_PAYMENT_PROFILE.get(code[:prefix_len])
+                if prof and prof.get("risk_level") == "high":
+                    industry_risk = "high"
+                    break
 
     return {
         "business_model": web_model,
-        "payment_model": web_payment,
+        "payment_pattern": web_payment,
         "chargeback_risk": chargeback_risk,
-        "dd_suitability": dd_suitability,
-        "dd_note": dd_note,
+        "industry_risk": industry_risk,
+        "industry_categories": industry_categories,
+        "recommended": recommended,
+        "cautious": cautious,
+        "not_advised": not_advised,
+        "overall": overall,
         "sic_analysis": {
             "chargeback_risk": sic_chargeback,
             "typical_model": sic_model,
             "typical_payment": sic_payment,
+            "industry_reasons": industry_reasons,
         },
         "website_signals": {
             "b2b_signals": b2b_hits,
@@ -1675,10 +1811,16 @@ def analyse_merchant_suitability(
         "search_methodology": search_methodology,
         "data_sources_used": data_sources_used,
         "data_limitations": data_limitations,
-        "risk_points": risk_points,
+        "operational_flags": operational_flags,
         "flags": flags,
         "positives": positives,
     }
+
+
+# Back-compat alias — anyone still importing the old name gets the new
+# function (with the new return shape, which old DD-only callers will
+# need to handle).
+analyse_merchant_suitability = analyse_payment_suitability
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2583,8 +2725,8 @@ def run_company_check(
     )
     sic_mismatch = check_sic_website_mismatch(sic_risk, web_results)
 
-    # ── Phase 4.5: Merchant suitability ──────────────────────────────
-    merchant = analyse_merchant_suitability(
+    # ── Phase 4.5: Payment-method suitability ────────────────────────
+    payment_suitability = analyse_payment_suitability(
         profile.get("sic_codes"),
         web_results,
         director_analysis,
@@ -2619,12 +2761,12 @@ def run_company_check(
         sic_codes=profile.get("sic_codes"),
     )
 
-    # ── Phase 5: Risk matrix (with UBO + merchant + hard stops) ────────
+    # ── Phase 5: Risk matrix (with UBO + payment profile + hard stops) ─
     risk_matrix = build_risk_matrix(
         company_age, status_analysis, sic_risk, virtual_office,
         director_analysis, dormancy, psc_analysis, cross_ref,
         ubo_chain=ubo_chain,
-        merchant=merchant,
+        merchant=payment_suitability,
         fatf_screening=fatf_results,
         adverse_media=adverse_results,
         accounts_data=accounts_data,
@@ -2724,7 +2866,10 @@ def run_company_check(
         "accounts_data": accounts_data,
         "psc_analysis": psc_analysis,
         "ubo_chain": ubo_chain,
-        "merchant_suitability": merchant,
+        "payment_suitability": payment_suitability,
+        # back-compat alias — readers may still expect "merchant_suitability".
+        # Same dict; legacy DD-only fields are no longer populated.
+        "merchant_suitability": payment_suitability,
         "restricted_activities": restricted_activities,
         "hrob_verticals": hrob_verticals,
         "actual_industry": actual_industry,
