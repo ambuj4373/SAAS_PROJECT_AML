@@ -1,0 +1,1102 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sources we read — probitas</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  /* ===== Masthead ===== */
+  .masthead {
+    border-bottom: 1px solid var(--ink);
+    padding: 22px 0 18px;
+  }
+  .masthead__inner {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .masthead__rule {
+    height: 4px;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    margin-top: 18px;
+  }
+
+  /* ===== Hero ===== */
+  .src-hero { padding: 80px 0 56px; }
+  .src-hero h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(48px, 6.4vw, 84px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin: 16px 0 0;
+    max-width: 14ch;
+  }
+  .src-hero h1 em { font-style: italic; font-weight: 500; color: var(--indigo-deep); }
+  .src-hero__dek {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--grey);
+    max-width: 60ch;
+    margin: 32px 0 0;
+    font-weight: 400;
+  }
+
+  /* ===== Summary strip ===== */
+  .src-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 56px;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+  }
+  .src-summary__cell {
+    padding: 28px 24px;
+    border-right: 1px solid var(--line);
+  }
+  .src-summary__cell:last-child { border-right: 0; }
+  .src-summary__num {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 52px;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .src-summary__lab {
+    margin-top: 10px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--grey);
+  }
+
+  /* ===== Section heading ===== */
+  .src-section { padding: 80px 0 40px; }
+  .src-section__head {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 48px;
+    align-items: baseline;
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .src-section__num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--grey);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .src-section__title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 38px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 8px;
+  }
+  .src-section__title em { font-style: italic; font-weight: 500; color: var(--grey); }
+  .src-section__dek {
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--grey);
+    max-width: 56ch;
+    margin: 0;
+  }
+
+  /* ===== Source ledger ===== */
+  .src-ledger {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--line);
+  }
+  .src-row {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 18px;
+    padding: 24px 24px 22px 0;
+    border-bottom: 1px solid var(--line);
+    align-items: start;
+  }
+  .src-row:nth-child(odd) {
+    border-right: 1px solid var(--line);
+    padding-right: 32px;
+  }
+  .src-row:nth-child(even) {
+    padding-left: 32px;
+    padding-right: 0;
+  }
+  .src-mark {
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    letter-spacing: 0;
+    flex-shrink: 0;
+    text-align: center;
+    line-height: 1;
+    padding: 4px;
+  }
+  .src-mark--indigo {
+    background: var(--indigo);
+    color: white;
+    border-color: var(--indigo);
+  }
+  .src-mark--ink {
+    background: var(--ink);
+    color: white;
+  }
+  .src-mark--paper {
+    background: var(--paper-warm);
+  }
+  .src-mark--red {
+    background: var(--risk-high);
+    color: white;
+    border-color: var(--risk-high);
+  }
+  .src-mark--amber {
+    background: var(--risk-med);
+    color: white;
+    border-color: var(--risk-med);
+  }
+  .src-mark--gold {
+    background: #C8A951;
+    color: white;
+    border-color: #C8A951;
+  }
+  .src-name {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 17px;
+    line-height: 1.25;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    margin: 0 0 4px;
+  }
+  .src-authority {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--grey-2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .src-desc {
+    font-family: var(--serif);
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin: 0 0 12px;
+  }
+  .src-meta {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--grey);
+    letter-spacing: 0;
+  }
+  .src-meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .src-meta b { color: var(--ink); font-weight: 500; }
+
+  /* ===== Legend ===== */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 28px;
+    align-items: center;
+    padding: 20px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--grey);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .legend__item { display: inline-flex; align-items: center; gap: 8px; }
+  .legend__sq {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--ink);
+  }
+
+  /* ===== Methodology side note ===== */
+  .method {
+    background: var(--paper-warm);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 80px 0;
+  }
+  .method__grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 64px;
+  }
+  .method__head h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 14px 0 0;
+  }
+  .method__head h2 em { font-style: italic; font-weight: 500; color: var(--indigo-deep); }
+  .method__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-top: 1px solid var(--ink);
+  }
+  .method__step {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .method__num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--grey-2);
+    font-weight: 500;
+    padding-top: 3px;
+  }
+  .method__step h4 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ink);
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .method__step p {
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    margin: 0;
+  }
+
+  /* ===== Closing CTA ===== */
+  .closing { padding: 96px 0; text-align: center; }
+  .closing h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 48px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 auto;
+    max-width: 24ch;
+  }
+  .closing h2 em { font-style: italic; font-weight: 500; color: var(--grey); }
+
+  @media (max-width: 820px) {
+    .src-summary { grid-template-columns: repeat(2, 1fr); }
+    .src-summary__cell:nth-child(2) { border-right: 0; }
+    .src-section__head { grid-template-columns: 1fr; gap: 12px; }
+    .src-ledger { grid-template-columns: 1fr; }
+    .src-row:nth-child(odd), .src-row:nth-child(even) {
+      padding: 24px 0;
+      border-right: 0;
+    }
+    .method__grid { grid-template-columns: 1fr; gap: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Top nav ===== -->
+<nav class="topnav">
+  <div class="topnav__inner">
+    <a href="index.html" class="wordmark">
+      <span class="wordmark__name">probitas</span>
+    </a>
+    <div class="topnav__links">
+      <a href="index.html#sample">Sample report</a>
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="index.html#film">Watch the film</a>
+      <a href="sources.html" style="color:var(--ink);font-weight:600;">Sources</a>
+      <a href="about.html">About</a>
+      <a href="index.html#faq">FAQ</a>
+      <a href="preview.html?type=charity&id=220949" class="btn btn-ghost btn-sm">Search →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== Masthead ===== -->
+<section class="container">
+  <div class="masthead">
+    <div class="masthead__inner">
+      <span>Sources &amp; Methodology · Probitas</span>
+      <span>Last reviewed · 02 May 2026 · v3.4</span>
+    </div>
+  </div>
+  <div class="masthead__rule"></div>
+</section>
+
+<!-- ===== Hero ===== -->
+<section class="container src-hero">
+  <span class="kicker">The full ledger</span>
+  <h1>Forty-three authorities.<br/><em>One report.</em></h1>
+  <p class="src-hero__dek">Every public register, sanctions list, regulator and court record we read &mdash; what they are, who publishes them, and how fresh they are at the moment your report is written.</p>
+
+  <div class="src-summary">
+    <div class="src-summary__cell">
+      <div class="src-summary__num">43</div>
+      <div class="src-summary__lab">authoritative sources read on every run</div>
+    </div>
+    <div class="src-summary__cell">
+      <div class="src-summary__num">6</div>
+      <div class="src-summary__lab">categories &mdash; statutory, sanctions, regulators, courts, press, financial</div>
+    </div>
+    <div class="src-summary__cell">
+      <div class="src-summary__num">3</div>
+      <div class="src-summary__lab">sanctions lists screened against every named person</div>
+    </div>
+    <div class="src-summary__cell">
+      <div class="src-summary__num">90s</div>
+      <div class="src-summary__lab">to read all of it, cross-check, and write the report</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="legend__item"><span class="legend__sq" style="background:var(--ink);border-color:var(--ink);"></span>Statutory register</span>
+    <span class="legend__item"><span class="legend__sq" style="background:var(--risk-high);border-color:var(--risk-high);"></span>Sanctions list</span>
+    <span class="legend__item"><span class="legend__sq" style="background:var(--indigo);border-color:var(--indigo);"></span>Regulator</span>
+    <span class="legend__item"><span class="legend__sq" style="background:#C8A951;border-color:#C8A951;"></span>Court &amp; tribunal</span>
+    <span class="legend__item"><span class="legend__sq" style="background:var(--risk-med);border-color:var(--risk-med);"></span>Press &amp; OSINT</span>
+    <span class="legend__item"><span class="legend__sq" style="background:var(--paper-warm);"></span>Financial</span>
+  </div>
+</section>
+
+<!-- ===== Section: Statutory registers ===== -->
+<section class="container src-section">
+  <div class="src-section__head">
+    <span class="src-section__num">§ 01 · 17 sources</span>
+    <div>
+      <h2 class="src-section__title">Statutory registers <em>&mdash; the public record</em></h2>
+      <p class="src-section__dek">The official registers maintained by UK government bodies and devolved regulators. The legal record of who exists, who runs them, and what they&rsquo;ve filed.</p>
+    </div>
+  </div>
+
+  <div class="src-ledger">
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">CH</div>
+      <div>
+        <div class="src-name">Companies House</div>
+        <div class="src-authority">UK Government · Department for Business and Trade</div>
+        <p class="src-desc">The statutory register of every company incorporated in the United Kingdom. We read the full filing history, officers, persons of significant control, charges, and confirmation statements.</p>
+        <div class="src-meta">
+          <span>Read via <b>public API</b></span>
+          <span>Refresh <b>live</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">CC</div>
+      <div>
+        <div class="src-name">Charity Commission for England &amp; Wales</div>
+        <div class="src-authority">UK Government · Independent regulator</div>
+        <p class="src-desc">Register of all charities operating in England and Wales. We read trustee lists, governing documents, regulatory cases, annual returns and audited accounts.</p>
+        <div class="src-meta">
+          <span>Read via <b>public API</b></span>
+          <span>Refresh <b>live</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">OSCR</div>
+      <div>
+        <div class="src-name">OSCR — Scottish Charity Regulator</div>
+        <div class="src-authority">Scottish Government · Non-ministerial department</div>
+        <p class="src-desc">The Scottish equivalent of the Charity Commission. Read for any entity registered as a Scottish charity, including trustees and accounts.</p>
+        <div class="src-meta">
+          <span>Read via <b>public dataset</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">CCNI</div>
+      <div>
+        <div class="src-name">Charity Commission for Northern Ireland</div>
+        <div class="src-authority">Northern Ireland Executive</div>
+        <p class="src-desc">Register of charities operating in Northern Ireland. Cross-checked for any entity declaring NI operations or trustees.</p>
+        <div class="src-meta">
+          <span>Read via <b>public dataset</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">PSC</div>
+      <div>
+        <div class="src-name">Persons of Significant Control register</div>
+        <div class="src-authority">Companies House · Beneficial ownership</div>
+        <p class="src-desc">The UK&rsquo;s beneficial ownership register. We read every named PSC and screen each against all three sanctions lists, plus the disqualified persons register.</p>
+        <div class="src-meta">
+          <span>Read via <b>public API</b></span>
+          <span>Refresh <b>live</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">INS</div>
+      <div>
+        <div class="src-name">The Insolvency Service register</div>
+        <div class="src-authority">UK Government · Insolvency Service</div>
+        <p class="src-desc">Live register of insolvency proceedings, bankruptcy orders, debt relief orders, and disqualified directors. Critical for solvency signals on company reports.</p>
+        <div class="src-meta">
+          <span>Read via <b>public search</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">HMRC</div>
+      <div>
+        <div class="src-name">HMRC — Recognised charities list</div>
+        <div class="src-authority">HM Revenue &amp; Customs</div>
+        <p class="src-desc">Charities recognised by HMRC for tax purposes (Gift Aid, charitable rates relief). Cross-checked to confirm a charity&rsquo;s tax-recognised status.</p>
+        <div class="src-meta">
+          <span>Read via <b>public dataset</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">DPR</div>
+      <div>
+        <div class="src-name">Disqualified Persons register (Companies House)</div>
+        <div class="src-authority">UK Government · Companies House</div>
+        <p class="src-desc">Directors disqualified from acting as a company director. Every officer and PSC in the report is cross-checked against this register.</p>
+        <div class="src-meta">
+          <span>Read via <b>public dataset</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">DT</div>
+      <div>
+        <div class="src-name">Disqualified Trustees register</div>
+        <div class="src-authority">Charity Commission for England &amp; Wales</div>
+        <p class="src-desc">Trustees disqualified by the Charity Commission. Cross-checked for every named trustee on a charity report.</p>
+        <div class="src-meta">
+          <span>Read via <b>public dataset</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">LG</div>
+      <div>
+        <div class="src-name">The London Gazette</div>
+        <div class="src-authority">UK Government · Official Public Record</div>
+        <p class="src-desc">The official journal of public record. We read notices of insolvency, dissolution, wind-up petitions, and other statutory notices relevant to the entity.</p>
+        <div class="src-meta">
+          <span>Read via <b>API</b></span>
+          <span>Refresh <b>live</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">EG</div>
+      <div>
+        <div class="src-name">The Edinburgh &amp; Belfast Gazettes</div>
+        <div class="src-authority">UK Government · Devolved official records</div>
+        <p class="src-desc">The Scottish and Northern Irish official journals of record, parallel to The London Gazette. Read for any entity with Scottish or NI activity.</p>
+        <div class="src-meta">
+          <span>Read via <b>API</b></span>
+          <span>Refresh <b>live</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--ink">MPR</div>
+      <div>
+        <div class="src-name">Mutuals Public Register</div>
+        <div class="src-authority">Financial Conduct Authority</div>
+        <p class="src-desc">Register of co-operative and community benefit societies, friendly societies, and credit unions. Read for any entity registered as a mutual.</p>
+        <div class="src-meta">
+          <span>Read via <b>public search</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Section: Sanctions lists ===== -->
+<section class="container src-section">
+  <div class="src-section__head">
+    <span class="src-section__num">§ 02 · 7 sources</span>
+    <div>
+      <h2 class="src-section__title">Sanctions lists <em>&mdash; three primary, four allied</em></h2>
+      <p class="src-section__dek">Every named person in the report &mdash; trustees, directors, persons of significant control &mdash; is screened against three primary sanctions lists and four allied registers.</p>
+    </div>
+  </div>
+
+  <div class="src-ledger">
+
+    <div class="src-row">
+      <div class="src-mark src-mark--red">OFSI</div>
+      <div>
+        <div class="src-name">OFSI — UK consolidated sanctions list</div>
+        <div class="src-authority">HM Treasury · Office of Financial Sanctions Implementation</div>
+        <p class="src-desc">The UK&rsquo;s authoritative sanctions list. Approximately 5,135 designated persons, entities and vessels. The primary screen on every Probitas report.</p>
+        <div class="src-meta">
+          <span>Read via <b>file download</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--red">OFAC</div>
+      <div>
+        <div class="src-name">OFAC SDN — Specially Designated Nationals</div>
+        <div class="src-authority">US Department of the Treasury</div>
+        <p class="src-desc">The United States&rsquo; flagship sanctions list. ~16,000 entries including alias names. Screened to catch UK-incorporated entities with US-designated principals.</p>
+        <div class="src-meta">
+          <span>Read via <b>file download</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--red">UN</div>
+      <div>
+        <div class="src-name">UN Security Council consolidated list</div>
+        <div class="src-authority">United Nations Security Council</div>
+        <p class="src-desc">The list of individuals and entities subject to UN Security Council sanctions regimes. ~700 entries. The baseline international screen.</p>
+        <div class="src-meta">
+          <span>Read via <b>XML feed</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--red">EU</div>
+      <div>
+        <div class="src-name">EU consolidated financial sanctions list</div>
+        <div class="src-authority">European Council · European External Action Service</div>
+        <p class="src-desc">The European Union&rsquo;s consolidated sanctions database. Cross-screened for any entity with EU-resident principals or trade exposure.</p>
+        <div class="src-meta">
+          <span>Read via <b>file download</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--red">SECO</div>
+      <div>
+        <div class="src-name">Switzerland SECO sanctions</div>
+        <div class="src-authority">Swiss State Secretariat for Economic Affairs</div>
+        <p class="src-desc">Switzerland&rsquo;s sanctions register. Cross-checked for designations that may not appear on OFSI or OFAC, particularly in financial-secrecy jurisdictions.</p>
+        <div class="src-meta">
+          <span>Read via <b>XML feed</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--red">DFAT</div>
+      <div>
+        <div class="src-name">Australia DFAT consolidated list</div>
+        <div class="src-authority">Dept of Foreign Affairs and Trade</div>
+        <p class="src-desc">Australia&rsquo;s sanctions register. Read as an allied jurisdiction screen, particularly for Indo-Pacific-linked entities.</p>
+        <div class="src-meta">
+          <span>Read via <b>file download</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--red">GAC</div>
+      <div>
+        <div class="src-name">Canada GAC consolidated list</div>
+        <div class="src-authority">Global Affairs Canada</div>
+        <p class="src-desc">Canada&rsquo;s sanctions list under the Special Economic Measures Act and Justice for Victims of Corrupt Foreign Officials Act.</p>
+        <div class="src-meta">
+          <span>Read via <b>file download</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Section: Regulators ===== -->
+<section class="container src-section">
+  <div class="src-section__head">
+    <span class="src-section__num">§ 03 · 7 sources</span>
+    <div>
+      <h2 class="src-section__title">Regulators <em>&mdash; enforcement &amp; conduct</em></h2>
+      <p class="src-section__dek">The UK regulators that publish enforcement actions, conduct notices and registers of authorised persons. Read for both authorisation status and adverse history.</p>
+    </div>
+  </div>
+
+  <div class="src-ledger">
+
+    <div class="src-row">
+      <div class="src-mark src-mark--indigo">FCA</div>
+      <div>
+        <div class="src-name">FCA Financial Services Register</div>
+        <div class="src-authority">Financial Conduct Authority</div>
+        <p class="src-desc">The register of every individual and firm authorised by the FCA. Includes scope of permissions, exemptions, and a five-year history of regulatory action.</p>
+        <div class="src-meta">
+          <span>Read via <b>public API</b></span>
+          <span>Refresh <b>live</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--indigo">FCA·E</div>
+      <div>
+        <div class="src-name">FCA Enforcement &amp; Final Notices</div>
+        <div class="src-authority">Financial Conduct Authority</div>
+        <p class="src-desc">Public archive of FCA enforcement actions, fines, prohibitions and final notices against firms and individuals. Read for the last ten years.</p>
+        <div class="src-meta">
+          <span>Read via <b>archive scrape</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--indigo">PRA</div>
+      <div>
+        <div class="src-name">PRA — Prudential Regulation Authority</div>
+        <div class="src-authority">Bank of England</div>
+        <p class="src-desc">The UK&rsquo;s prudential regulator for banks, insurers and major investment firms. Read for authorisation status and supervisory notices.</p>
+        <div class="src-meta">
+          <span>Read via <b>public dataset</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--indigo">ICO</div>
+      <div>
+        <div class="src-name">ICO — enforcement &amp; penalty notices</div>
+        <div class="src-authority">Information Commissioner&rsquo;s Office</div>
+        <p class="src-desc">UK data-protection regulator. Read for monetary penalty notices, enforcement actions, and reprimand letters against the entity.</p>
+        <div class="src-meta">
+          <span>Read via <b>archive scrape</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--indigo">CMA</div>
+      <div>
+        <div class="src-name">CMA — competition decisions</div>
+        <div class="src-authority">Competition and Markets Authority</div>
+        <p class="src-desc">Decisions, infringements, and merger interventions. Read for competition-law exposure on company reports.</p>
+        <div class="src-meta">
+          <span>Read via <b>archive scrape</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--indigo">HSE</div>
+      <div>
+        <div class="src-name">HSE — prosecutions database</div>
+        <div class="src-authority">Health and Safety Executive</div>
+        <p class="src-desc">Public register of health-and-safety prosecutions and enforcement notices. Read for the entity and named officers.</p>
+        <div class="src-meta">
+          <span>Read via <b>public search</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--indigo">TPR</div>
+      <div>
+        <div class="src-name">The Pensions Regulator</div>
+        <div class="src-authority">TPR · Statutory regulator</div>
+        <p class="src-desc">Register of prohibited and disqualified trustees, and notices of regulatory action against pension scheme sponsors.</p>
+        <div class="src-meta">
+          <span>Read via <b>public dataset</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Section: Courts & tribunals ===== -->
+<section class="container src-section">
+  <div class="src-section__head">
+    <span class="src-section__num">§ 04 · 6 sources</span>
+    <div>
+      <h2 class="src-section__title">Courts &amp; tribunals <em>&mdash; the written judgement</em></h2>
+      <p class="src-section__dek">Published judgements and decisions of UK courts and tribunals, read for any named officer, trustee, PSC, or the entity itself.</p>
+    </div>
+  </div>
+
+  <div class="src-ledger">
+
+    <div class="src-row">
+      <div class="src-mark src-mark--gold">EWHC</div>
+      <div>
+        <div class="src-name">England &amp; Wales courts (BAILII)</div>
+        <div class="src-authority">British &amp; Irish Legal Information Institute</div>
+        <p class="src-desc">Published judgements of the High Court, Court of Appeal and Crown Court for England &amp; Wales. Read by named-party search.</p>
+        <div class="src-meta">
+          <span>Read via <b>full-text search</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--gold">SCS</div>
+      <div>
+        <div class="src-name">Scottish Court Service</div>
+        <div class="src-authority">Scottish Courts and Tribunals Service</div>
+        <p class="src-desc">Published opinions of the Court of Session and High Court of Justiciary. Read for Scottish-registered entities and their principals.</p>
+        <div class="src-meta">
+          <span>Read via <b>full-text search</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--gold">UKSC</div>
+      <div>
+        <div class="src-name">UK Supreme Court judgments</div>
+        <div class="src-authority">The Supreme Court of the United Kingdom</div>
+        <p class="src-desc">Published Supreme Court decisions. Read by named-party search for any precedent involving the entity or its principals.</p>
+        <div class="src-meta">
+          <span>Read via <b>archive</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--gold">ET</div>
+      <div>
+        <div class="src-name">Employment Tribunal decisions</div>
+        <div class="src-authority">Ministry of Justice · ET portal</div>
+        <p class="src-desc">Published employment tribunal judgements. Read for the entity as respondent &mdash; signals on conduct, discrimination, dismissal.</p>
+        <div class="src-meta">
+          <span>Read via <b>portal search</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--gold">FTT·C</div>
+      <div>
+        <div class="src-name">First-tier Tribunal (Charity)</div>
+        <div class="src-authority">HM Courts &amp; Tribunals Service</div>
+        <p class="src-desc">Decisions of the Charity Tribunal, including appeals against Charity Commission enforcement. Read for the charity and its trustees.</p>
+        <div class="src-meta">
+          <span>Read via <b>archive</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--gold">UTC</div>
+      <div>
+        <div class="src-name">Upper Tribunal (Tax &amp; Chancery)</div>
+        <div class="src-authority">HM Courts &amp; Tribunals Service</div>
+        <p class="src-desc">Upper Tribunal decisions on tax, chancery and lands matters. Read for principals named in published appeals.</p>
+        <div class="src-meta">
+          <span>Read via <b>archive</b></span>
+          <span>Refresh <b>weekly</b></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Section: Press & OSINT ===== -->
+<section class="container src-section">
+  <div class="src-section__head">
+    <span class="src-section__num">§ 05 · 5 sources</span>
+    <div>
+      <h2 class="src-section__title">Press &amp; open-source intelligence <em>&mdash; the public conversation</em></h2>
+      <p class="src-section__dek">Wire-service and broadsheet coverage of the entity, screened for adverse mentions. We only cite published reporting from named outlets &mdash; never anonymous forums or social media.</p>
+    </div>
+  </div>
+
+  <div class="src-ledger">
+
+    <div class="src-row">
+      <div class="src-mark src-mark--amber">REU</div>
+      <div>
+        <div class="src-name">Reuters wire archive</div>
+        <div class="src-authority">Thomson Reuters · Newswire</div>
+        <p class="src-desc">Reuters reporting on the entity, indexed by named-party. Read for the most recent five years of coverage.</p>
+        <div class="src-meta">
+          <span>Read via <b>licensed feed</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--amber">FT</div>
+      <div>
+        <div class="src-name">Financial Times archive</div>
+        <div class="src-authority">FT Limited · UK broadsheet</div>
+        <p class="src-desc">FT coverage of the entity. Read for adverse coverage indexed by name, with attention to investigations, regulatory issues, and litigation.</p>
+        <div class="src-meta">
+          <span>Read via <b>licensed feed</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--amber">BBC</div>
+      <div>
+        <div class="src-name">BBC News archive</div>
+        <div class="src-authority">British Broadcasting Corporation</div>
+        <p class="src-desc">BBC reporting indexed by named-party, including regional bureaux. Read for public-interest reporting that may not surface on financial wires.</p>
+        <div class="src-meta">
+          <span>Read via <b>RSS &amp; search</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--amber">GDN</div>
+      <div>
+        <div class="src-name">The Guardian / Observer archive</div>
+        <div class="src-authority">Guardian News &amp; Media</div>
+        <p class="src-desc">Coverage and investigative reporting from The Guardian and The Observer. Read for the most recent five years.</p>
+        <div class="src-meta">
+          <span>Read via <b>licensed feed</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row">
+      <div class="src-mark src-mark--amber">PA</div>
+      <div>
+        <div class="src-name">PA Media wire</div>
+        <div class="src-authority">Press Association · UK national wire</div>
+        <p class="src-desc">PA Media&rsquo;s national wire, which feeds most UK regional press. Read for regional coverage that does not appear on broadsheet feeds.</p>
+        <div class="src-meta">
+          <span>Read via <b>licensed feed</b></span>
+          <span>Refresh <b>daily</b></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Section: Financial filings ===== -->
+<section class="container src-section">
+  <div class="src-section__head">
+    <span class="src-section__num">§ 06 · 1 source &mdash; many filings</span>
+    <div>
+      <h2 class="src-section__title">Financial filings <em>&mdash; the numbers themselves</em></h2>
+      <p class="src-section__dek">We don&rsquo;t read summaries of the accounts. We read the audited accounts as filed. The auditor&rsquo;s opinion, the notes, the cash position, the reserves policy &mdash; the raw filing.</p>
+    </div>
+  </div>
+
+  <div class="src-ledger">
+
+    <div class="src-row">
+      <div class="src-mark src-mark--paper">AC</div>
+      <div>
+        <div class="src-name">Audited accounts (Companies House &amp; CC)</div>
+        <div class="src-authority">Filed with Companies House or the relevant charity regulator</div>
+        <p class="src-desc">The actual filed PDF of the most recent audited or independently examined accounts. We extract reserves, income, expenditure, the auditor&rsquo;s opinion, going-concern statement, and the notes on related-party transactions.</p>
+        <div class="src-meta">
+          <span>Read via <b>document fetch</b></span>
+          <span>Refresh <b>live</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="src-row" style="background: var(--paper-warm);">
+      <div class="src-mark src-mark--paper">·</div>
+      <div style="padding-top:8px;">
+        <div class="src-name" style="font-style:italic;font-weight:500;font-family:var(--serif);">Plus the entity&rsquo;s last six filings.</div>
+        <p class="src-desc" style="margin-top:8px;">Confirmation statements, accounts, charges, officer changes &mdash; everything the entity has filed in the last 24 months is read as part of the same pipeline run.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Methodology ===== -->
+<section class="method">
+  <div class="container">
+    <div class="method__grid">
+      <div class="method__head">
+        <span class="kicker">How we read it</span>
+        <h2>Sources are only useful<br/><em>if you read them properly.</em></h2>
+      </div>
+      <div class="method__steps">
+        <div class="method__step">
+          <span class="method__num">01</span>
+          <div>
+            <h4>Read live, not cached.</h4>
+            <p>Every source is fetched at the moment of generation. The report&rsquo;s footer prints the read time of each one &mdash; you can check we&rsquo;re not serving last week&rsquo;s data.</p>
+          </div>
+        </div>
+        <div class="method__step">
+          <span class="method__num">02</span>
+          <div>
+            <h4>Cross-check before you cite.</h4>
+            <p>A claim from one source is held back until at least one other source confirms it &mdash; or the claim is marked &ldquo;single-source&rdquo; in the report. We don&rsquo;t hide where we&rsquo;re only seeing one side of the picture.</p>
+          </div>
+        </div>
+        <div class="method__step">
+          <span class="method__num">03</span>
+          <div>
+            <h4>Cite the primary record, not the summary.</h4>
+            <p>Where a regulator publishes both a summary and the underlying filing, we cite the filing. Where a wire service reports on a court judgement, we cite the judgement.</p>
+          </div>
+        </div>
+        <div class="method__step">
+          <span class="method__num">04</span>
+          <div>
+            <h4>Name what&rsquo;s missing.</h4>
+            <p>Where a register has no data, the report says so &mdash; explicitly &mdash; rather than letting silence read as absence of risk.</p>
+          </div>
+        </div>
+        <div class="method__step">
+          <span class="method__num">05</span>
+          <div>
+            <h4>Log every correction.</h4>
+            <p>When a customer flags an issue we&rsquo;ve made, the correction goes on a public log with a date and a description of what changed. The log is part of the methodology.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Closing CTA ===== -->
+<section class="closing">
+  <div class="container">
+    <h2>The forty-three are read for you.<br/><em>The judgement is still yours.</em></h2>
+    <div style="margin-top:36px;">
+      <a href="preview.html?type=charity&id=220949" class="btn btn-primary btn-lg">See a sample report →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__top">
+      <div>
+        <a href="index.html" class="wordmark wordmark--lg">
+          <span class="wordmark__name">probitas</span>
+        </a>
+        <p style="margin-top:20px; max-width:32ch; color:var(--grey-2); font-size:13.5px;">Research-grade due-diligence reports on UK companies and charities.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="index.html#sample">Sample report</a></li>
+          <li><a href="index.html#how">How it works</a></li>
+          <li><a href="report-charity.html">Charity sample (cleared)</a></li>
+          <li><a href="report-company.html">Company sample</a></li>
+          <li><a href="report-declined.html">Sample &mdash; declined</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>About us</h4>
+        <ul>
+          <li><a href="about.html">Why we built this</a></li>
+          <li><a href="sources.html">Sources we read</a></li>
+          <li><a href="index.html#faq">FAQ</a></li>
+          <li><a href="index.html#film">Watch the film</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="sources.html">Sources &amp; methodology</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 Probitas Research Ltd · Company number 16482910</span>
+      <span>Registered in England &amp; Wales · probitas.co.uk</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>About — probitas</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  /* ===== Masthead ===== */
+  .masthead {
+    border-bottom: 1px solid var(--ink);
+    padding: 22px 0 18px;
+  }
+  .masthead__inner {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .masthead__rule {
+    height: 4px;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    margin-top: 18px;
+  }
+
+  /* ===== Editorial hero ===== */
+  .article-hero {
+    padding: 96px 0 64px;
+    text-align: center;
+  }
+  .article-hero .kicker { color: var(--ink-2); }
+  .article-hero h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(48px, 7vw, 84px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin: 18px 0 0;
+    max-width: 18ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .article-hero h1 em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--indigo-deep);
+  }
+  .article-hero__dek {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--grey);
+    max-width: 56ch;
+    margin: 32px auto 0;
+    font-weight: 400;
+  }
+  .article-hero__byline {
+    margin-top: 40px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--grey);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+  }
+  .article-hero__byline strong { color: var(--ink); font-weight: 600; }
+  .article-hero__byline .dot { width: 3px; height: 3px; background: var(--grey-3); border-radius: 50%; }
+
+  /* ===== Article body ===== */
+  .article {
+    padding: 56px 0 96px;
+  }
+  .article__body {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 32px;
+    font-family: var(--serif);
+    font-size: 21px;
+    line-height: 1.65;
+    color: var(--ink-2);
+    letter-spacing: -0.005em;
+  }
+  .article__body > p { margin: 0 0 28px; text-wrap: pretty; }
+  .article__body > p:first-of-type::first-letter {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 84px;
+    line-height: 0.85;
+    float: left;
+    margin: 6px 14px 0 -2px;
+    color: var(--ink);
+    letter-spacing: -0.04em;
+  }
+  .article__body h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin: 56px 0 22px;
+    padding-top: 36px;
+    border-top: 1px solid var(--line);
+  }
+  .article__body h2 .num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--grey-2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .article__body em { font-style: italic; color: var(--ink); }
+  .article__body strong { font-weight: 600; color: var(--ink); }
+  .article__body a { color: var(--indigo-deep); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* pull quote */
+  .pullquote {
+    margin: 48px -32px;
+    padding: 36px 40px;
+    border-left: 3px solid var(--indigo);
+    background: var(--paper-warm);
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 28px;
+    line-height: 1.35;
+    color: var(--ink);
+    letter-spacing: -0.012em;
+  }
+  .pullquote::before {
+    content: "“";
+    display: block;
+    font-family: var(--serif);
+    font-size: 72px;
+    line-height: 0;
+    color: var(--indigo);
+    margin-bottom: 24px;
+  }
+  .pullquote cite {
+    display: block;
+    margin-top: 18px;
+    font-family: var(--ui);
+    font-style: normal;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+
+  /* ===== Founder cards ===== */
+  .founders-section {
+    background: var(--paper-warm);
+    padding: 96px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .founders-section__head {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+  .founders {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  .founder {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .founder__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .founder__avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--indigo-tint);
+    color: var(--indigo-deep);
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+    border: 1px solid var(--indigo-line);
+  }
+  .founder__name {
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .founder__role {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+  }
+  .founder__bio {
+    font-family: var(--serif);
+    font-size: 15.5px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .founder__bio em { color: var(--grey); }
+  .founder__prev {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--grey-2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ===== Principles ===== */
+  .principles-section { padding: 96px 0; }
+  .principles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--line);
+    margin-top: 48px;
+  }
+  .principle {
+    padding: 32px 0;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 24px;
+  }
+  .principle:nth-child(odd) { padding-right: 32px; border-right: 1px solid var(--line); }
+  .principle:nth-child(even) { padding-left: 32px; }
+  .principle__num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--grey-2);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    padding-top: 4px;
+  }
+  .principle__title {
+    font-family: var(--display);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.012em;
+    margin: 0 0 10px;
+  }
+  .principle__body {
+    font-family: var(--serif);
+    font-size: 15.5px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    margin: 0;
+  }
+
+  /* ===== What we don't do ===== */
+  .boundaries-section {
+    background: var(--ink);
+    color: white;
+    padding: 96px 0;
+  }
+  .boundaries-section .kicker { color: rgba(255,255,255,0.6); }
+  .boundaries-section h2 { color: white; }
+  .boundaries {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px 64px;
+    margin-top: 48px;
+    max-width: 920px;
+  }
+  .boundary {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    padding-bottom: 28px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .boundary__x {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 16px;
+    margin-top: 2px;
+  }
+  .boundary__title {
+    font-family: var(--display);
+    font-size: 17px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .boundary__body {
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.7);
+    margin: 0;
+  }
+
+  /* ===== Closing CTA ===== */
+  .closing {
+    padding: 120px 0;
+    text-align: center;
+  }
+  .closing h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 56px;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin: 0 auto;
+    max-width: 18ch;
+  }
+  .closing h2 em { font-style: italic; font-weight: 500; color: var(--grey); }
+  .closing__row {
+    display: inline-flex;
+    gap: 16px;
+    margin-top: 36px;
+    align-items: center;
+  }
+  .closing__row span {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--grey);
+  }
+
+  @media (max-width: 820px) {
+    .founders { grid-template-columns: 1fr; }
+    .principles { grid-template-columns: 1fr; }
+    .principle:nth-child(odd) { border-right: 0; padding-right: 0; }
+    .principle:nth-child(even) { padding-left: 0; }
+    .boundaries { grid-template-columns: 1fr; }
+    .pullquote { margin: 32px 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Top nav ===== -->
+<nav class="topnav">
+  <div class="topnav__inner">
+    <a href="index.html" class="wordmark">
+      <span class="wordmark__name">probitas</span>
+    </a>
+    <div class="topnav__links">
+      <a href="index.html#sample">Sample report</a>
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="index.html#film">Watch the film</a>
+      <a href="sources.html">Sources</a>
+      <a href="about.html" style="color:var(--ink);font-weight:600;">About</a>
+      <a href="index.html#faq">FAQ</a>
+      <a href="preview.html?type=charity&id=220949" class="btn btn-ghost btn-sm">Search →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== Masthead ===== -->
+<section class="container">
+  <div class="masthead">
+    <div class="masthead__inner">
+      <span>About · Probitas Research</span>
+      <span>Vol. I · No. 01 — Founded in London, 2025</span>
+    </div>
+  </div>
+  <div class="masthead__rule"></div>
+</section>
+
+<!-- ===== Hero ===== -->
+<section class="container article-hero">
+  <span class="kicker">A note from the founders</span>
+  <h1>The night Maya rang us<br/><em>at half past one.</em></h1>
+  <p class="article-hero__dek">She had a board meeting on Friday morning and forty grant applications still open in her browser. We built Probitas so the next person wouldn&rsquo;t have to.</p>
+  <div class="article-hero__byline">
+    <span><strong>By the founders</strong></span>
+    <span class="dot"></span>
+    <span>London</span>
+    <span class="dot"></span>
+    <span>5 min read</span>
+  </div>
+</section>
+
+<!-- ===== Article body ===== -->
+<article class="article">
+  <div class="article__body">
+
+    <p>Maya runs the giving programme at a mid-sized City firm. Every Friday her board signs off on roughly forty grants — universities, community trusts, international aid, the occasional one-off. Each one needs a check: is the charity real, is it solvent, who runs it, is anyone on a sanctions list, is there anything in the press that gives pause.</p>
+
+    <p>The work is real work. It is also work no one teaches you. The first time Maya was asked to do it, she stayed up past midnight reading filings on the Charity Commission&rsquo;s website and copy-pasting trustee names into the OFSI search bar. She rang one of us at one-thirty in the morning to ask whether a 2019 trustee disqualification on a different charity meant anything for the one she was looking at. We didn&rsquo;t know either.</p>
+
+    <p>That call is why this company exists.</p>
+
+    <div class="pullquote">
+      The information was all there. Public. Free. And the person who needed it was reading thirty browser tabs at one in the morning, hoping she hadn&rsquo;t missed anything.
+      <cite>— What we kept coming back to</cite>
+    </div>
+
+    <h2><span class="num">01 / The Problem</span>The work is real. The tools are not.</h2>
+
+    <p>The UK has world-class public registers. Companies House publishes every filing within minutes. The Charity Commission lists trustees, accounts, regulatory cases. OFSI, OFAC and the UN publish their sanctions lists for free. The FCA tells you which firms are authorised, which are not, and which are under enforcement.</p>
+
+    <p>None of this is hidden. All of it is somewhere on the open internet. The problem isn&rsquo;t access. The problem is that nobody — not Maya, not a small foundation, not a compliance officer at a payments firm — has four hours per name to assemble it all, cross-check it, and write up what they found.</p>
+
+    <p>The big screening databases solve a different problem. World-Check, Dow Jones, LexisNexis — those are tools for a bank running tens of thousands of names through an automated workflow. They cost what enterprise software costs, and they produce hit-lists, not reports. If you are a giving programme with forty decisions on Friday, or an investment desk doing a one-off due diligence on a target, those tools are too much and too little at the same time.</p>
+
+    <h2><span class="num">02 / What we built</span>One careful report. Ninety seconds. Fifteen pounds.</h2>
+
+    <p>Probitas is a research service. You give us a UK company or charity number. We read the same authoritative sources Maya was reading at one in the morning — Companies House, the Charity Commission, all three sanctions lists, the FCA register, court and tribunal records, audited accounts, press coverage — and we write you a careful, footnoted report. About twenty pages. About ninety seconds. Fifteen pounds.</p>
+
+    <p>Every claim in the report carries a citation. The footnote says where the fact came from, what was read, and when. If something cannot be cited, it doesn&rsquo;t appear. The verdict is in plain English: clear to fund, conditional, decline, or critical. We tell you what we found and we tell you what we couldn&rsquo;t verify.</p>
+
+    <p>It is not regulated advice. We are not a substitute for a compliance officer&rsquo;s judgement and we don&rsquo;t pretend to be. We are the evidence layer underneath. The Friday night before the board meeting. The hour Maya doesn&rsquo;t have.</p>
+
+    <h2><span class="num">03 / Why this, and not the obvious thing</span>We are not building a chatbot for compliance.</h2>
+
+    <p>The obvious thing in 2026 is to wrap a large language model in a chat interface, point it at the same public sources, and sell answers. We&rsquo;ve seen people try. The reports that come out are confident, plausible, and quietly wrong in places no human notices until something blows up.</p>
+
+    <p>The way Probitas is built reflects that. The verification stage exists precisely to refuse claims that cannot be traced back to a primary source. We don&rsquo;t generate prose first and look for evidence second. We pull the evidence first — filings, sanctions hits, audited accounts — and only then do we write what we have evidence for. Sentences without footnotes get cut before the report leaves the machine.</p>
+
+    <p>It is slower than the chatbot version. Ninety seconds instead of seven. We think those eighty-three seconds buy something worth buying.</p>
+
+  </div>
+</article>
+
+<!-- ===== Founder cards ===== -->
+<section class="founders-section">
+  <div class="founders-section__head">
+    <span class="kicker">The team</span>
+    <h2 class="editorial-h2" style="margin-top:14px;">A small team in London.</h2>
+  </div>
+  <div class="founders">
+
+    <div class="founder">
+      <div class="founder__head">
+        <div class="founder__avatar">EH</div>
+        <div>
+          <div class="founder__name">Elena Hartmann</div>
+          <div class="founder__role">Founder · CEO</div>
+        </div>
+      </div>
+      <p class="founder__bio">Spent eight years in financial-crime investigations at a Tier-1 UK bank. The kind of work where you read a filing at 2am because if you don&rsquo;t, the wrong cheque gets signed.</p>
+      <div class="founder__prev">Previously — Lloyds Banking Group · UCL Law</div>
+    </div>
+
+    <div class="founder">
+      <div class="founder__head">
+        <div class="founder__avatar">RO</div>
+        <div>
+          <div class="founder__name">Reuben Okafor</div>
+          <div class="founder__role">Founder · Engineering</div>
+        </div>
+      </div>
+      <p class="founder__bio">Builds the seven-stage pipeline. Spent the previous decade making systems that didn&rsquo;t make things up — search ranking at one place, fact extraction at another.</p>
+      <div class="founder__prev">Previously — Element AI · Cambridge CS</div>
+    </div>
+
+    <div class="founder">
+      <div class="founder__head">
+        <div class="founder__avatar">SP</div>
+        <div>
+          <div class="founder__name">Saoirse Parnell</div>
+          <div class="founder__role">Founder · Operations</div>
+        </div>
+      </div>
+      <p class="founder__bio">Was a trustee of two small charities before this. Knows what it feels like to sign the cheque and hope. Runs the corrections log; reads every report flagged by a customer.</p>
+      <div class="founder__prev">Previously — Trust for London · Goodlord</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Principles ===== -->
+<section class="principles-section">
+  <div class="container">
+    <div style="max-width:600px;">
+      <span class="kicker">How we work</span>
+      <h2 class="editorial-h2" style="margin-top:14px;">Six rules we hold ourselves to.</h2>
+      <p class="lede">The closer you read these, the more they sound like things any careful researcher would do. We think that&rsquo;s the point.</p>
+    </div>
+    <div class="principles">
+
+      <div class="principle">
+        <div class="principle__num">01</div>
+        <div>
+          <h3 class="principle__title">No claim without a citation.</h3>
+          <p class="principle__body">If a sentence in the report can&rsquo;t point to a primary source — a filing, a register, a published document — it doesn&rsquo;t appear. Verification refuses anything else.</p>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle__num">02</div>
+        <div>
+          <h3 class="principle__title">Public sources only.</h3>
+          <p class="principle__body">We read what regulators, courts and registers publish. We don&rsquo;t buy back-channel data, we don&rsquo;t scrape private feeds, we don&rsquo;t infer from social media absent a primary anchor.</p>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle__num">03</div>
+        <div>
+          <h3 class="principle__title">Read fresh, every time.</h3>
+          <p class="principle__body">Sources are read at the moment of generation, not from a cached snapshot. Yesterday&rsquo;s filing is in yesterday&rsquo;s report; today&rsquo;s filing is in today&rsquo;s.</p>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle__num">04</div>
+        <div>
+          <h3 class="principle__title">Say what we don&rsquo;t know.</h3>
+          <p class="principle__body">Where evidence is thin, the report says so plainly. A claim absent from filings is not a claim we make &mdash; it&rsquo;s a gap we name.</p>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle__num">05</div>
+        <div>
+          <h3 class="principle__title">Corrections are public.</h3>
+          <p class="principle__body">Every issue a customer flags goes on the public corrections log with a date and a description of what changed. We&rsquo;d rather you see our mistakes than wonder if we make any.</p>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle__num">06</div>
+        <div>
+          <h3 class="principle__title">Research, not advice.</h3>
+          <p class="principle__body">Probitas is the evidence layer for the human making a decision. We are not regulated investment, legal, or compliance advice. The signature on the cheque is still yours.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== What we don't do ===== -->
+<section class="boundaries-section">
+  <div class="container">
+    <div style="max-width:680px;">
+      <span class="kicker">For the avoidance of doubt</span>
+      <h2 class="editorial-h2" style="margin-top:14px;color:white;">Six things Probitas is not.</h2>
+      <p class="lede" style="color:rgba(255,255,255,0.65);">Naming the boundaries plainly. The same way we&rsquo;d want a service we paid for to.</p>
+    </div>
+    <div class="boundaries">
+
+      <div class="boundary">
+        <div class="boundary__x">×</div>
+        <div>
+          <h4 class="boundary__title">Not a substitute for regulated CDD.</h4>
+          <p class="boundary__body">If MLR 2017 applies to you, Probitas is the evidence underneath your procedures &mdash; not the procedure itself.</p>
+        </div>
+      </div>
+
+      <div class="boundary">
+        <div class="boundary__x">×</div>
+        <div>
+          <h4 class="boundary__title">Not investment or legal advice.</h4>
+          <p class="boundary__body">We tell you what the public record says. What you do with it is your own decision, made with your own professional judgement.</p>
+        </div>
+      </div>
+
+      <div class="boundary">
+        <div class="boundary__x">×</div>
+        <div>
+          <h4 class="boundary__title">Not a credit score.</h4>
+          <p class="boundary__body">The risk score in the report is a summary of probity signals from public filings. It is not a probability of default.</p>
+        </div>
+      </div>
+
+      <div class="boundary">
+        <div class="boundary__x">×</div>
+        <div>
+          <h4 class="boundary__title">Not opinion dressed as fact.</h4>
+          <p class="boundary__body">Where the report draws a conclusion, the footnotes carry the working. Where it doesn&rsquo;t, it stays silent.</p>
+        </div>
+      </div>
+
+      <div class="boundary">
+        <div class="boundary__x">×</div>
+        <div>
+          <h4 class="boundary__title">Not a screening database.</h4>
+          <p class="boundary__body">We don&rsquo;t sell a list of names. We write a careful report on one entity at a time, the way you&rsquo;d want it written for you.</p>
+        </div>
+      </div>
+
+      <div class="boundary">
+        <div class="boundary__x">×</div>
+        <div>
+          <h4 class="boundary__title">Not stored without reason.</h4>
+          <p class="boundary__body">Reports and the search that produced them live for 90 days so your signed link keeps working. After that, deleted. UK servers throughout.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== Closing ===== -->
+<section class="closing">
+  <div class="container">
+    <h2>The cheque can wait.<br/><em>The answer doesn&rsquo;t need to.</em></h2>
+    <div class="closing__row">
+      <a href="preview.html?type=charity&id=220949" class="btn btn-primary btn-lg">Try a sample report →</a>
+      <span>or read about <a href="sources.html" style="color:var(--indigo-deep);">the sources we use</a></span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__top">
+      <div>
+        <a href="index.html" class="wordmark wordmark--lg">
+          <span class="wordmark__name">probitas</span>
+        </a>
+        <p style="margin-top:20px; max-width:32ch; color:var(--grey-2); font-size:13.5px;">Research-grade due-diligence reports on UK companies and charities.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="index.html#sample">Sample report</a></li>
+          <li><a href="index.html#how">How it works</a></li>
+          <li><a href="report-charity.html">Charity sample (cleared)</a></li>
+          <li><a href="report-company.html">Company sample</a></li>
+          <li><a href="report-declined.html">Sample &mdash; declined</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>About us</h4>
+        <ul>
+          <li><a href="about.html">Why we built this</a></li>
+          <li><a href="sources.html">Sources we read</a></li>
+          <li><a href="index.html#faq">FAQ</a></li>
+          <li><a href="index.html#film">Watch the film</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="sources.html">Sources &amp; methodology</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 Probitas Research Ltd · Company number 16482910</span>
+      <span>Registered in England &amp; Wales · probitas.co.uk</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

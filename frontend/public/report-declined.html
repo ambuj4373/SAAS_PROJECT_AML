@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Probitas Report · Albion Maritime Holdings Ltd · 11428736</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body { background: var(--white); }
+
+  .rv-grid {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 320px;
+    gap: 64px;
+    padding: 56px 0 96px;
+    align-items: start;
+  }
+
+  .toc { position: sticky; top: 100px; }
+  .toc__kicker { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey); margin: 0 0 14px; }
+  .toc__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; border-left: 1px solid var(--line); }
+  .toc__list a {
+    display: block; padding: 7px 14px; margin-left: -1px;
+    border-left: 1px solid transparent;
+    color: var(--grey); font-size: 13.5px; line-height: 1.4;
+    text-decoration: none;
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+  .toc__list a:hover { color: var(--ink); }
+  .toc__list a.is-active { color: var(--ink); border-left-color: var(--risk-high); font-weight: 500; }
+  .toc__list .num { font-family: var(--mono); font-size: 11px; color: var(--grey-2); margin-right: 6px; }
+  .toc__sub a { padding-left: 32px; font-size: 13px; }
+  .toc__foot { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11px; color: var(--grey); line-height: 1.6; }
+  .toc__foot a { color: var(--indigo); }
+
+  .report__head { padding-bottom: 40px; border-bottom: 1px solid var(--line); margin-bottom: 48px; }
+  .report__crumb { font-family: var(--mono); font-size: 11.5px; color: var(--grey); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 18px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .report__crumb .sep { color: var(--grey-3); }
+  .report__title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; }
+  .report__title { font-family: var(--serif); font-weight: 600; font-size: 56px; line-height: 1.04; letter-spacing: -0.018em; color: var(--ink); margin: 0; }
+  .report__sub { font-family: var(--serif); font-size: 19px; line-height: 1.5; color: var(--grey); font-style: italic; max-width: 56ch; margin: 18px 0 0; }
+  .report__meta { font-family: var(--mono); font-size: 12px; color: var(--grey); margin-top: 24px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .report__meta b { color: var(--ink); font-weight: 500; }
+
+  /* Declined stamp */
+  .stamp {
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 8px;
+    border: 3px solid var(--risk-high);
+    color: var(--risk-high);
+    padding: 10px 18px 8px;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transform: rotate(-3deg);
+    line-height: 1;
+    border-radius: 4px;
+    text-align: center;
+  }
+  .stamp__sub { display: block; font-family: var(--mono); font-size: 9.5px; font-weight: 500; letter-spacing: 0.1em; margin-top: 5px; color: var(--risk-high); opacity: 0.85; }
+
+  .rv-hero { margin-bottom: 56px; padding: 36px 40px; background: var(--risk-high-bg); border: 1px solid rgba(220,38,38,0.22); border-radius: 12px; }
+  .rv-hero__top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
+
+  .narr { font-family: var(--serif); font-size: 17.5px; line-height: 1.65; color: var(--ink-2); max-width: 64ch; }
+  .narr h2 { font-family: var(--display); font-weight: 600; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--grey); margin: 56px 0 4px; padding-bottom: 10px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; justify-content: space-between; }
+  .narr h2 .sec-num { font-family: var(--mono); font-size: 11px; color: var(--grey-2); letter-spacing: 0.04em; }
+  .narr h2:first-child { margin-top: 0; }
+  .narr h3 { font-family: var(--serif); font-weight: 600; font-size: 30px; letter-spacing: -0.015em; line-height: 1.2; color: var(--ink); margin: 12px 0 20px; }
+  .narr h3.danger { color: var(--risk-high); }
+  .narr h4 { font-family: var(--display); font-weight: 600; font-size: 16px; letter-spacing: -0.01em; color: var(--ink); margin: 32px 0 8px; }
+  .narr p { margin: 0 0 18px; }
+  .narr p.lead { font-size: 19.5px; line-height: 1.55; color: var(--ink); margin: 0 0 22px; }
+  .narr p.lead::first-letter { font-size: 64px; float: left; line-height: 0.9; padding: 6px 12px 0 0; font-weight: 600; color: var(--risk-high); }
+  .narr ul { margin: 0 0 22px; padding-left: 22px; }
+  .narr ul li { margin-bottom: 8px; }
+  .narr blockquote { margin: 22px 0; padding-left: 24px; border-left: 2px solid var(--risk-high); font-style: italic; color: var(--ink); }
+  .narr a.cite { border: 1px solid var(--indigo-line); }
+
+  /* Critical finding callout — red */
+  .crit {
+    margin: 22px 0;
+    padding: 22px 26px;
+    background: var(--risk-high-bg);
+    border: 1px solid rgba(220,38,38,0.28);
+    border-left: 4px solid var(--risk-high);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .crit__icon {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--risk-high); color: white;
+    display:flex; align-items:center; justify-content:center; font-family: var(--mono); font-weight: 700; font-size: 14px;
+    margin-top: 2px;
+  }
+  .crit__title {
+    font-family: var(--display); font-weight: 700; font-size: 11.5px; color: var(--risk-high);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;
+  }
+  .crit__head {
+    font-family: var(--display); font-weight: 600; font-size: 17px; color: var(--ink); margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+  .crit__text { font-family: var(--serif); font-size: 15.5px; line-height: 1.55; color: var(--ink); }
+  .crit__text p { margin: 0 0 8px; }
+  .crit__text p:last-child { margin-bottom: 0; }
+  .crit__detail {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(220,38,38,0.18);
+    border-radius: 5px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: var(--ink-2);
+  }
+  .crit__detail b { color: var(--risk-high); font-weight: 600; }
+
+  .doc-table { width: 100%; border-collapse: collapse; font-family: var(--ui); font-size: 13.5px; margin: 22px 0; }
+  .doc-table th, .doc-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .doc-table thead th { font-family: var(--ui); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey); border-bottom: 1px solid var(--ink); }
+  .doc-table .num { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+  .doc-table tbody tr:hover { background: var(--paper); }
+  .doc-table .flag { color: var(--risk-high); font-weight: 600; }
+  .doc-table .hit {
+    background: var(--risk-high);
+    color: white;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .doc-table .nohit {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .source-chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 18px 0; }
+  .source-chip { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 8px; background: white; text-decoration: none; color: var(--ink); }
+  .source-chip:hover { border-color: var(--ink); background: var(--paper); }
+  .source-chip.is-hit { border-color: var(--risk-high); background: var(--risk-high-bg); }
+  .source-chip__name { font-size: 14px; font-weight: 500; letter-spacing: -0.005em; }
+  .source-chip__meta { font-family: var(--mono); font-size: 11px; color: var(--grey); }
+  .source-chip__status { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--risk-low); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .source-chip__status::before { content: "✓"; font-size: 9px; }
+  .source-chip__status--hit { color: var(--risk-high); }
+  .source-chip__status--hit::before { content: "✕"; }
+
+  .rail { position: sticky; top: 100px; display: flex; flex-direction: column; gap: 16px; }
+  .rail__card { border: 1px solid var(--line); border-radius: 10px; background: white; overflow: hidden; }
+  .rail__card--alert { border-color: var(--risk-high); }
+  .rail__head { padding: 14px 18px 0; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey); }
+  .rail__head--alert { background: var(--risk-high); color: white; padding: 10px 18px; }
+  .rail__body { padding: 14px 18px 18px; }
+  .rail__num { font-family: var(--display); font-weight: 600; font-size: 38px; line-height: 1; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+  .rail__num--red { color: var(--risk-high); }
+  .rail__row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 18px; font-size: 12.5px; border-top: 1px solid var(--line); color: var(--ink-2); }
+  .rail__row .v { font-family: var(--mono); color: var(--grey); font-size: 11.5px; text-align: right; white-space: nowrap; }
+  .rail__row .v.flag { color: var(--risk-high); font-weight: 600; }
+  .rail__btn { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--line); color: var(--ink); font-size: 13.5px; font-weight: 500; cursor: pointer; background: white; text-decoration: none; }
+  .rail__btn:hover { background: var(--paper); text-decoration: none; }
+  .rail__btn svg { color: var(--indigo); }
+
+  .verdict-box {
+    padding: 18px;
+    background: var(--risk-high);
+    color: white;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  .verdict-box__label { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; margin-bottom: 8px; font-style: normal; }
+
+  .end-rule { margin: 56px 0 0; text-align: center; color: var(--grey-3); font-family: var(--mono); letter-spacing: 0.5em; font-size: 12px; }
+
+  /* Category scores box overrides */
+  .cat__fill--high { background: var(--risk-high); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav__inner">
+    <a href="index.html" class="wordmark">
+      <span class="wordmark__name">probitas</span>
+    </a>
+    <div class="topnav__links">
+      <span class="mono" style="color:var(--grey); font-size:12px;">Sample · what a declined report looks like</span>
+      <a href="report-company.html" class="btn btn-ghost btn-sm">See cleared sample →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="rv-grid">
+
+    <aside class="toc">
+      <div class="toc__kicker">Contents</div>
+      <ul class="toc__list" id="toc">
+        <li><a href="#sec-1" data-sec="sec-1"><span class="num">01</span>Verdict</a></li>
+        <li><a href="#sec-2" data-sec="sec-2"><span class="num">02</span>Critical findings</a></li>
+        <li class="toc__sub"><a href="#sec-2a" data-sec="sec-2a">A · Sanctions match</a></li>
+        <li class="toc__sub"><a href="#sec-2b" data-sec="sec-2b">B · Disqualified director</a></li>
+        <li class="toc__sub"><a href="#sec-2c" data-sec="sec-2c">C · Strike-off notice</a></li>
+        <li><a href="#sec-3" data-sec="sec-3"><span class="num">03</span>Entity profile</a></li>
+        <li><a href="#sec-4" data-sec="sec-4"><span class="num">04</span>Director &amp; control</a></li>
+        <li><a href="#sec-5" data-sec="sec-5"><span class="num">05</span>Financial position</a></li>
+        <li><a href="#sec-6" data-sec="sec-6"><span class="num">06</span>Filing history</a></li>
+        <li><a href="#sec-7" data-sec="sec-7"><span class="num">07</span>Sanctions screening</a></li>
+        <li><a href="#sec-8" data-sec="sec-8"><span class="num">08</span>Adverse media</a></li>
+        <li><a href="#sec-9" data-sec="sec-9"><span class="num">09</span>Risk findings</a></li>
+        <li><a href="#sec-10" data-sec="sec-10"><span class="num">10</span>Methodology</a></li>
+      </ul>
+      <div class="toc__foot">
+        Sample report · declined<br/>
+        Fictional entity for illustration<br/>
+        Reading time · ~14 min<br/>
+        <a href="#" style="display:inline-block;margin-top:10px;">Print PDF →</a>
+      </div>
+    </aside>
+
+    <main>
+      <header class="report__head">
+        <div class="report__crumb">
+          <span>Probitas Report</span>
+          <span class="sep">/</span>
+          <span>Company</span>
+          <span class="sep">/</span>
+          <span class="mono">11428736</span>
+          <span class="sep">/</span>
+          <span style="color:var(--risk-high); font-weight:600;">Sample · Declined</span>
+        </div>
+        <div class="report__title-row">
+          <h1 class="report__title">Albion Maritime<br/>Holdings Ltd</h1>
+          <div class="stamp">
+            Do not proceed
+            <span class="stamp__sub">High risk · 3 critical</span>
+          </div>
+        </div>
+        <p class="report__sub">A research report compiled from Companies House, three sanctions registers, the Insolvency Service register, court filings, and 90-day adverse-media review.</p>
+        <div class="report__meta">
+          <span><b>Generated</b> 22 Oct 2025, 09:14 BST</span>
+          <span>·</span>
+          <span><b>Read time</b> 88.7s</span>
+          <span>·</span>
+          <span><b>Sources</b> 43 of 43</span>
+          <span>·</span>
+          <span style="color:var(--risk-high);"><b>Critical findings</b> 3</span>
+        </div>
+      </header>
+
+      <section class="rv-hero" id="hero">
+        <div class="rv-hero__top">
+          <div class="risk-hero">
+            <div class="risk-hero__score">
+              <div class="risk-hero__num" style="color:var(--risk-high);">89</div>
+              <div class="col gap-12">
+                <div class="risk-hero__denom">/ 100</div>
+                <div class="risk-hero__label">Overall risk</div>
+                <div class="risk-hero__pill" style="background:var(--risk-high); color:white;">High</div>
+              </div>
+            </div>
+            <div class="risk-hero__divider"></div>
+            <div>
+              <div class="kicker" style="margin-bottom:18px;">Category breakdown</div>
+              <div class="cats">
+                <div class="cat">
+                  <span class="cat__name">Sanctions</span>
+                  <div class="cat__track"><div class="cat__fill cat__fill--high" style="width:100%"></div></div>
+                  <span class="cat__num">100</span>
+                </div>
+                <div class="cat">
+                  <span class="cat__name">Governance</span>
+                  <div class="cat__track"><div class="cat__fill cat__fill--high" style="width:96%"></div></div>
+                  <span class="cat__num">96</span>
+                </div>
+                <div class="cat">
+                  <span class="cat__name">Financial</span>
+                  <div class="cat__track"><div class="cat__fill cat__fill--high" style="width:84%"></div></div>
+                  <span class="cat__num">84</span>
+                </div>
+                <div class="cat">
+                  <span class="cat__name">Adverse media</span>
+                  <div class="cat__track"><div class="cat__fill cat__fill--high" style="width:78%"></div></div>
+                  <span class="cat__num">78</span>
+                </div>
+                <div class="cat">
+                  <span class="cat__name">Geography</span>
+                  <div class="cat__track"><div class="cat__fill cat__fill--med" style="width:62%"></div></div>
+                  <span class="cat__num">62</span>
+                </div>
+                <div class="cat">
+                  <span class="cat__name">Operational</span>
+                  <div class="cat__track"><div class="cat__fill cat__fill--med" style="width:58%"></div></div>
+                  <span class="cat__num">58</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:14px; padding-top:24px; border-top:1px solid rgba(220,38,38,0.18);">
+          <button class="vbadge" type="button" data-drawer="claims">
+            <div class="vbadge__top">Verification</div>
+            <div class="vbadge__main">Strong · 91<em>%</em></div>
+            <div class="vbadge__sub">31 OF 34 CLAIMS BACKED</div>
+          </button>
+          <button class="vbadge" type="button" tabindex="-1" style="cursor:default; background:var(--risk-high-bg); border-color:rgba(220,38,38,0.3);">
+            <div class="vbadge__top" style="color:var(--risk-high);">Sanctions</div>
+            <div class="vbadge__main" style="color:var(--risk-high);"><em>1</em> hit</div>
+            <div class="vbadge__sub" style="color:var(--risk-high);">OFSI · RUSSIA REGIME</div>
+          </button>
+          <button class="vbadge" type="button" tabindex="-1" style="cursor:default; background:var(--risk-high-bg); border-color:rgba(220,38,38,0.3);">
+            <div class="vbadge__top" style="color:var(--risk-high);">Critical findings</div>
+            <div class="vbadge__main" style="color:var(--risk-high);"><em>3</em> critical</div>
+            <div class="vbadge__sub" style="color:var(--risk-high);">SEE § 2 BELOW</div>
+          </button>
+        </div>
+      </section>
+
+      <article class="narr">
+
+        <h2 id="sec-1"><span>Verdict</span><span class="sec-num">§ 1 of 10</span></h2>
+        <h3 class="danger">Do not proceed without enhanced due diligence and Treasury consultation.</h3>
+        <p class="lead">Albion Maritime Holdings Ltd is a UK-incorporated company in the freight shipping sector that, on the basis of the public record alone, presents three independently serious findings &mdash; any one of which would warrant declining the relationship. The verdict on this report is <strong style="color:var(--risk-high);">do not proceed</strong>. The findings are: a sanctions match against the company&rsquo;s majority Person of Significant Control on the OFSI consolidated list under the Russia regime; an active director who is currently subject to a Companies House disqualification order; and a first Gazette notice of compulsory strike-off filed by the Registrar on grounds of failure to file.</p>
+
+        <blockquote>This is a sample report illustrating how a declined verdict is presented. Albion Maritime Holdings Ltd, its officers and PSCs are fictional and any resemblance to real entities or persons is coincidental.</blockquote>
+
+        <h2 id="sec-2"><span>Critical findings</span><span class="sec-num">§ 2 of 10</span></h2>
+        <p>Three findings drive the verdict on this report. They are not gradations of the same concern. Each is independently sufficient grounds to decline, and is sourced from the primary authority rather than aggregated reporting.</p>
+
+        <div class="crit" id="sec-2a">
+          <div class="crit__icon">!</div>
+          <div>
+            <div class="crit__title">Critical finding A · Sanctions match</div>
+            <div class="crit__head">The 51% PSC is on the OFSI consolidated list under the Russia regime.</div>
+            <div class="crit__text">
+              <p>The Person of Significant Control holding 51% of Albion Maritime Holdings Ltd&rsquo;s issued shares is recorded on the PSC register as <strong>Pavel Konstantinovich Volkov</strong>, born March 1968, of British and Russian nationality, with a UK service address in Knightsbridge <a class="cite" href="#">PSC register</a>.</p>
+              <p>A name, date-of-birth and nationality match was returned against the OFSI consolidated list. The designation is current and unrestricted &mdash; not an asset-freeze-only listing.</p>
+            </div>
+            <div class="crit__detail">
+              <div><b>List · </b>OFSI consolidated list (UK HM Treasury)</div>
+              <div><b>Designation · </b>Group ID 14782 · Russia regime</div>
+              <div><b>Designation date · </b>16 March 2023 · last updated 02 September 2025</div>
+              <div><b>Regulation · </b>Russia (Sanctions) (EU Exit) Regulations 2019</div>
+              <div><b>Probitas confidence · </b>97% &mdash; full name + DOB month/year + nationality match</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="crit" id="sec-2b">
+          <div class="crit__icon">!</div>
+          <div>
+            <div class="crit__title">Critical finding B · Disqualified director</div>
+            <div class="crit__head">The sole UK-resident director is currently subject to a disqualification order.</div>
+            <div class="crit__text">
+              <p>The only UK-resident director on file, <strong>James Anthony Reid</strong>, appointed 04 November 2021, is recorded on the Companies House Disqualified Persons register with an active eight-year disqualification order made in 2019 <a class="cite" href="#">Disq. register</a>.</p>
+              <p>The disqualification arises from the conduct of a different company in the cargo logistics sector (now dissolved) and was made by the High Court under section 6 of the Company Directors Disqualification Act 1986. The order remains in force until 14 May 2027. Acting as a director while disqualified is a criminal offence under section 13 of the Act.</p>
+            </div>
+            <div class="crit__detail">
+              <div><b>Disqualified person · </b>James Anthony Reid · DOB Aug 1971</div>
+              <div><b>Order made · </b>14 May 2019 · High Court of Justice (Chancery)</div>
+              <div><b>Period · </b>8 years · until 14 May 2027</div>
+              <div><b>Grounds · </b>Unfit conduct under s.6 CDDA 1986 &mdash; prior company</div>
+              <div><b>Cross-check · </b>Date-of-birth and address match the Companies House officer record for Reid at this entity</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="crit" id="sec-2c">
+          <div class="crit__icon">!</div>
+          <div>
+            <div class="crit__title">Critical finding C · Compulsory strike-off proposed</div>
+            <div class="crit__head">First Gazette notice was issued on 28 August 2025.</div>
+            <div class="crit__text">
+              <p>A first Gazette notice of compulsory strike-off was issued by the Registrar of Companies on 28 August 2025 and published in The London Gazette on 02 September 2025 <a class="cite" href="#">London Gazette</a>. The grounds, as recorded on the Companies House public record, are failure to file confirmation statement and most recent accounts.</p>
+              <p>Absent a successful objection or remedial filing, the company will be struck off and dissolved approximately two months after the first notice &mdash; on or shortly after 02 November 2025. The company remains active as at the date of this report, but its capacity to discharge obligations is in active doubt.</p>
+            </div>
+            <div class="crit__detail">
+              <div><b>Notice type · </b>First Gazette notice for compulsory strike-off (Form GAZ1)</div>
+              <div><b>Gazette publication · </b>London · 02 September 2025</div>
+              <div><b>Earliest dissolution date · </b>02 November 2025</div>
+              <div><b>Outstanding · </b>Confirmation statement (overdue 287 days) · FY24 accounts (overdue 198 days)</div>
+            </div>
+          </div>
+        </div>
+
+        <h2 id="sec-3"><span>Entity profile</span><span class="sec-num">§ 3 of 10</span></h2>
+        <table class="doc-table">
+          <tbody>
+            <tr><th>Registered name</th><td>Albion Maritime Holdings Ltd <a class="cite" href="#">CH API</a></td></tr>
+            <tr><th>Company number</th><td class="num">11428736</td></tr>
+            <tr><th>Incorporation</th><td>16 July 2018 · 7 years</td></tr>
+            <tr><th>Legal form</th><td>Private company limited by shares</td></tr>
+            <tr><th>Status</th><td><span class="flag">Active · proposal to strike off</span></td></tr>
+            <tr><th>Registered office</th><td>Suite 1108, 1 Canada Square, Canary Wharf, London, E14 5AB</td></tr>
+            <tr><th>SIC codes</th><td>50200 · Sea and coastal freight water transport<br/>52290 · Other transportation support activities</td></tr>
+            <tr><th>Previous names</th><td>Severn Cargo Holdings Ltd (until 11 Mar 2022)</td></tr>
+            <tr><th>Issued shares</th><td class="num">1,000 ordinary @ £1.00 = £1,000</td></tr>
+            <tr><th>Accounting reference</th><td>31 December</td></tr>
+          </tbody>
+        </table>
+        <p>The registered office is a managed-suite address &mdash; an indicator commonly seen on shell or near-shell entities but not by itself adverse. The 2022 name change from Severn Cargo Holdings Ltd to Albion Maritime Holdings Ltd is on file with no associated change in officers or PSCs.</p>
+
+        <h2 id="sec-4"><span>Director &amp; control</span><span class="sec-num">§ 4 of 10</span></h2>
+        <table class="doc-table">
+          <thead><tr><th>Name</th><th>Role</th><th>Appointed</th><th>Nationality</th><th>Screening</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>James Anthony Reid</td>
+              <td>Director</td>
+              <td>04 Nov 2021</td>
+              <td>British</td>
+              <td><span class="hit">Disq. order</span></td>
+            </tr>
+            <tr>
+              <td>Olena Dmytrivna Yanenko</td>
+              <td>Director</td>
+              <td>11 Mar 2022</td>
+              <td>Ukrainian</td>
+              <td><span class="nohit">No match</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p>The Persons of Significant Control register lists two PSCs at the time of the most recent confirmation statement (March 2024):</p>
+        <table class="doc-table">
+          <thead><tr><th>Name</th><th>Nature of control</th><th>Notified</th><th>OFSI / OFAC / UN</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Pavel Konstantinovich Volkov</td>
+              <td>Ownership of 50% &mdash; 75% of shares</td>
+              <td>11 Mar 2022</td>
+              <td><span class="hit">OFSI · Russia</span></td>
+            </tr>
+            <tr>
+              <td>Volkov Family Trust (Cyprus)</td>
+              <td>Ownership of 25% &mdash; 50% of shares</td>
+              <td>11 Mar 2022</td>
+              <td><span class="nohit">No direct match</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Volkov is recorded as the controlling individual via direct holding; the Cyprus-incorporated trust holds the residual minority. Beneficial ownership of the trust is not disclosed on the UK register. The combined shareholding gives Volkov, directly and via the trust, effective control of substantially all of the issued shares.</p>
+
+        <h2 id="sec-5"><span>Financial position</span><span class="sec-num">§ 5 of 10</span></h2>
+        <table class="doc-table">
+          <thead><tr><th>Year ending</th><th class="num">Turnover</th><th class="num">PBT</th><th class="num">Net assets</th><th class="num">Cash</th></tr></thead>
+          <tbody>
+            <tr><td>31 Dec 2024</td><td class="num" style="color:var(--grey);">— not filed —</td><td class="num" style="color:var(--grey);">—</td><td class="num" style="color:var(--grey);">—</td><td class="num" style="color:var(--grey);">—</td></tr>
+            <tr><td>31 Dec 2023</td><td class="num flag">£14.21m</td><td class="num flag">(£840k)</td><td class="num flag">(£412k)</td><td class="num">£187k</td></tr>
+            <tr><td>31 Dec 2022</td><td class="num">£18.74m</td><td class="num flag">(£221k)</td><td class="num">£428k</td><td class="num">£514k</td></tr>
+            <tr><td>31 Dec 2021</td><td class="num">£21.18m</td><td class="num">£612k</td><td class="num">£649k</td><td class="num">£942k</td></tr>
+            <tr><td>31 Dec 2020</td><td class="num">£8.84m</td><td class="num">£104k</td><td class="num">£38k</td><td class="num">£221k</td></tr>
+          </tbody>
+        </table>
+        <p>The most recent filed accounts (FY23) show a £840k loss before tax and net liabilities of £412k &mdash; the auditor&rsquo;s opinion includes a material uncertainty paragraph relating to going concern <a class="cite" href="#">FY23 accounts</a>. FY24 accounts are not on file and are 198 days past the statutory deadline of 30 September 2025, contributing to the first Gazette strike-off notice covered in finding C.</p>
+        <h4>Auditor&rsquo;s opinion</h4>
+        <p>FY23 accounts carry a qualified audit opinion from a small London-based audit firm. The qualification cites the inability to obtain sufficient appropriate evidence regarding the recoverability of £2.3m of trade receivables, of which £1.8m was due from a single related Cyprus-resident counterparty.</p>
+
+        <h2 id="sec-6"><span>Filing history</span><span class="sec-num">§ 6 of 10</span></h2>
+        <table class="doc-table">
+          <thead><tr><th>Date</th><th>Filing</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>28 Aug 2025</td><td>First Gazette notice for compulsory strike-off</td><td class="flag">Active notice</td></tr>
+            <tr><td>—</td><td>FY24 full accounts (y/e 31 Dec 2024)</td><td class="flag">Overdue · 198 days</td></tr>
+            <tr><td>—</td><td>Confirmation statement (due 18 Jan 2025)</td><td class="flag">Overdue · 287 days</td></tr>
+            <tr><td>18 Jan 2024</td><td>Confirmation statement</td><td>On time</td></tr>
+            <tr><td>14 Sep 2024</td><td>Full accounts FY23</td><td class="flag">Late · 258 days past deadline</td></tr>
+            <tr><td>11 Mar 2022</td><td>Change of name &mdash; Severn Cargo Holdings Ltd &rarr; Albion Maritime Holdings Ltd</td><td>On time</td></tr>
+            <tr><td>11 Mar 2022</td><td>PSC notification &mdash; Volkov &amp; Volkov Family Trust</td><td>On time</td></tr>
+            <tr><td>04 Nov 2021</td><td>Appointment &mdash; James A. Reid as director</td><td>On time</td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="sec-7"><span>Sanctions screening</span><span class="sec-num">§ 7 of 10</span></h2>
+        <p>The entity, its company number, both directors and both PSCs were screened against three consolidated sanctions lists on the morning of <span class="mono">22 Oct 2025</span>. One match was returned.</p>
+        <table class="doc-table">
+          <thead><tr><th>Subject</th><th>OFSI</th><th>OFAC SDN</th><th>UN</th><th>Outcome</th></tr></thead>
+          <tbody>
+            <tr><td>Albion Maritime Holdings Ltd (entity)</td><td>—</td><td>—</td><td>—</td><td><span class="nohit">No match</span></td></tr>
+            <tr style="background:var(--risk-high-bg);"><td><b>Pavel K. Volkov (PSC)</b></td><td><b style="color:var(--risk-high);">MATCH</b></td><td>—</td><td>—</td><td><span class="hit">Designated</span></td></tr>
+            <tr><td>James A. Reid (director)</td><td>—</td><td>—</td><td>—</td><td><span class="nohit">No match</span></td></tr>
+            <tr><td>Olena D. Yanenko (director)</td><td>—</td><td>—</td><td>—</td><td><span class="nohit">No match</span></td></tr>
+            <tr><td>Volkov Family Trust (PSC)</td><td>—</td><td>—</td><td>—</td><td><span class="nohit">No direct match</span></td></tr>
+          </tbody>
+        </table>
+        <h4>Sources checked</h4>
+        <div class="source-chips">
+          <a class="source-chip is-hit" href="#">
+            <div>
+              <div class="source-chip__name">OFSI consolidated list</div>
+              <div class="source-chip__meta">UK HM Treasury · 5,135 entries · v 2025-10-21</div>
+            </div>
+            <span class="source-chip__status source-chip__status--hit">1 match</span>
+          </a>
+          <a class="source-chip" href="#">
+            <div>
+              <div class="source-chip__name">OFAC SDN list</div>
+              <div class="source-chip__meta">US Treasury · 16,041 entries · v 2025-10-20</div>
+            </div>
+            <span class="source-chip__status">No match</span>
+          </a>
+          <a class="source-chip" href="#">
+            <div>
+              <div class="source-chip__name">UN consolidated list</div>
+              <div class="source-chip__meta">UN Security Council · 705 entries · v 2025-10-15</div>
+            </div>
+            <span class="source-chip__status">No match</span>
+          </a>
+          <a class="source-chip" href="#">
+            <div>
+              <div class="source-chip__name">Disq. Persons register</div>
+              <div class="source-chip__meta">Companies House · v 2025-10-21</div>
+            </div>
+            <span class="source-chip__status source-chip__status--hit">1 match</span>
+          </a>
+        </div>
+
+        <h2 id="sec-8"><span>Adverse media</span><span class="sec-num">§ 8 of 10</span></h2>
+        <p>A 90-day adverse-media sweep across UK national press, Reuters wire, Financial Times archive and BBC News returned three substantive findings.</p>
+        <ul>
+          <li><strong>Financial Times</strong> &mdash; 18 September 2025. Albion Maritime Holdings named in passing in a feature on dark-fleet tanker activity, in the context of vessels chartered through related Cyprus and UAE entities. Not the primary subject of the article <a class="cite" href="#">FT · 18 Sept 2025</a>.</li>
+          <li><strong>Reuters</strong> &mdash; 03 October 2025. Reporting on UK Treasury enforcement under the Russia regime cites the Volkov designation as an example of designations subsequently linked to UK-incorporated entities. Albion is mentioned by name <a class="cite" href="#">Reuters · 03 Oct 2025</a>.</li>
+          <li><strong>BBC News</strong> &mdash; 08 October 2025. Regional reporting referencing port authority hold notices on a vessel said to be chartered by Albion subsidiaries in the previous twelve months <a class="cite" href="#">BBC · 08 Oct 2025</a>.</li>
+        </ul>
+        <p>Two of the three findings are wire-quality and from named outlets. Both are dated within the last 30 days. Adverse-media score of 78 reflects this clustering rather than the volume of coverage.</p>
+
+        <h2 id="sec-9"><span>Risk findings</span><span class="sec-num">§ 9 of 10</span></h2>
+        <table class="doc-table">
+          <thead><tr><th>Category</th><th class="num">Score</th><th>Rationale</th></tr></thead>
+          <tbody>
+            <tr><td>Sanctions</td><td class="num flag">100</td><td>OFSI Russia-regime match against majority PSC (Volkov). Designation current.</td></tr>
+            <tr><td>Governance</td><td class="num flag">96</td><td>Disqualification order against active director (Reid). Strike-off notice live.</td></tr>
+            <tr><td>Financial</td><td class="num flag">84</td><td>Net liabilities at FY23; going concern paragraph in auditor&rsquo;s opinion; FY24 accounts overdue 198 days.</td></tr>
+            <tr><td>Adverse media</td><td class="num flag">78</td><td>Three wire/broadsheet mentions in last 60 days; two in last 30 days; dark-fleet context.</td></tr>
+            <tr><td>Geography</td><td class="num">62</td><td>UK-incorporated. Operations span EU and high-risk maritime corridors via related Cyprus / UAE entities.</td></tr>
+            <tr><td>Operational</td><td class="num">58</td><td>Managed-suite registered office. Single non-disqualified UK officer. Related-party receivables concentrated.</td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="sec-10"><span>Methodology &amp; sources</span><span class="sec-num">§ 10 of 10</span></h2>
+        <p>This report draws on the full Probitas source list of 43 authorities. Where a finding is critical, the citation is to the primary record (the OFSI list, the Insolvency Service register, the London Gazette) rather than to a secondary aggregator. Each critical finding has been independently cross-checked against at least one additional source &mdash; see the verification mark on the front page for the full breakdown.</p>
+        <h4>What this report is &mdash; and isn&rsquo;t.</h4>
+        <p>This is research-grade intelligence, not regulated AML advice. The findings above are material on their face and warrant either declining the relationship outright or, where the relationship cannot be declined, enhanced due-diligence procedures and consultation with the UK Office of Financial Sanctions Implementation regarding the Volkov designation.</p>
+        <h4>Why we publish a sample of a declined report.</h4>
+        <p>Probitas is only useful if it is willing to deliver bad news clearly. This sample exists so that prospective customers can see what a declined verdict looks like &mdash; not just a cleared one. The visual treatment, the language, and the structure of findings on a high-risk report are deliberately distinct from a cleared report so the verdict is unmistakable at a glance.</p>
+
+        <div class="end-rule">— END OF REPORT —</div>
+      </article>
+    </main>
+
+    <aside class="rail">
+      <div class="rail__card rail__card--alert">
+        <div class="rail__head--alert">Verdict</div>
+        <div class="verdict-box">
+          <div class="verdict-box__label">Do not proceed</div>
+          Three independently sufficient findings. Each warrants declining the relationship.
+        </div>
+        <div class="rail__row" style="border-top: 1px solid rgba(255,255,255,0.15);"><span>Overall risk</span><span class="v flag">89 · High</span></div>
+        <div class="rail__row"><span>Critical</span><span class="v flag">3 findings</span></div>
+        <div class="rail__row"><span>Sanctions</span><span class="v flag">1 · OFSI</span></div>
+        <div class="rail__row"><span>Disq. directors</span><span class="v flag">1</span></div>
+      </div>
+
+      <div class="rail__card">
+        <div class="rail__head">Risk score</div>
+        <div class="rail__body" style="display:flex; align-items:flex-end; gap:10px; padding-top:0;">
+          <span class="rail__num rail__num--red">89</span>
+          <span class="mono" style="color:var(--grey); font-size:11.5px; padding-bottom:6px;">/ 100</span>
+          <span class="risk-hero__pill" style="margin-left:auto; height:24px; padding: 0 10px; font-size:11px; background:var(--risk-high); color:white;">High</span>
+        </div>
+        <div class="rail__row"><span>Verification</span><span class="v">Strong · 91%</span></div>
+        <div class="rail__row"><span>Sources read</span><span class="v">43 of 43</span></div>
+        <div class="rail__row"><span>Read time</span><span class="v">88.7s</span></div>
+      </div>
+
+      <div class="rail__card">
+        <a class="rail__btn" href="report-company.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          See a cleared sample
+        </a>
+        <a class="rail__btn" href="sources.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Read the source list
+        </a>
+        <a class="rail__btn" href="index.html#sample">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+          Run on your own entity
+        </a>
+      </div>
+
+      <div class="rail__card">
+        <div class="rail__head">Sample report</div>
+        <div class="rail__body" style="font-family:var(--mono); font-size:11.5px; color:var(--grey); line-height:1.7; padding-top:6px;">
+          status · illustrative<br/>
+          entity · fictional<br/>
+          all officers and PSCs<br/>
+          named in this report are<br/>
+          fictional &mdash; designed<br/>
+          to demonstrate how<br/>
+          probitas presents a<br/>
+          high-risk verdict
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('.narr h2[id], .narr h3[id], .crit[id]');
+  const tocLinks = document.querySelectorAll('#toc a');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(a => a.classList.toggle('is-active', a.dataset.sec === entry.target.id));
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+
+  tocLinks.forEach(a => a.addEventListener('click', (e) => {
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (target) {
+      e.preventDefault();
+      window.scrollTo({ top: target.offsetTop - 84, behavior: 'smooth' });
+      history.replaceState(null, '', `#${id}`);
+    }
+  }));
+</script>
+</body>
+</html>
