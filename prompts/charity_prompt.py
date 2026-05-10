@@ -245,382 +245,97 @@ DATA DISCREPANCY HANDLING:
 - If discrepancies are significant (>10% variance), note them factually and recommend the analyst
   verify against the original filing document.
 
-Write the complete report with these 9 sections:
-
-## 1. Overview — What They Do
-- Charity's stated objects, aims, mission statement
-- Website link and assessment of web presence quality
-- List projects/programs found (from web search AND documents)
-- Summarise Trustees' Annual Report if document data available
-- **Analyst Note**: Are activities consistent with income level and geography?
-
-## 2. How the Charity Operates
-- Donation methods (cash, online, bank transfer, goods-in-kind, crypto?)
-- Funding model: donations, grants, government funding, trading — with £ amounts
-- **Partner Organisations**: List ALL partners found in documents/search. For each: name, country, relationship type
-- **Due diligence on partners**: What checks? Vetting criteria? MoU?
-- **Fund oversight**: Who has decision-making power over funds?
-- **3rd party KYC**: Does the charity verify partner identities? Sanctions screening?
-- Reference partnerships search data + document extracts
-- If partnership info not found, use the "NOT FOUND" format above with specific guidance
-- IMPORTANT: If the partnership search failed due to technical errors (SSL, timeout, crawl failure), do NOT write "No partner information found" or "Partner Organisations — NOT FOUND". Instead write: "Automated search was limited due to technical access restrictions. Partner frameworks likely exist given the charity's scale and international operations. Direct confirmation is recommended." Check "partnership_search_audit" for error indicators and "search_failures" for technical issues.
-
-### Cross-Border Disbursement & Sanctions Risk Assessment
-If the charity operates in or disburses funds to ANY 🔴 Very High Risk or 🟠 High Risk jurisdiction, you MUST include this sub-section:
-
-**Cross-Border Disbursement Risk:**
-- How are funds transferred to operating countries? (bank wire, hawala/money service businesses, cash couriers, local agents?)
-- What controls exist over fund transfers? (dual authorisation, audit trail, reconciliation?)
-- Are local implementing partners used? If so, what due diligence framework applies?
-- For EACH high-risk country, describe the disbursement mechanism if identifiable from documents/data.
-
-**Sanctions Exposure:**
-- Cross-reference operating countries against: UK HMT sanctions list, UN sanctions, OFAC SDN list, EU restrictive measures.
-- For countries under active sanctions regimes (Syria, Yemen, Afghanistan, Myanmar, North Korea, Iran, Somalia, Sudan, South Sudan, Libya, DRC, CAR, Mali, etc.), flag: "Operations in [country] require ongoing sanctions compliance monitoring under [applicable regime]."
-- Note whether the charity has stated sanctions screening procedures.
-- If no AML/sanctions policy was located (check hrcob_core_controls → financial_crime status), flag this as a compounding risk factor for sanctioned jurisdictions.
-
-**Diversion Risk:**
-- For conflict-affected or fragile states (Yemen, Syria, Somalia, Afghanistan, South Sudan, Myanmar, DRC, etc.), assess risk of diversion to non-state armed groups, proscribed organisations, or designated entities.
-- Consider: Is there active armed conflict? Are non-state actors controlling territory where the charity operates? Does the charity's operational model (e.g. cash distributions, food aid) carry elevated diversion risk?
-- If operating in territory controlled or contested by proscribed organisations, flag: "Operations in [area] carry elevated risk of resource diversion. Direct engagement with the charity to verify monitoring controls is recommended."
-- Keep language proportionate — operating in conflict zones is legitimate for humanitarian organisations. Flag the risk, do not assume wrongdoing.
-
-## 3. Where They Operate
-Summary table: Country | Continent | Risk Level.
-Labels: 🔴 Very High Risk, 🟠 High Risk, 🟡 Medium Risk, 🟢 Low Risk, ⚪ Unclassified (not in internal matrix — analyst should verify against Basel AML Index).
-
-For EACH 🔴/🟠 country, write a **"Know Your Country" profile**:
-- **Country Summary**: 2-3 sentence AML risk overview
-- **Risk Indicators**: Sanctions | FATF | Terrorism | Corruption | Criminal Markets | EU Tax Blacklist — ✅ or ➖
-- **Key Concerns**: bullet points
-Cite: [Know Your Country](https://www.knowyourcountry.com/), [Basel AML Index](https://index.baselgovernance.org/).
-
-GEOGRAPHIC RISK CONTEXTUALISATION (for large humanitarian NGOs):
-- If the charity has income > £50m, operates in > 10 countries, and has > 5 elevated-risk jurisdictions, add a contextual note: "High-risk geographic exposure is consistent with humanitarian mandate and does not independently indicate elevated governance risk. Risk assessment should focus on control framework rather than geographic presence alone."
-- Do NOT reduce risk counts or change numeric classifications.
-- Do NOT assume absence of controls because of geography.
-- Large humanitarian NGOs (Red Cross, MSF, Oxfam, etc.) operate in high-risk jurisdictions by mandate — this is expected and should be contextualised, not penalised.
-
-## 4. Entity Details & Financial Analysis
-- Registration, HQ, years active, charity type
-- **CC Governance Intelligence** (NEW — use "cc_governance_intelligence" data):
-  - **Organisation Type**: State the type (CIO, Charitable Company, Trust, etc.) and explain what it means for liability, regulation, and transparency. Use "organisation_type_detail" for the description and risk note.
-  - **Registration History**: List all registration events with dates. Flag notable events (removals, mergers, re-registrations, conversions). If a charity was removed and re-registered, this warrants scrutiny. State years active since registration.
-  - **Gift Aid Status**: State whether recognised by HMRC. If NOT recognised, flag as: "Gift Aid not recognised — verify with charity whether this is administrative or indicative of a compliance issue."
-  - **Other Names**: List any trading names, former names, or working names. Multiple name changes may warrant verification.
-  - **Companies House Consistency**: Use "governance_indicators.ch_consistency" — state whether the CH link status matches what's expected for the organisation type. If a charitable company lacks CH registration, flag it.
-  - **CC Declared Policies**: State the count and list policies declared to the Charity Commission. Cross-reference with the policy_classification findings — note any discrepancies (e.g. charity declares a safeguarding policy to CC but none was found on their website).
-  - **Land & Property**: State whether the charity owns/leases land or property. Property ownership is relevant for asset-based risk assessment.
-  - **Other Regulators**: State if the charity is regulated by any body other than the Charity Commission.
-  - Source: Always attribute as "(Source: CC Register — Governance page)".
-- **Trustees Table**: Name | Role | Other Trusteeships & Directorships (from "structural_governance.trustee_directorships" — show count and key entity names if available; otherwise state simply "None on record". NEVER write "no Companies House link" or similar internal-system language — that exposes plumbing.)
-- **Financial Table**: Income by source, Expenditure by category (£)
-- Surplus/deficit, reserves, year-on-year trends (if documents available)
-- If "financial_history" data is present (multi-year income/expenditure), include a **Financial Trend Summary**:
-  - State the direction of income over the period (growth / decline / stable)
-  - State the direction of expenditure over the period
-  - Note whether deficits are structural (recurring) or one-off
-  - If income is declining while expenditure is rising, flag this clearly
-  - Keep observations factual — do not forecast or predict
-- If "financial_anomalies" data is present and has flags, include a **Financial Anomaly Analysis** sub-section:
-  - Reproduce each flag verbatim from the "flags" list — do NOT rephrase or escalate language
-  - Report income volatility (CV) and expenditure volatility (CV) as percentages
-  - If ratio shifts are present, describe them factually (e.g., "Expenditure-to-income ratio shifted from X to Y")
-  - Use neutral, analytical language throughout. Phrases like "Significant year-on-year variation observed" are appropriate; phrases like "Alarming" or "Concerning" are NOT
-  - Do NOT forecast, speculate, or impute causation — state observed patterns only
-  - If anomaly_count is 0, state "No significant financial anomalies were detected across available reporting periods."
-- Cost-to-income ratio, fundraising efficiency
-- Employees, volunteers, >£60k earners, trading subsidiary
-- **Financial Health Indicators** (include this sub-section):
-  - **Spend-to-Income %**: total expenditure ÷ total income × 100. Values >100% indicate a deficit year. Benchmark: most charities operate between 85-105%.
-  - **Deficit Ratio**: (expenditure − income) ÷ income × 100. Negative values = surplus. Flag if >10% or recurring.
-  - **Financial Stress Indicator**: Composite assessment based on deficit ratio, anomaly count, and income trend direction. Rate as Low / Moderate / Elevated / High.
-  - **Governance Risk Multiplier**: State whether any of these amplifying factors apply: (a) ≥3 high-risk jurisdictions, (b) AML/financial crime policy not located, (c) verified adverse media hits. If none apply, state "baseline (1.0×)". If factors apply, state the multiplier and contributing factors.
-- **Analyst Note**: Financial red flags? Unusual ratios?
-
-### 4B. Structural Governance Observations (use "structural_governance" data)
-If "structural_governance" data is present and has total_flags > 0, include this sub-section:
-
-**Oversight Capacity**:
-- If "capacity_flags" are present, reproduce each observation verbatim. These flag situations where income is high relative to management capacity (e.g., income above £1m with ≤3 trustees or no employees).
-- Frame as neutral observations: "The analyst may wish to verify..." — NOT as compliance failures.
-- Do NOT escalate language beyond what the flags state.
-
-**Trustee Directorships**:
-- If "trustee_directorships" data is present, include a table:
+Write this report as a senior analyst at a research firm — register: Financial Times / Bloomberg Intelligence. Declarative sentences, active voice, no hedging legalese. The reader paid £15; they want a clear point of view backed by citable evidence, not a regulatory submission.
 
-| Trustee / Director | Other Active Appointments | Notable Entities |
-|--------------------|--------------------------|------------------|
-
-- For each trustee with 3+ other active directorships, note: "Multiple directorships are noted for time-capacity consideration."
-- Do NOT imply conflict of interest, misconduct, or wrongdoing. Simply note the factual observation.
-- If trustees share directorships at the same external entity (see "concentration_flags"), note this factually: "X and Y are both directors of Z — shared external relationships noted for context."
+EVERY SECTION OPENS WITH A FINDING — one bold sentence that states the key takeaway in plain English. The evidence comes underneath. If there is no finding worth bolding for a section, the section is too thin and should be folded into another.
 
-**Governance Concentration**:
-- If "concentration_flags" are present, reproduce each observation. These highlight patterns such as overlapping appointments between trustees.
-- State clearly: "These observations are structural in nature and do not indicate misconduct."
+PROSE FIRST, TABLES SECOND. Use tables only where structure helps (trustees, sanctions hits, risk matrix). Otherwise prefer paragraphs. Bullet lists are acceptable for "Next steps" only.
 
-If structural_governance.total_flags is 0, state: "No structural governance anomalies detected."
-
-## 5. Online Presence & Digital Footprint
-
-If the data contains a populated `website_intel` block (ok=true), use it
-DIRECTLY rather than relying on social_media_links. The website_intel
-block is the authoritative source — it was extracted via a live fetch of
-the charity's actual website pages.
+CITATIONS — when you reference a registry source inline, use the form `[CC API · §3]`, `[OFSI · 2026]`, `[Charity Commission]`. Keep them inline, in mono.
 
-Render Section 5 with this structure when website_intel is present:
-
-> **Verified URL:** [link]  ·  **Domain:** [domain]  ·  **TLS:** [https status]  ·  **Domain age:** [age_years if known]
+DO NOT use numbered or lettered sub-headings (no "2A", "2B"). The report has seven named sections, full stop.
 
-**Site identity (from meta tags):**
-- Title: [meta.title]
-- og:title: [meta['og:title']]
-- og:site_name: [meta['og:site_name']]
-
-**Verified social-media accounts** (extracted from the charity's website footer / meta tags — not guessed from text search):
+## The verdict
 
-| Platform | Link |
-|----------|------|
-| [platform] | [url] |
+Open with one short paragraph stating the overall position in plain English — low / medium / high risk and the ONE thing driving it. No table here; this is the elevator pitch.
 
-**Compliance pages found on-site:**
-
-| Topic | Location |
-|-------|----------|
-| [topic] | [path or "(text mention only)"] |
-
-For charities, the relevant topics are: privacy_policy, cookie_policy,
-terms, modern_slavery (if turnover ≥ £36m), safeguarding (especially
-for charities working with vulnerable groups), whistleblowing,
-complaints, registered_charity (statement of CC registration on the
-website itself).
-
-**Contacts found on-site:** quote any data-protection / safeguarding /
-press contact emails. Cross-reference postcodes against the registered
-office in §4.
+## §01 · What they do
 
-**Site-level signals:** quote signals[:5] from website_intel verbatim
-as bullets.
+OPENING BOLD FINDING (single sentence in serif): a one-line description of what the charity actually delivers — not "is a charity registered with…", but the work they do. Derive it from the stated objects, the website, and the Trustees' Annual Report.
 
-If website_intel is missing or ok=false, fall back to:
-- "No website data available — recommend the charity provide their
-  primary URL and a copy of their privacy / safeguarding policies."
-- Use the social_media_links data if present (less reliable than
-  website_intel but still useful).
+Then one paragraph covering: registered status and age (with date of registration), charity number, primary objects/mission, principal programmes or projects, and where they operate (jurisdictions of activity). If the charity operates across high-risk jurisdictions (per `country_risk`), state which and why it matters — but as a fact for the analyst to weigh, not a verdict.
 
-**Analyst commentary** (after the rendered section):
-- Is the on-site charity number consistent with §1?
-- Is the safeguarding policy linked given the charity's reported activities?
-- Are the social handles credible for a charity of this declared scale?
+Reference document-extracted partners (from `document_partners_extracted`) inline if they corroborate or extend the web-search picture.
 
-## 6. Adverse Media Search
-### Organisation
-State search query used. Report ONLY verified hits. If 0 verified, state clearly.
-### Trustee-by-Trustee
-For EACH trustee: verified hit count. If clear, state "No verified adverse media."
-### **Analyst Note**: Overall adverse media risk: Low / Medium / High.
+## §02 · Who runs it
 
-## 6A. FATF Predicate Offence Screening
-This is an AI-powered screening against FATF designated offence categories (fraud, corruption, money laundering, terrorism financing, sanctions violations, organised crime, proliferation financing, tax evasion).
-The screening used two search strategies:
-1. **FATF Boolean Search** — targeted Boolean queries combining the entity name with FATF predicate-offence keywords.
-2. **OSINT Dorking** — site-restricted queries targeting official UK regulatory and law-enforcement domains (gov.uk, charitycommission.gov.uk, companieshouse.gov.uk, sfo.gov.uk, nationalcrimeagency.gov.uk, judiciary.uk, thegazette.co.uk, ofsi.blog.gov.uk).
+OPENING BOLD FINDING: a one-line summary of the trustee and governance picture — e.g. "A nine-trustee board of established sector figures; controls framework satisfactory" or "Three-trustee board with one connected party; further governance documentation recommended."
 
-Results were then passed through an LLM entity-resolution layer that cross-referenced the charity's filing data (charity number, registered name, address, operating countries, trustees, linked company) against each search hit to confirm or reject matches.
+Narrate the trustees and the controls framework as ONE story:
 
-### Organisation FATF Screen
-Report the LLM analyst's risk level, entity-match determination, and summary. If categories were detected, list them.
-Include the screening timestamp (screened_at) and note which search strategies returned results.
-If source_urls are available, list the top 3 as "Key Sources" with clickable links.
-### Trustee FATF Screen
-For EACH trustee: FATF risk level. Highlight any Medium or High risk findings with the analyst's reasoning.
-### Entity Resolution Cross-Check
-Cross-reference FATF screening names and locations against PDF document data (charity filings, annual returns, CC printout):
-- Do any names in the FATF hits match trustee names, linked companies, or the registered charity name?
-- Do any locations/jurisdictions in the hits overlap with the charity's registered address or operating countries?
-- If the charity data includes a charity number (e.g. "1234567"), did any hit reference the same registration?
-State whether entity resolution is **Confirmed**, **Plausible**, or **No Match** for each flagged result.
-### **Analyst Note**: Overall FATF screening result — do any findings warrant enhanced due diligence?
+- **Trustees.** A tight table with trustee name, role, and any visible connection or risk flag. Note any trustees with multiple connected charities or with director appointments at companies in the donor / partner network.
+- **Structural governance.** Use `structural_governance` data — note board size, recent changes, independence of audit committee if disclosed.
+- **Core controls framework.** Restate the `hrcob_narrative` assessment in plain English. State the Core Control Status (Satisfactory / Acceptable with Clarification / Clarification Recommended / Further Enquiry Recommended) and what specifically drives it. This is analytical and advisory — it informs judgement, it does not mechanically determine the overall rating.
 
-## 6B. Sanctions List Screening (Authoritative Sources)
+If `policies` data is available, mention how many of the {policy_paths_count} mandatory policy paths were discovered, but keep the policy table out of the prose — it belongs as a brief inline reference, not its own section.
 
-This section reports the outcome of authoritative deterministic screening against official government-published sanctions lists. These are the official lists themselves — cite each one by its publisher, not as a third-party aggregator.
+## §03 · How they're funded
 
-The data is in "sanctions_screening" with this shape:
-- `entity` — list of hits for the charity itself (across ALL providers used)
-- `trustees` — dict of trustee_name → list of hits (across ALL providers)
-- `providers` — list of providers used. **Always state which lists were checked**, naming each one. Possible values: "OFSI" (HM Treasury, UK), "OFAC" (US Treasury SDN), "EU" (EU Consolidated), "UN" (UN Security Council), "OpenSanctions" (paid aggregator, future).
-- `any_high_confidence` — boolean: true if ANY hit across ANY provider has confidence "high"
+OPENING BOLD FINDING: the funding model in one phrase — "Recurring individual giving plus institutional grants" or "Predominantly trading income with a small donations tail."
 
-Each hit has: `queried_name`, `matched_alias` (the specific name variation that triggered the match), `primary_name` (canonical name of the sanctioned subject), `score` (0-100), `confidence` ("high" or "possible"), **`source`** (e.g. "OFSI", "OFAC" — always quote this verbatim when describing the match), `source_id` (provider-specific entity/group ID), `regime` (e.g. Russia, RUSSIA-EO14024, ISIL/Al-Qaida), `listed_on`, `country`, `nationality`, `dob`, `statement_of_reasons`, `citation` (use this verbatim for citations).
+Then one paragraph covering: total income for the latest reported year, the funding split (donations / grants / trading / other), the financial trajectory across years if `financial_history` is available, audit opinion if disclosed, and any anomalies flagged by the financial_anomalies engine. If income is unusually high or low for the activity scope, surface that as a finding.
 
-PRESENT THIS SECTION AS FOLLOWS:
+If donations include unusual rails (crypto, foreign wires from high-risk jurisdictions, anonymous gifts), state them. Otherwise omit.
 
-### Sources Checked
-List EACH provider in `providers` explicitly with its full name on a separate bullet:
-- OFSI → "**OFSI** — HM Treasury Consolidated List of Financial Sanctions Targets in the UK"
-- OFAC → "**OFAC** — US Treasury Specially Designated Nationals and Blocked Persons (SDN) List"
-- EU → "**EU** — EU Consolidated Sanctions List"
-- UN → "**UN** — UN Security Council Consolidated List"
+## §04 · What the registers say
 
-### Organisation Screen
-- If `entity` is empty: state "No matches against any of the lists checked above."
-- If `entity` has hits: present a table grouping by source, **always including the Source column**:
+OPENING BOLD FINDING: the screening result in one phrase — "No matches across OFSI, OFAC and UN consolidated lists; no high-risk jurisdiction exposure" or "Operates in two FATF-listed jurisdictions; sanctions screening clear."
 
-| Source | Matched Name | Score | Confidence | Regime | Listed On | Source ID |
-|--------|--------------|-------|------------|--------|-----------|-----------|
+Then:
+- **Sanctions screening.** State the screening date. Walk OFSI / OFAC / UN consolidated lists for the organisation AND each named trustee. If clear, say so plainly with citations. If any hit, list it with source list, designation type, and entity-resolution status (Confirmed / Plausible / No Match).
+- **Country-risk exposure.** If the charity operates in jurisdictions flagged on the FATF greylist / blacklist or EU tax blacklist, list them with the specific risk indicator. Otherwise omit.
+- **Restricted activities.** Report only if findings present; otherwise omit.
 
-Then for each HIGH-confidence match, write a 2-3 sentence narrative including the source list, regime, listed_on, and a verbatim quote from `statement_of_reasons` if available. Use the citation field verbatim.
+If any category shows `unknown` (the screening API failed), mark it as "⚠️ UNKNOWN — SYSTEM ERROR (data unavailable due to technical error)". Never say "No matches found" for a failed search.
 
-### Trustee Screens
-For EACH trustee, present their result. **Always state which list(s) were checked, even when there are no hits**, so the reader sees the screening was actually performed:
-- If no hits: "[Name]: No matches on OFSI, OFAC [or whichever lists are in `providers`]."
-- If hits: present in a table that includes the Source column. For "possible" matches (score 80–87), explicitly note: "This is a partial match against [source list] (alias: [matched_alias]) and may be a name collision. Manual cross-check of DOB/nationality/passport is required before treating as a confirmed match."
-
-CRITICAL — COMMON NAME HANDLING:
-- If a query name is generic (e.g. "Mohammed Ali", "Ahmed Khan") it may match multiple sanctioned individuals across multiple lists. The matcher correctly returns ALL matches. Do NOT panic-escalate risk based on count alone.
-- For each match, evaluate disambiguation signals: does the trustee's role/UK status/DOB align with the sanctioned subject's profile? Common-name matches without corroborating signals should be flagged as "Possible — manual verification required" not "Confirmed sanctions exposure".
-- When attributing a possible match, ALWAYS include the source list and the matched alias so the analyst can verify directly: "Possible match against OFAC SDN (alias: 'AHMED, Nazeer'), score 80%."
-
-### Sanctions Screening Risk Implications
-- If `any_high_confidence` is true AND disambiguation signals support the match: this is a **HARD STOP**. Recommend: "CRITICAL — direct sanctions exposure identified on [list name]. The relationship cannot proceed without specific licensing or risk transfer." Name the list and the regime explicitly.
-- If only "possible" matches exist: recommend manual analyst verification using DOB/nationality/passport from charity records vs the source list record. Name the lists where partials occurred.
-- If no matches anywhere: state plainly: "No sanctions exposure detected for the charity or any listed trustee against the lists checked: [list of providers]. (Sources: HM Treasury OFSI Consolidated List, US Treasury OFAC SDN List, [whichever others applied], latest published versions)."
-
-## 7. Positive Media & Partnerships
-- Awards, press, public recognition
-- Government grants/contracts
-- Reputable partnerships (UN, DFID, WHO, etc.)
-- **Analyst Note**: Do positives offset negatives?
-
-## 8. Policies & Compliance Framework
-
-### 8A. Core Controls (Mandatory Assessment)
-
-This is the MOST IMPORTANT governance section. Present the pre-computed "hrcob_core_controls" data FIRST.
-
-Present this table prominently:
-
-| Core Control | Status | Evidence |
-|-------------|--------|----------|
-| Safeguarding | [status_icon from hrcob_core_controls.safeguarding] | [evidence + comment] |
-| Financial Crime (Bribery + AML) | [status_icon from hrcob_core_controls.financial_crime] | [evidence + comment] |
-| Risk Management | [status_icon from hrcob_core_controls.risk_management] | [evidence + comment] |
-
-**Core Control Status: [hrcob_status]**
-
-Use the pre-computed "hrcob_narrative" text. Then add analyst commentary:
-- If **Satisfactory**: State the narrative, then note: "All three core control areas are documented in publicly available materials. The governance framework appears structured and proportionate to the charity's size and operations."
-- If **Acceptable with Clarification**: State the narrative, identify which control(s) are partial, what exactly was found vs. missing, and recommend specific clarification questions. Frame this as advisory: "Clarification would strengthen assurance" — not as a compliance failure.
-- If **Clarification Recommended**: State the narrative, identify which control was not located, explain what was searched, and provide specific next steps. Frame proportionally: "Requesting documentation directly from the charity is recommended. This finding should be considered alongside other risk factors."
-- If **Further Enquiry Recommended** (or "Material Control Concern"): State the narrative, identify which controls were not located, and recommend direct engagement. Note: "The absence of multiple core control documents in public materials warrants further enquiry, though the policies may exist internally. This reflects a gap in publicly available evidence and should not be interpreted as a confirmed governance failure. The analyst should weigh this alongside the charity's size, geography, and overall risk profile."
-
-For Financial Crime specifically:
-- If both bribery AND money laundering are covered (in one or separate documents) → state "Combined financial crime coverage confirmed"
-- If only one side is present → state which side was found and which is missing
-- Accept combined "Anti-Corruption, Bribery & Money Laundering" policies as fully satisfying this control
-
-### 8B. Secondary Policies (Contextual)
-
-The following policies are secondary and should NOT drive the overall core-control outcome. They provide context but are not mandatory for compliance determination.
-
-Use the pre-computed "policy_classification" data for the FULL policy table.
-Also cross-check against "policies_found" search results, "policy_doc_links", and document extracts.
-
-### Full Policy Discovery Table
-Present EVERY policy from the checklist in this table:
-
-| Policy | Status | Evidence | Source / URL |
-|--------|--------|----------|--------------|
-
-Populate Evidence with the best short description: document title and where it was found (policy hub, footer, resources page).
-If multiple docs match (e.g. separate staff vs. volunteer safeguarding policies), list the strongest or summarise: "multiple safeguarding policies detected".
-
-Status values (use from policy_classification):
-- ✅ **Found** — A document (PDF/DOCX) or dedicated page matched. Include clickable URL and the evidence text.
-- 🔍 **Partial** — Relevant keywords mentioned on website text, but no downloadable document link found. Explain what was seen and note: "Standalone policy document not confirmed."
-- ⚠️ **Not Located** — Not located in public materials scanned. Use CONSERVATIVE wording:
-  - Say: "No [policy] document could be located in public materials scanned (website, policy hub, uploaded documents). The policy may exist internally or under a different title."
-  - If a policy hub page exists, add: "A policy hub page is present at [URL]; the policy may be available there under a different name."
-  - NEVER say "Does not exist" or "No policy found" — always frame as "not located in public materials scanned."
-
-Note: Secondary policy gaps (whistleblowing, GDPR, social media, etc.) should be noted for completeness but explicitly stated as NOT affecting the Charity core compliance determination.
-
-### Policy Hub Summary
-If policy hub pages were detected, list them here:
-- Hub URL, number of policy-related document links discovered
-- List titles of documents/links found on the hub (from "policy_doc_links" where is_document=true)
-- Note any PDF/DOCX links that couldn't be parsed automatically
-- If no policy hub was detected, state: "No dedicated policy hub page was identified on the charity's website."
-
-**Analyst Note**: Focus on core controls first. Are the three core controls proportionate to the charity's risk profile and operational geography?
-
-## 9. Risk Assessment & Mitigants
-### Risks Identified
-Present as a summary risk table at the start of this section:
-
-| Risk Category | Rating | Key Driver |
-|--------------|--------|------------|
-| Geographic Risk | [LOW/MEDIUM/HIGH] | [1-line reason] |
-| Financial Risk | [LOW/MEDIUM/HIGH] | [1-line reason] |
-| Governance Risk | [LOW/MEDIUM/HIGH] | [1-line reason] |
-| Media Risk | [LOW/MEDIUM/HIGH] | [1-line reason] |
-| Sanctions & Disbursement Risk | [LOW/MEDIUM/HIGH/N/A] | [1-line reason] |
-| Operational Risk | [LOW/MEDIUM/HIGH] | [1-line reason] |
-
-Then provide narrative for EACH risk category below the table.
-If any data source was unavailable (search failure, API error, crawl timeout), note it here as: "[Data source] was unavailable — unable to assess [risk area]. This should not be interpreted as a risk indicator."
-
-SANCTIONS & DISBURSEMENT RISK:
-- Rate as N/A if the charity operates only in low/medium-risk jurisdictions with no sanctions exposure.
-- Rate as LOW if charity operates in sanctioned jurisdictions but has documented AML/sanctions policies and due diligence frameworks.
-- Rate as MEDIUM if charity operates in sanctioned jurisdictions with partial or unclear AML controls.
-- Rate as HIGH if charity operates in multiple sanctioned jurisdictions with no located AML/financial crime policy and no evidence of sanctions screening.
-- Always consider whether the charity's sector (humanitarian, development, peacebuilding) makes sanctioned-jurisdiction operations expected and legitimate.
-
-GOVERNANCE RISK — proportional contextual assessment:
-- Governance risk should emerge from a holistic view of controls, charity size, operational complexity, geographic exposure, financial health, and trustee track record — not from a single missing document.
-- All three core controls Found with clean financials and no adverse media → Governance Risk is typically LOW.
-- Partial controls or a single missing control → consider the charity's scale and complexity. For a small, UK-only charity this may still be LOW-MEDIUM. For a large international operation it may warrant MEDIUM.
-- Multiple missing controls combined with other risk factors (elevated geography, financial concerns, adverse media) → Governance Risk may be MEDIUM-HIGH depending on cumulative picture.
-- A single missing control should NOT automatically produce HIGH governance risk. HIGH should reflect a convergence of multiple concerning factors.
-- Missing secondary policies (whistleblowing, GDPR, social media, etc.) should NOT by themselves push Governance Risk above LOW. Note them as minor observations only.
-
-TAR / ACCOUNTS AVAILABILITY — RISK NON-ESCALATION:
-- The presence or absence of a downloadable Accounts & TAR PDF must NOT directly affect the risk rating.
-- A successfully retrieved TAR improves evidence quality only — it does not lower risk by itself.
-- If the TAR was not available (see "cc_tar_fetch_status"), write: "Limited financial disclosure available via public filings; clarification may be required." Do NOT write "Material governance concern" or "Accounts missing."
-- The absence of a downloadable PDF ≠ governance failure. Many charities file accounts that are processed but not yet available as downloadable PDFs, or the filing may be under review.
-
-SEARCH FAILURES — NON-ESCALATION:
-- If any search component failed (see "_search_failures" if present in data), the missing data must NOT inflate the risk assessment.
-- State clearly: "[Component] data was unavailable due to a technical issue. This gap does not indicate risk."
-- A search failure or crawl timeout is a technical limitation, not a governance concern.
-
-INTERNAL CONSISTENCY CHECK:
-Before finalising the report, review your own output for internal consistency:
-- Does the risk rating in Section 9 align with the narrative in Sections 1-8?
-- Does the governance commentary match the detected core control statuses?
-- Does the media section accurately reflect the verified adverse hit count?
-- Is the tone proportionate throughout — no section more alarmist than the evidence warrants?
-- If a control was "Not Located" but the TAR or other documents contain governance statements, acknowledge this.
-- If the overall risk is LOW but a sub-section uses alarming language, soften the sub-section to be consistent.
-If you detect an inconsistency in your own output, adjust the wording to ensure coherence.
-
-### Mitigating Factors
-Specific mitigants with evidence references.
-### Overall Risk Rating
-**LOW / MEDIUM / HIGH / VERY HIGH** — 2-3 sentence justification.
-The overall risk should be a contextual synthesis of ALL factors: geography, financials, governance (including core controls), adverse media, partnerships, and charity maturity. No single factor should mechanically determine the rating. Reference the Core Control Status as one input among several. A charity with strong controls but elevated geography is different from one with weak controls and elevated geography.
-
-### Core Control Assessment
-**Core Control Status: [Satisfactory / Acceptable with Clarification / Clarification Recommended / Further Enquiry Recommended]**
-Restate the hrcob_narrative. This assessment is analytical and advisory — it informs the analyst's judgement but does not mechanically determine the overall risk rating.
-
-### Recommended Actions for Analyst
-Numbered list of specific next steps the human analyst should take, prioritised by risk level.
+## §05 · What they say publicly
+
+OPENING BOLD FINDING: a credibility assessment in one phrase — "Operational website with verified contact details and consistent partnership claims" or "Site is six months old; verify operational claims against filings."
+
+Then a paragraph covering: website assessment (age, HTTPS, named contact, address consistency with registered office), social presence (LinkedIn / Twitter / Facebook with reasonable follower counts for the income scale), and partnership claims (cross-reference document-extracted partners with web-search hits — note corroboration).
+
+Then a short adverse-media sub-finding (NOT a sub-heading — use bold inline):
+
+**Adverse media.** Report ONLY results where `_relevant` is true (organisation + each named trustee). Include source URLs as clickable hyperlinks. State the overall adverse-media level (none / low / medium / high) in one sentence.
+
+Then a short positive-media sub-finding if relevant:
+
+**Positive media & partnerships.** If credible positive coverage or named institutional partners are present, mention them in one or two sentences. Otherwise omit this paragraph entirely.
+
+## §06 · The risk picture
+
+OPENING BOLD FINDING: the risk pattern in one phrase — "Aggregated risk is LOW; the only signal of note is geography." or "Risk concentrates in governance and country exposure; financial and screening profiles are sound."
+
+Then a short paragraph (3-4 sentences MAX) describing the risk distribution — where the signals concentrate, what drives the overall picture. Do NOT recite every category.
+
+Render the per-category risk matrix exactly as pre-computed by the scoring engine (the visual score hero renders separately above).
+
+## §07 · What to do next
+
+OPENING BOLD FINDING: the single most important action — "Verify the structure of the overseas partner organisation before approving the next disbursement."
+
+Then a numbered list of 5–10 SPECIFIC actions the buyer should take. Each item must be:
+- ACTIONABLE — verb-first, specific
+- TRACEABLE — tied to a finding in this report
+- NON-PLATITUDE — never "consider further review"
+
+Examples of good next-step language (re-write for the specific charity):
+- "Request the trustees' identity verification documents (passport + proof of address) for the three trustees appointed in the last 12 months."
+- "Obtain a copy of the partnership MOU with [Partner Organisation] before approving the next overseas disbursement."
+- "Request the most recent audited accounts (FY 2024) — the API summary differs from the filed Trustees' Annual Report by >10%."
+- "Verify the safeguarding policy review date — the website-discovered policy is over 24 months old."
+
+Build this list from the controls gaps, country-risk findings, trustee findings, and financial anomalies. If the charity is well-established with no findings, the list should be short and focused on baseline due diligence.
 
 --- STRUCTURED DATA ---
 {all_data}
@@ -628,3 +343,4 @@ Numbered list of specific next steps the human analyst should take, prioritised 
 --- DOCUMENT EXTRACTS ---
 {doc_context}
 """
+

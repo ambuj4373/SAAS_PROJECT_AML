@@ -785,32 +785,28 @@ def generate_company_prompt(state: dict) -> dict:
     check = state.get("company_check", {})
     rm = check.get("risk_matrix", {})
 
-    # Build verdict blocks (same logic as existing app.py)
-    hard_stops = rm.get("hard_stops", [])
-    if hard_stops:
-        verdict_override = (
-            "⚠️ HARD STOP TRIGGERED: " + "; ".join(hard_stops) +
-            "\nThe report MUST be flagged as CRITICAL RISK."
-        )
-    else:
-        verdict_override = ""
+    # No hard-stop verdict block — Probitas presents data with context,
+    # not vetoes. The category ratings flow through unchanged.
+    verdict_override = ""
 
     cats = rm.get("category_risks", {})
     verdict_lines = [f"- {k}: {v}" for k, v in cats.items()]
     verdict_block = ("PRE-COMPUTED RISK MATRIX:\n" + "\n".join(verdict_lines)
                      if verdict_lines else "")
 
-    # Recommendation instructions
+    # Recommendation tone — derived from the rating, never from hard stops.
     overall = rm.get("overall_risk", "unknown")
-    if overall in ("critical", "high") or hard_stops:
-        rec = ("This entity has CRITICAL/HIGH risk. Frame observations around the "
-               "specific risk drivers. Do not suggest this is routine.")
+    if overall in ("critical", "high"):
+        rec = ("This entity carries elevated risk signals. Surface them as "
+               "specific observations with the relevant industry/regulatory "
+               "context. Do NOT use 'do not transact' / 'prohibited' language — "
+               "present the data and let the analyst decide.")
     elif overall == "medium":
-        rec = ("This entity has MEDIUM risk. Note areas requiring attention. "
-               "Frame as advisory observations for the analyst.")
+        rec = ("This entity has MEDIUM risk. Surface the signals as advisory "
+               "observations with industry context.")
     else:
         rec = ("This entity has LOW risk. Frame observations as routine "
-               "compliance notes. Acknowledge clean aspects positively.")
+               "compliance notes; acknowledge clean aspects positively.")
 
     # Risk score summary
     rs = state.get("risk_score", {})

@@ -341,6 +341,53 @@ function escape(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+/** Animate a numeric counter from 0 to target with an ease-out cubic curve.
+ *  Used on the risk score for a small craft signal — "the number is being
+ *  resolved", not "the number is just there". */
+function countUpTo(el, target, duration = 700) {
+  if (!el) return;
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(target * eased);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/** Tag the first long prose paragraph in a narrative container so the
+ *  CSS drop cap can apply. Skip short paragraphs and lists. */
+function applyDropCap(container) {
+  if (!container) return;
+  const p = Array.from(container.querySelectorAll(':scope > p, :scope > section > p'))
+    .find(el => (el.textContent || '').trim().length >= 180);
+  if (p) p.classList.add('has-dropcap');
+}
+
+/** Premium section-opener treatment.
+ *  The LLM emits sections like "## The verdict" or "## §01 · Who they are".
+ *  We tag the verdict opener separately (italic lede, no top rule) and
+ *  for the §-prefixed sections we lift the "§NN" marker into a small
+ *  mono kicker rendered above the heading via the data-marker attribute. */
+function styleNarrativeHeadings(container) {
+  if (!container) return;
+  container.querySelectorAll('h2').forEach((h2) => {
+    const text = (h2.textContent || '').trim();
+    // Tag "The verdict" (case-insensitive) so the CSS can style it as a lede.
+    if (/^the verdict\b/i.test(text)) {
+      h2.classList.add('narr__verdict');
+      return;
+    }
+    // Pull a leading "§NN ·" or "§NN -" marker into data-marker, strip from text.
+    const m = text.match(/^(§\s*\d{1,2})\s*[·\-—]?\s*(.+)$/);
+    if (m) {
+      h2.setAttribute('data-marker', m[1].replace(/\s+/g, ' '));
+      h2.textContent = m[2].trim();
+    }
+  });
+}
+
 function levelClass(level) {
   return 'risk-hero__pill--' + (level || 'low').toLowerCase().replace(/[^a-z]/g,'').slice(0, 4);
 }
@@ -389,12 +436,13 @@ function render(bundle) {
     <span><b>Run reference</b> ${escape(runId)}</span>
   `;
 
-  // Risk score
+  // Risk score — count-up animation from 0 to the final value.
+  // Tabular nums in the existing CSS prevent layout jitter as digits change.
   const rs = bundle.state?.risk_score || {};
   const score = rs.overall_score ?? 0;
   const level = (rs.overall_level || 'Low').toString();
-  document.getElementById('risk-num').textContent = Math.round(score);
-  document.getElementById('rail-num').textContent = Math.round(score);
+  countUpTo(document.getElementById('risk-num'), Math.round(score));
+  countUpTo(document.getElementById('rail-num'), Math.round(score));
 
   const pill = document.getElementById('risk-pill');
   pill.textContent = level;
@@ -446,7 +494,10 @@ function render(bundle) {
   // Narrative
   const md = bundle.narrative_report || '';
   marked.setOptions({ gfm: true, breaks: false });
-  document.getElementById('narrative').innerHTML = marked.parse(md);
+  const narrativeEl = document.getElementById('narrative');
+  narrativeEl.innerHTML = marked.parse(md);
+  styleNarrativeHeadings(narrativeEl);
+  applyDropCap(narrativeEl);
 
   // TOC from h2 headings in narrative
   const headings = document.querySelectorAll('#narrative h1, #narrative h2');

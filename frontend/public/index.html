@@ -174,6 +174,58 @@
   .trust__stat:last-child { border-right: none; padding-right: 0; }
   .trust__num { font-family: var(--display); font-weight: 600; font-size: 36px; letter-spacing: -0.025em; color: var(--ink); line-height: 1; }
   .trust__lab { font-size: 13px; color: var(--grey); margin-top: 6px; }
+
+  /* ----- "How it thinks" film section -------------------------
+   * 44-second motion piece that walks through the pipeline. Heavy
+   * (~2.8MB) so we click-to-play with a poster: nothing loads
+   * until the user signals intent.
+   */
+  .film { padding: 96px 0 24px; }
+  .film__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 28px; flex-wrap: wrap; }
+  .film__title { font-family: var(--serif); font-weight: 600; font-size: 44px; line-height: 1.05; letter-spacing: -0.018em; margin: 12px 0 0; max-width: 22ch; }
+  .film__dek { color: var(--grey); font-size: 15px; line-height: 1.55; max-width: 36ch; margin: 0; }
+  .film__chapters {
+    display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--mono);
+    font-size: 11px; color: var(--grey-2); letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .film__chapters span:not(:last-child)::after { content: " · "; color: var(--grey-3); padding-left: 8px; }
+
+  .film__frame {
+    position: relative; width: 100%; aspect-ratio: 16 / 10;
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    background: #F7F6F2;
+    box-shadow: 0 1px 0 rgba(26,29,41,0.02), 0 28px 48px -20px rgba(26,29,41,0.18);
+  }
+  .film__frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+  .film__poster {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px; cursor: pointer;
+    background: #F7F6F2;
+    transition: opacity 280ms ease;
+  }
+  .film__poster--hidden { opacity: 0; pointer-events: none; }
+  .film__poster-mark { display: flex; align-items: center; gap: 14px; }
+  .film__poster-mark::before {
+    content: ""; display: inline-block; width: 7px; height: 38px;
+    border-left: 4px solid var(--indigo); border-right: 4px solid var(--ink);
+    box-sizing: content-box;
+  }
+  .film__poster-name { font-family: var(--display); font-weight: 600; font-size: 56px; letter-spacing: -0.02em; color: var(--ink); line-height: 1; }
+  .film__poster-tag { font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--grey); margin-top: 2px; }
+  .film__play {
+    display: inline-flex; align-items: center; gap: 10px; margin-top: 22px;
+    padding: 12px 22px; background: var(--ink); color: white;
+    border-radius: 999px; font-size: 14px; font-weight: 500;
+    border: none; cursor: pointer; transition: transform 180ms ease, background 180ms ease;
+  }
+  .film__play:hover { transform: translateY(-1px); background: var(--indigo); }
+  .film__play .play-icon {
+    width: 0; height: 0; border-style: solid;
+    border-width: 6px 0 6px 9px; border-color: transparent transparent transparent white;
+    margin-left: 2px;
+  }
+  .film__caption { display: flex; justify-content: space-between; gap: 16px; margin-top: 14px; font-family: var(--mono); font-size: 11.5px; color: var(--grey); flex-wrap: wrap; }
+  .film__caption a { color: var(--indigo); }
 </style>
 </head>
 <body>
@@ -182,6 +234,7 @@
   <div class="topnav__inner">
     <a href="index.html" class="wordmark"><span class="wordmark__name">probitas</span></a>
     <div class="topnav__links">
+      <a href="#film">Film</a>
       <a href="#sample">Sample report</a>
       <a href="#how">How it works</a>
       <a href="#pricing">Pricing</a>
@@ -194,16 +247,16 @@
 <section class="hero">
   <div class="container">
     <div class="hero__lockup">
-      <div class="hero__eyebrow">
+      <div class="hero__eyebrow reveal reveal--1">
         <span></span>
         Research-grade due-diligence reports
       </div>
-      <h1 class="editorial-h1">A probity check on any UK&nbsp;company or charity.</h1>
-      <p class="hero__sub">
+      <h1 class="editorial-h1 reveal reveal--2">A probity check on any UK&nbsp;company or charity.</h1>
+      <p class="hero__sub reveal reveal--3">
         The same sources regulators use — <b>Companies House, Charity Commission, OFSI, OFAC, UN</b> — read into a 25-page evidence-anchored report. Delivered in <b>90 seconds.</b><span class="hero__price">£15</span>
       </p>
 
-      <form class="search" id="searchForm" autocomplete="off">
+      <form class="search reveal reveal--4" id="searchForm" autocomplete="off">
         <div class="search__icon" aria-hidden="true">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         </div>
@@ -298,6 +351,43 @@
         <span>or</span>
         <a href="preview.html?type=company&id=09238471" class="btn-link">see a company sample →</a>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="film" id="film">
+  <div class="container">
+    <div class="film__head">
+      <div>
+        <span class="kicker">Film · 44 seconds</span>
+        <h2 class="film__title">How Probitas thinks.</h2>
+      </div>
+      <div>
+        <p class="film__dek">A motion piece that walks through the pipeline — title to outro, the whole 44-second thought.</p>
+        <div class="film__chapters" style="margin-top:14px;">
+          <span>Title</span><span>Problem</span><span>Search</span><span>Reasoning</span><span>Report</span><span>Who it's for</span><span>Outro</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="film__frame" id="film-frame">
+      <!-- Click-to-play poster · the iframe is only inserted on click so the
+           ~2.8MB bundle never blocks first paint for visitors who don't watch. -->
+      <div class="film__poster" id="film-poster" role="button" tabindex="0" aria-label="Play the 44-second Probitas film">
+        <div class="film__poster-mark">
+          <span class="film__poster-name">probitas</span>
+        </div>
+        <div class="film__poster-tag">how it thinks</div>
+        <button class="film__play" type="button">
+          <span class="play-icon" aria-hidden="true"></span>
+          Play the film
+        </button>
+      </div>
+    </div>
+
+    <div class="film__caption">
+      <span>Click to play · runtime 0:44 · sound off by default</span>
+      <span>Or jump to <a href="#sample">the sample report ↓</a></span>
     </div>
   </div>
 </section>
@@ -513,6 +603,32 @@
       item.dataset.open = item.dataset.open === 'true' ? 'false' : 'true';
     });
   });
+
+  // ── Film: lazy-load the 2.8MB iframe only when the user signals intent.
+  // Click OR Enter/Space when the poster has focus.
+  (function initFilm() {
+    const poster = document.getElementById('film-poster');
+    const frame  = document.getElementById('film-frame');
+    if (!poster || !frame) return;
+    let loaded = false;
+    function play() {
+      if (loaded) return;
+      loaded = true;
+      const iframe = document.createElement('iframe');
+      iframe.src = 'probitas-film.html';
+      iframe.title = 'Probitas — How it thinks';
+      iframe.setAttribute('loading', 'eager');
+      iframe.setAttribute('allow', 'autoplay; fullscreen');
+      frame.appendChild(iframe);
+      poster.classList.add('film__poster--hidden');
+      // Remove the poster from layout once the fade finishes.
+      setTimeout(() => poster.remove(), 320);
+    }
+    poster.addEventListener('click', play);
+    poster.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); play(); }
+    });
+  })();
 </script>
 </body>
 </html>

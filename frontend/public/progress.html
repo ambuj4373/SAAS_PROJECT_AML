@@ -52,21 +52,25 @@
   .stages__bar-fill { height: 100%; width: 0%; background: var(--indigo); transition: width 600ms ease; }
 
   .stage {
-    display: grid; grid-template-columns: 28px 1fr auto auto; gap: 16px; align-items: center;
-    padding: 18px 24px; border-bottom: 1px solid var(--line); transition: background 240ms ease;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto auto auto;
+    gap: 16px; align-items: center;
+    padding: 18px 24px; border-bottom: 1px solid var(--line);
+    transition: background 240ms ease, box-shadow 240ms ease;
   }
   .stage:last-child { border-bottom: none; }
+  .stage > div { min-width: 0; }   /* let truncation work in name column */
 
-  .stage__num { font-family: var(--mono); font-size: 11px; color: var(--grey-2); font-weight: 500; }
-  .stage__name { font-size: 14.5px; color: var(--ink); letter-spacing: -0.005em; font-weight: 500; }
+  .stage__num { font-family: var(--mono); font-size: 11px; color: var(--grey-2); font-weight: 500; white-space: nowrap; }
+  .stage__name { display: block; font-size: 14.5px; color: var(--ink); letter-spacing: -0.005em; font-weight: 500; }
   .stage__status {
     font-family: var(--mono); font-size: 11px; color: var(--grey-2);
     text-transform: uppercase; letter-spacing: 0.08em;
-    min-width: 92px; text-align: right; font-weight: 500;
+    min-width: 76px; text-align: right; font-weight: 500;
   }
   .stage__elapsed {
     font-family: var(--mono); font-size: 12px; color: var(--grey);
-    min-width: 60px; text-align: right; font-variant-numeric: tabular-nums;
+    min-width: 56px; text-align: right; font-variant-numeric: tabular-nums;
   }
   .stage__indicator {
     width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--grey-3);
@@ -79,6 +83,19 @@
 
   .stage[data-state="running"] {
     background: linear-gradient(90deg, var(--indigo-tint) 0%, transparent 100%);
+    box-shadow: inset 3px 0 0 var(--indigo);
+  }
+  .stage[data-state="running"]::after {
+    content: ""; position: absolute; left: 0; bottom: 0; height: 1px; width: 0;
+    background: linear-gradient(90deg, transparent, var(--indigo), transparent);
+    animation: travel 1.6s ease-in-out infinite;
+  }
+  .stage { position: relative; }
+  @keyframes travel {
+    0%   { width: 0; opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { width: 100%; opacity: 0; }
   }
   .stage[data-state="running"] .stage__indicator {
     border-color: var(--indigo); background: white; position: relative;
@@ -92,13 +109,32 @@
   .stage[data-state="running"] .stage__status { color: var(--indigo); }
   .stage[data-state="running"] .stage__name { color: var(--ink); }
 
-  .stage[data-state="done"] .stage__indicator { background: var(--ink); border-color: var(--ink); color: white; }
-  .stage[data-state="done"] .stage__indicator::after { content: "✓"; font-size: 12px; line-height: 1; color: white; }
+  .stage[data-state="done"] .stage__indicator {
+    background: var(--ink); border-color: var(--ink); color: white;
+    /* Drawn-in check: SVG inside .stage__indicator is animated when present */
+  }
+  .stage[data-state="done"] .stage__indicator svg.tick { display: block; }
   .stage[data-state="done"] .stage__status { color: var(--grey); }
+  .stage[data-state="done"] .stage__name { color: var(--ink); }
 
-  .stage[data-state="failed"] .stage__indicator { background: var(--risk-high); border-color: var(--risk-high); color: white; }
-  .stage[data-state="failed"] .stage__indicator::after { content: "✗"; font-size: 12px; line-height: 1; color: white; }
+  .stage[data-state="failed"] .stage__indicator {
+    background: var(--risk-high); border-color: var(--risk-high); color: white;
+  }
+  .stage[data-state="failed"] .stage__indicator::after {
+    content: "✗"; font-size: 12px; line-height: 1; color: white;
+  }
   .stage[data-state="failed"] .stage__status { color: var(--risk-high); }
+
+  /* SVG tick is hidden until the row enters `done` — then it draws itself */
+  .stage__indicator svg.tick {
+    display: none; width: 11px; height: 11px; stroke: white; stroke-width: 2.4;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .stage[data-state="done"] .stage__indicator svg.tick path {
+    stroke-dasharray: 14; stroke-dashoffset: 14;
+    animation: drawTick 380ms ease-out forwards;
+  }
+  @keyframes drawTick { to { stroke-dashoffset: 0; } }
 
   .stage__detail {
     grid-column: 2 / -1; font-family: var(--mono); font-size: 11.5px;
@@ -117,9 +153,16 @@
     content: ""; position: absolute; inset: auto 0 0 0; height: 40px;
     background: linear-gradient(transparent, white); pointer-events: none;
   }
-  .trace__line { display: flex; gap: 12px; }
+  .trace__line {
+    display: flex; gap: 12px;
+    animation: slideInLine 240ms ease-out both;
+  }
   .trace__time { color: var(--grey-2); white-space: nowrap; }
   .trace__msg { color: var(--ink-2); }
+  @keyframes slideInLine {
+    from { opacity: 0; transform: translateX(-6px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
 
   body[data-finished="true"] .run-clock__big { color: var(--ink); }
   body[data-failed="true"] .run-clock__big { color: var(--risk-high); }
@@ -146,7 +189,7 @@
         </div>
         <h1 id="entity-name">Loading…</h1>
         <p class="run-meta__entity">
-          <b id="entity-type-meta">—</b> · 7-stage pipeline running. Once complete, the report loads automatically.
+          <b id="entity-type-meta">—</b> · Pipeline running. Once complete, the report loads automatically.
         </p>
 
         <div class="run-clock">
@@ -172,60 +215,19 @@
       <section>
         <div class="stages" id="stages">
           <div class="stages__head">
-            <div class="stages__title">Pipeline · 7 stages</div>
+            <div class="stages__title" id="stages-title">Pipeline</div>
             <div class="stages__progress">
-              <span><span id="done-count">0</span> / 7 done</span>
+              <span><span id="done-count">0</span> / <span id="total-count">—</span> done</span>
               <div class="stages__bar"><div class="stages__bar-fill" id="bar-fill"></div></div>
             </div>
           </div>
-          <div class="stage" data-state="pending" data-stage="fetch_registry">
-            <span class="stage__num">01</span>
-            <span class="stage__name">Charity Commission &amp; Companies House records</span>
-            <span class="stage__status">Waiting</span>
-            <span class="stage__elapsed">—</span>
-            <div class="stage__detail">Reading official register · entity profile · trustees · filed accounts.</div>
-          </div>
-          <div class="stage" data-state="pending" data-stage="extract_documents">
-            <span class="stage__num">02</span>
-            <span class="stage__name">Document extraction &amp; enrichment</span>
-            <span class="stage__status">Waiting</span>
-            <span class="stage__elapsed">—</span>
-            <div class="stage__detail">Pulling latest annual return PDF · trustees' report · governance review.</div>
-          </div>
-          <div class="stage" data-state="pending" data-stage="web_intelligence">
-            <span class="stage__num">03</span>
-            <span class="stage__name">Web intelligence &amp; OSINT</span>
-            <span class="stage__status">Waiting</span>
-            <span class="stage__elapsed">—</span>
-            <div class="stage__detail">Cross-referencing entity website, news, regulatory notices.</div>
-          </div>
-          <div class="stage" data-state="pending" data-stage="analysis_engines">
-            <span class="stage__num">04</span>
-            <span class="stage__name">Governance &amp; financial analysis</span>
-            <span class="stage__status">Waiting</span>
-            <span class="stage__elapsed">—</span>
-            <div class="stage__detail">Income / expenditure trend · audit opinion · governance code adherence.</div>
-          </div>
-          <div class="stage" data-state="pending" data-stage="screen_sanctions">
-            <span class="stage__num">05</span>
-            <span class="stage__name">Sanctions screening — OFSI · OFAC · UN</span>
-            <span class="stage__status">Waiting</span>
-            <span class="stage__elapsed">—</span>
-            <div class="stage__detail">Entity + every named trustee or director against three consolidated lists.</div>
-          </div>
-          <div class="stage" data-state="pending" data-stage="compute_risk_score">
-            <span class="stage__num">06</span>
-            <span class="stage__name">Risk scoring across 6 categories</span>
-            <span class="stage__status">Waiting</span>
-            <span class="stage__elapsed">—</span>
-            <div class="stage__detail">Geography · Financial · Governance · Sanctions · Adverse Media · Operational.</div>
-          </div>
-          <div class="stage" data-state="pending" data-stage="generate_report">
-            <span class="stage__num">07</span>
-            <span class="stage__name">Building analysis prompt &amp; LLM narrative</span>
-            <span class="stage__status">Waiting</span>
-            <span class="stage__elapsed">—</span>
-            <div class="stage__detail">Drafting 25-page narrative · running claim verification · checking rules.</div>
+          <div id="stages-list">
+            <div class="stage" data-state="pending" data-stage="__placeholder">
+              <span class="stage__num">··</span>
+              <span class="stage__name">Connecting to pipeline…</span>
+              <span class="stage__status">Waiting</span>
+              <span class="stage__elapsed">—</span>
+            </div>
           </div>
         </div>
       </section>
@@ -243,14 +245,54 @@ if (!runId) {
   document.getElementById('run-id').textContent = runId;
 }
 
-const STAGE_ORDER = [
-  'fetch_registry', 'extract_documents', 'web_intelligence',
-  'analysis_engines', 'screen_sanctions', 'compute_risk_score', 'generate_report'
-];
+// Stage rows are rendered dynamically from the SSE `start` event so the
+// grid always matches the actual pipeline (3 stages for company, 7 for
+// charity). Anything hardcoded here would drift the moment we add or
+// rename a node.
 const stageEls = {};
-document.querySelectorAll('.stage').forEach(el => {
-  stageEls[el.dataset.stage] = el;
-});
+let totalStages = 0;
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderStages(stages) {
+  const list = document.getElementById('stages-list');
+  list.innerHTML = '';
+  totalStages = (stages || []).length;
+  document.getElementById('total-count').textContent = totalStages;
+  document.getElementById('stages-title').textContent =
+    `Pipeline · ${totalStages} stage${totalStages === 1 ? '' : 's'}`;
+
+  (stages || []).forEach((s, i) => {
+    const num = String(i + 1).padStart(2, '0');
+    const row = document.createElement('div');
+    row.className = 'stage';
+    row.dataset.state = 'pending';
+    row.dataset.stage = s.key;
+    row.innerHTML = `
+      <span class="stage__indicator">
+        <svg class="tick" viewBox="0 0 12 12" aria-hidden="true">
+          <path d="M2.5 6.4 5 9l4.6-5.4"/>
+        </svg>
+      </span>
+      <div>
+        <span class="stage__name">${escapeHtml(s.title || s.key)}</span>
+        ${s.desc ? `<div class="stage__detail">${escapeHtml(s.desc)}</div>` : ''}
+      </div>
+      <span class="stage__num">${num}${s.est_time ? ` · ${escapeHtml(s.est_time)}` : ''}</span>
+      <span class="stage__status">Waiting</span>
+      <span class="stage__elapsed">—</span>
+    `;
+    list.appendChild(row);
+    stageEls[s.key] = row;
+  });
+
+  if (totalStages === 0) {
+    // Defensive: backend couldn't introspect — show a friendly placeholder.
+    list.innerHTML = '<div class="stage" data-state="pending"><span class="stage__num">··</span><span class="stage__name">Pipeline running (stage list unavailable)</span><span class="stage__status">—</span><span class="stage__elapsed">—</span></div>';
+  }
+}
 
 const traceEl = document.getElementById('trace');
 const clockEl = document.getElementById('clock');
@@ -310,7 +352,8 @@ function setStage(stageName, state) {
     if (runningStage === stageName) runningStage = null;
     doneStages++;
     doneCount.textContent = doneStages;
-    barFill.style.width = `${(doneStages / 7) * 100}%`;
+    const denom = totalStages || 1;
+    barFill.style.width = `${(doneStages / denom) * 100}%`;
   } else if (state === 'failed') {
     el.querySelector('.stage__status').textContent = 'Failed';
     if (runningStage === stageName) runningStage = null;
@@ -328,7 +371,15 @@ function connect() {
     runStartMs = performance.now();
     if (data.entity_name) document.getElementById('entity-name').textContent = data.entity_name;
     if (data.entity_type_label) document.getElementById('entity-type-meta').textContent = data.entity_type_label;
-    pushTrace(`pipeline.start · ${data.entity_type}/${data.entity_id}`);
+    // Render stage rows from the actual pipeline definition emitted by the backend
+    if (Array.isArray(data.stages) && data.stages.length > 0) {
+      renderStages(data.stages);
+      // Update the entity-type sentence with the real stage count
+      const _label = document.getElementById('entity-type-meta').textContent || '—';
+      document.querySelector('.run-meta__entity').innerHTML =
+        `<b>${escapeHtml(_label)}</b> · ${data.stages.length}-stage pipeline running. Once complete, the report loads automatically.`;
+    }
+    pushTrace(`pipeline.start · ${escapeHtml(data.entity_type || '')}/${escapeHtml(data.entity_id || '')} · ${data.stages ? data.stages.length : '?'} stages`);
   });
 
   sse.addEventListener('stage_start', (ev) => {

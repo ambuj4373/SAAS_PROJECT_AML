@@ -100,12 +100,39 @@ def _execute_pipeline(run_id: str, entity_type: str, entity_id: str,
         })
 
     try:
+        # Pull the actual stage list from the pipeline definition so the
+        # frontend can render rows that match what will actually run.
+        # Source of truth: pipeline/{charity,company}_graph.py.
+        stages_payload: list[dict] = []
+        try:
+            if entity_type == "charity":
+                from pipeline.charity_graph import CHARITY_NODES, CHARITY_STAGE_LABELS
+                node_names = [n for n, _ in CHARITY_NODES]
+                labels = CHARITY_STAGE_LABELS
+            elif entity_type == "company":
+                from pipeline.company_graph import COMPANY_NODES, COMPANY_STAGE_LABELS
+                node_names = [n for n, _ in COMPANY_NODES]
+                labels = COMPANY_STAGE_LABELS
+            else:
+                node_names, labels = [], {}
+            for n in node_names:
+                meta = labels.get(n, {}) or {}
+                stages_payload.append({
+                    "key": n,
+                    "title": meta.get("title", n.replace("_", " ").title()),
+                    "desc": meta.get("desc", ""),
+                    "est_time": meta.get("est_time", ""),
+                })
+        except Exception as ex:
+            log.warning(f"Could not introspect pipeline stages for {entity_type}: {ex}")
+
         # Initial start event for the SSE consumer
         _post(run_id, {
             "type": "start",
             "entity_type": entity_type,
             "entity_id": entity_id,
             "entity_type_label": "Charity " + entity_id if entity_type == "charity" else "Company " + entity_id,
+            "stages": stages_payload,
         })
 
         if entity_type == "charity":

@@ -903,23 +903,201 @@ def _is_negated(keyword: str, text: str) -> bool:
     return negated_count == len(snippets)
 
 
+# Industry-context briefings — what an analyst would say when an entity's
+# website/SIC signals match this category. Each entry: a one-line
+# description, the regulatory frame, and the buyer-actionable controls
+# to look for. This replaces the old "prohibited" verdict layer with
+# something useful: "here is what this industry is, and here is what to
+# verify before transacting with them."
+_INDUSTRY_BRIEFINGS: dict[str, dict] = {
+    "Gambling & Betting": {
+        "description": "Operates in the gambling and betting sector.",
+        "regulatory_frame": "Licensed by the Gambling Commission under the Gambling Act 2005. Subject to AML obligations under the MLR 2017 as a 'casino' or 'remote gambling' operator.",
+        "typical_controls": [
+            "Verify Gambling Commission operating licence (search via the Public Register at gamblingcommission.gov.uk).",
+            "Confirm GamStop integration for online operators.",
+            "Request the firm's most recent Source-of-Funds policy and AML risk assessment.",
+        ],
+    },
+    "Cryptocurrency": {
+        "description": "Operates in the cryptocurrency / digital-asset sector.",
+        "regulatory_frame": "Cryptoasset firms in the UK must register with the FCA under the MLR 2017. From October 2023 they are subject to the Financial Promotions regime (PERG 8). Travel Rule (MLR 2022 amendment) applies to transfers over £1,000.",
+        "typical_controls": [
+            "Verify the firm appears on the FCA's cryptoasset register (register.fca.org.uk).",
+            "Request the firm's Travel Rule compliance attestation and chosen on-chain analytics provider (Chainalysis, Elliptic, TRM Labs).",
+            "Confirm a board-approved AML / Sanctions policy specific to digital assets.",
+        ],
+    },
+    "Adult Entertainment": {
+        "description": "Operates in the adult-entertainment / adult-content sector.",
+        "regulatory_frame": "Subject to the Online Safety Act 2023 (age-verification duties). Card acquirers typically apply enhanced underwriting and high reserve requirements. Chargeback exposure is materially higher than mainstream commerce.",
+        "typical_controls": [
+            "Verify age-verification provider (e.g. AgeChecked, Yoti, OneID).",
+            "Request the firm's content-moderation policy and 2257-equivalent record-keeping evidence.",
+            "Confirm card-scheme MATCH-list status before merchant onboarding.",
+        ],
+    },
+    "Weapons & Firearms": {
+        "description": "Operates in the firearms / weapons trade.",
+        "regulatory_frame": "Sale, transfer and possession regulated under the Firearms Acts 1968-2017. Export controls apply under the Export Control Order 2008. Dealers require Home Office authorisation.",
+        "typical_controls": [
+            "Verify Firearms Dealer registration with local police firearms licensing department.",
+            "Confirm Export Control Joint Unit (ECJU) licensing for any cross-border sales.",
+            "Request the firm's end-user verification policy.",
+        ],
+    },
+    "Narcotics & Paraphernalia": {
+        "description": "Operates in cannabis / CBD / vaping or related regulated-substance commerce.",
+        "regulatory_frame": "Cannabis-derived products: regulated under MoDA 1971 (THC < 0.2%) and Novel Foods (FSA). Vaping products: TPD-compliant (TRPR 2016). Wholesalers may require MHRA licensing.",
+        "typical_controls": [
+            "Confirm Novel Foods authorisation status for any CBD ingestibles (FSA register).",
+            "Verify THC testing certificates from accredited labs.",
+            "Request the firm's age-verification gateway evidence (TPD requires 18+).",
+        ],
+    },
+    "Pyramid / Ponzi / MLM": {
+        "description": "Website/branding signals MLM, network-marketing or referral-income structures.",
+        "regulatory_frame": "Trading Schemes Act 1996 and related Regulations govern multi-level marketing in the UK. Pyramid promotional schemes (no genuine product) are prohibited under the CPRs 2008.",
+        "typical_controls": [
+            "Request the firm's compensation plan and verify retail-vs-recruitment income split.",
+            "Confirm membership in the Direct Selling Association (DSA) if claimed.",
+            "Verify product-return / cooling-off policy meets CCRs 2013.",
+        ],
+    },
+    "Shell / Front Companies": {
+        "description": "Branding or services signal company-formation, nominee directors, or domiciliation activity.",
+        "regulatory_frame": "TCSP (Trust or Company Service Provider) activity requires HMRC supervision under MLR 2017. Nominee director arrangements must be transparent under the PSC regime.",
+        "typical_controls": [
+            "Verify HMRC TCSP supervision (HMRC AML-supervised business register).",
+            "Confirm the firm files PSC information for its nominee arrangements.",
+            "Request the firm's CDD/KYB policy and source-of-wealth verification process.",
+        ],
+    },
+    "Counterfeit Goods": {
+        "description": "Website signals possible imitation, replica or counterfeit branding.",
+        "regulatory_frame": "Sale of counterfeit goods is a criminal offence under the Trade Marks Act 1994 and Copyright, Designs and Patents Act 1988.",
+        "typical_controls": [
+            "Verify authorised-reseller agreements with original brand owners.",
+            "Request authenticity certificates / serial-number records for high-value goods.",
+            "Confirm IP rights coverage in product listings.",
+        ],
+    },
+    "Sanctions Evasion": {
+        "description": "Website or activity signals possible exposure to sanctioned jurisdictions or designated persons.",
+        "regulatory_frame": "UK sanctions regime under SAMLA 2018, enforced by OFSI. Breach is a criminal offence; OFSI has strict-liability monetary penalties.",
+        "typical_controls": [
+            "Run live OFSI / OFAC / UN screening for the entity and every UBO before transacting.",
+            "Confirm the firm has a documented Sanctions policy with screening cadence and escalation paths.",
+            "Verify there is no exposure to designated jurisdictions in the customer base or supply chain.",
+        ],
+    },
+    "Payday Loans / Predatory Lending": {
+        "description": "Operates in the high-cost short-term credit market.",
+        "regulatory_frame": "FCA-authorised consumer credit firm (CONC). HCSTC cap on cost (0.8% / day, total cost cap of 100%). Subject to FCA's vulnerability-customer rules.",
+        "typical_controls": [
+            "Verify FCA authorisation and full-permission status (register.fca.org.uk).",
+            "Request the firm's affordability-assessment policy and arrears-handling procedures.",
+            "Confirm Financial Ombudsman Service registration and FOS levy payment.",
+        ],
+    },
+    "Money Remittance / MSB": {
+        "description": "Operates as a Money Service Business (remittance, FX, or e-money agent).",
+        "regulatory_frame": "FCA-authorised or registered Payment Institution / EMI / Small Payment Institution under the PSRs 2017 or EMRs 2011. Also HMRC-supervised under MLR 2017.",
+        "typical_controls": [
+            "Verify FCA authorisation status — Payment Institution / EMI / API / SPI.",
+            "Confirm HMRC MSB supervision (HMRC AML-supervised business register).",
+            "Request the firm's Safeguarding policy and segregated-account arrangements.",
+        ],
+    },
+    "Spread Betting / CFDs / FX Derivatives": {
+        "description": "Operates in retail leveraged-trading products (CFDs, spread bets, FX derivatives).",
+        "regulatory_frame": "FCA-authorised (MiFID II / FSMA). Subject to FCA's CFD restrictions for retail clients (PERG 13, ESMA-derived margin caps).",
+        "typical_controls": [
+            "Verify FCA full-scope authorisation and CFD permission.",
+            "Confirm negative-balance protection and ESMA-aligned leverage limits.",
+            "Request the firm's appropriateness-test policy and warning disclosures.",
+        ],
+    },
+    "Debt Recovery": {
+        "description": "Operates in debt collection or enforcement services.",
+        "regulatory_frame": "FCA-authorised consumer credit firm if recovering regulated debts (CONC 7). Enforcement agents (bailiffs) certified by County Court under the Tribunals, Courts and Enforcement Act 2007.",
+        "typical_controls": [
+            "Verify FCA authorisation for consumer-credit debt collection.",
+            "Confirm Credit Services Association membership if claimed.",
+            "Request the firm's vulnerability-customer policy and complaints procedure.",
+        ],
+    },
+    "Unregulated Financial Advice": {
+        "description": "Website or branding signals investment / advisory services that may not be FCA-authorised.",
+        "regulatory_frame": "Carrying out a regulated activity (investment advice, arranging deals) without authorisation is a criminal offence (FSMA s.19).",
+        "typical_controls": [
+            "Verify FCA authorisation against the firm's actual activities (register.fca.org.uk).",
+            "Request copies of risk warnings, appropriateness tests, and client agreements.",
+            "Confirm professional indemnity insurance and FOS coverage.",
+        ],
+    },
+    "Crowdfunding / Investment Opportunity": {
+        "description": "Operates an investment / crowdfunding / equity platform.",
+        "regulatory_frame": "FCA-authorised under PERG 8 (financial promotions) and PERG 18 (P2P / equity crowdfunding). Restricted-investor regime applies (COBS 4.7).",
+        "typical_controls": [
+            "Verify FCA full-permission status and operating-platform permission.",
+            "Confirm restricted-investor / certified-sophisticated-investor categorisation procedures.",
+            "Request the firm's appropriateness-test framework and risk warnings.",
+        ],
+    },
+    "Online Dating / Marriage Services": {
+        "description": "Operates an online dating / matchmaking platform.",
+        "regulatory_frame": "Subject to GDPR + DPA 2018 (sensitive personal data, including sexual orientation). Subscription billing comes under the CCRs 2013 (cancellation rights). Online Safety Act 2023 imposes user-safety duties.",
+        "typical_controls": [
+            "Verify ICO registration and DPIA evidence.",
+            "Confirm CMA-aligned subscription / auto-renewal disclosures.",
+            "Request the firm's user-safety / fake-profile policy under the Online Safety Act.",
+        ],
+    },
+    "Telemarketing / Fake Engagement": {
+        "description": "Website signals telemarketing, cold-calling, or social-engagement-for-sale services.",
+        "regulatory_frame": "Telephone marketing is regulated by PECR 2003 (consent + TPS suppression). Sale of fake engagement metrics breaches platform ToS and may breach CPRs 2008.",
+        "typical_controls": [
+            "Verify TPS / CTPS suppression process and consent records.",
+            "Confirm ICO registration and DPIA for marketing-data processing.",
+            "Request the firm's customer-acquisition source-verification policy.",
+        ],
+    },
+}
+
+
+def _briefing_for(category: str) -> dict | None:
+    """Return the industry briefing for a detected category, or None if unmapped.
+    Briefings are buyer-actionable context — what this industry is, the regulatory
+    frame, and the typical controls — NOT a verdict."""
+    return _INDUSTRY_BRIEFINGS.get(category)
+
+
 def detect_restricted_activities(
     web_text: str,
     sic_risk: dict,
     company_name: str,
 ) -> dict:
-    """Screen for restricted activities using website + SIC signals.
+    """Detect industries that warrant contextual due-diligence briefings.
 
-    Uses word-boundary regex matching (not substring), negation detection,
-    and a minimum-signal-strength threshold for high-false-positive categories
-    to avoid spurious hard stops.
+    Replaces the prior "prohibited / restricted" verdict layer. The detection
+    still uses word-boundary regex, negation handling, and signal-strength
+    thresholds — but the output is now CONTEXTUAL, not prohibitive. Each
+    detected industry carries a one-line description, the relevant regulatory
+    frame, and a typical-controls checklist the buyer can act on.
 
     Returns dict with:
-      - prohibited: list of matched prohibited activities
-      - restricted: list of matched restricted activities
-      - total_flags: int
-      - hard_block: bool (if any prohibited activity is confirmed)
-      - details: list of {category, severity, matched_keywords, context_snippets}
+      - elevated_industries: list of industries where the briefing materially
+                             changes the due-diligence approach
+      - regulated_industries: list of industries with prior-agreement /
+                              authorisation requirements but standard CDD
+      - industries: combined list with full briefings
+      - total_flags: int — count of detected industries (informational)
+
+    Legacy keys preserved for back-compat:
+      - prohibited / restricted / hard_block / details — these still exist
+        for any downstream code that hasn't migrated, but `hard_block` is
+        ALWAYS False (Probitas does not issue hard blocks).
     """
     web_lower = web_text.lower()
     name_lower = company_name.lower()
@@ -932,56 +1110,68 @@ def detect_restricted_activities(
     )
     combined += " " + sic_descriptions
 
-    prohibited: list[dict] = []
-    restricted: list[dict] = []
+    elevated: list[dict] = []     # high-context industries
+    regulated: list[dict] = []    # regulated industries with prior-agreement needs
 
-    for category, keywords, severity in _RESTRICTED_ACTIVITY_RULES:
-        # Word-boundary matching instead of naive substring
+    for category, keywords, original_severity in _RESTRICTED_ACTIVITY_RULES:
         matched_kws = [kw for kw in keywords if _kw_word_boundary_match(kw, combined)]
         if not matched_kws:
             continue
 
-        # Filter out keywords that only appear in negation / disclaimer context
         confirmed_kws = [kw for kw in matched_kws if not _is_negated(kw, combined)]
         if not confirmed_kws:
-            continue  # all matches were negated — skip entirely
+            continue
 
-        # Collect context snippets for evidence
         all_snippets: list[str] = []
         for kw in confirmed_kws[:3]:
             all_snippets.extend(_extract_context_snippets(kw, combined, window=100))
 
+        briefing = _briefing_for(category) or {}
+
         entry = {
             "category": category,
-            "severity": severity,
             "matched_keywords": confirmed_kws[:5],
             "signal_strength": len(confirmed_kws),
             "context_snippets": all_snippets[:5],
+            # Contextual briefing — the heart of the new presentation
+            "description": briefing.get("description", f"Detected signals related to {category}."),
+            "regulatory_frame": briefing.get("regulatory_frame", ""),
+            "typical_controls": briefing.get("typical_controls", []),
         }
 
-        if severity == "prohibited":
-            # High-false-positive categories need minimum match count
+        # Bucket by how strongly the industry profile changes the buyer's
+        # due-diligence approach. "Elevated" = the briefing is substantive
+        # enough that the analyst would surface it prominently; "regulated"
+        # = standard regulated activity, surface as context.
+        if original_severity == "prohibited":
             min_matches = _HIGH_FP_CATEGORIES.get(category, 1)
             if len(confirmed_kws) >= min_matches:
-                prohibited.append(entry)
+                entry["context_level"] = "elevated"
+                elevated.append(entry)
             else:
-                # Downgrade to restricted — not enough evidence for hard block
-                entry["severity"] = "restricted"
-                entry["downgraded_from"] = "prohibited"
-                entry["downgrade_reason"] = (
-                    f"Only {len(confirmed_kws)} keyword(s) matched "
-                    f"(need {min_matches}+ for hard block)"
+                entry["context_level"] = "regulated"
+                entry["note"] = (
+                    f"Weak signal ({len(confirmed_kws)} keyword match — "
+                    f"surface as context only)."
                 )
-                restricted.append(entry)
+                regulated.append(entry)
         else:
-            restricted.append(entry)
+            entry["context_level"] = "regulated"
+            regulated.append(entry)
 
+    industries = elevated + regulated
     return {
-        "prohibited": prohibited,
-        "restricted": restricted,
-        "total_flags": len(prohibited) + len(restricted),
-        "hard_block": len(prohibited) > 0,
-        "details": prohibited + restricted,
+        # New contextual shape
+        "elevated_industries": elevated,
+        "regulated_industries": regulated,
+        "industries": industries,
+        "total_flags": len(industries),
+        # Legacy back-compat keys — kept so older readers don't break.
+        # hard_block is ALWAYS False; Probitas presents context, not vetoes.
+        "prohibited": elevated,
+        "restricted": regulated,
+        "details": industries,
+        "hard_block": False,
     }
 
 
@@ -2182,59 +2372,21 @@ def build_risk_matrix(
                 )
 
     # ══════════════════════════════════════════════════════════════════
-    # HARD STOP DETECTION (binary — any one = instant critical)
-    # ══════════════════════════════════════════════════════════════════
+    # Hard stops removed. Probitas presents data with context — the buyer
+    # decides whether an entity is workable for their own use case. What
+    # used to be hard stops (crypto, gambling, insolvent status, sanctions
+    # adverse media, etc.) now surface as ELEVATED-CONTEXT signals: each
+    # carries a one-line industry/situation note and a typical-controls
+    # list so the buyer can act on them with informed judgement, not on
+    # a binary veto from us.
+    #
+    # Kept as an empty list for downstream code that still reads it.
     hard_stops: list[str] = []
-
-    # 1. Company Status: dissolved, liquidated, or insolvent
     _status = (status_analysis.get("status") or "").lower()
-    _DEAD_STATUSES = {
-        "dissolved", "liquidation", "administration",
-        "insolvency-proceedings", "receivership",
-        "voluntary-arrangement", "converted-closed",
-    }
-    if _status in _DEAD_STATUSES:
-        hard_stops.append(
-            f"🛑 HARD STOP: Company status is '{_status}' — "
-            f"entity is non-operational / cannot legally trade"
-        )
-    if status_analysis.get("has_been_liquidated"):
-        hard_stops.append(
-            "🛑 HARD STOP: Company has been liquidated — "
-            "historical insolvency event on record"
-        )
 
-    # 2. Sanctions Match — check adverse media for sanctions keywords
-    #    (uses _SANCTIONS_KEYWORDS and _adverse_has_sanctions from cross-pollination above)
-    if _adverse_has_sanctions:
-        # Find the specific keyword and URL for the hard stop message
-        for adv in adverse_media:
-            if not adv.get("_relevant"):
-                continue
-            snippet = ((adv.get("content") or "") + " " + (adv.get("title") or "")).lower()
-            for kw in _SANCTIONS_KEYWORDS:
-                if kw in snippet:
-                    hard_stops.append(
-                        f"🛑 HARD STOP: Sanctions-related adverse media detected — "
-                        f"'{kw}' found in verified result: {adv.get('url', 'N/A')}"
-                    )
-                    break
-
-    # 3. FATF Predicate — if FATF screening returns High or Very High
-    _fatf_risk = (fatf_screening.get("risk_level") or "").lower()
-    if _fatf_risk in ("high", "very high"):
-        hard_stops.append(
-            f"🛑 HARD STOP: FATF predicate-offence screening returned "
-            f"'{fatf_screening.get('risk_level')}' risk — "
-            f"{fatf_screening.get('summary', 'See FATF screening details')}"
-        )
-
-    # 4. Restricted Activities — prohibited activities are a hard block
-    for ra in restricted_activities.get("prohibited", []):
-        hard_stops.append(
-            f"🛑 HARD STOP: Prohibited activity — {ra['category']} "
-            f"(evidence: {', '.join(ra['matched_keywords'][:3])})"
-        )
+    # (Former hard-stop triggers for FATF and restricted activities are
+    # no longer generated here. They become contextual signals further
+    # below — see industry context + screening summary in the bundle.)
 
     # ══════════════════════════════════════════════════════════════════
     # FILING OVERDUE (precise date math)

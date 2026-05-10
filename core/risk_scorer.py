@@ -186,9 +186,8 @@ def score_company(check: dict) -> RiskScore:
     if status_risk == "high":
         _add(signals, category_scores, "Governance", "Company status is concerning",
              RiskLevel.HIGH, "status_analysis", 15)
-        for f in status.get("flags", []):
-            if "dissolved" in f.lower() or "liquidation" in f.lower():
-                hard_stops.append(f)
+        # No hard-stop here — dissolved/liquidated status is surfaced as a
+        # HIGH governance signal which the analyst weighs in context.
     for flag in status.get("flags", []):
         _add(signals, category_scores, "Governance", flag,
              RiskLevel.MEDIUM, "status_analysis", 3)
@@ -259,26 +258,28 @@ def score_company(check: dict) -> RiskScore:
              "Accounts overdue",
              RiskLevel.MEDIUM, "accounts", 5)
 
-    # ── Restricted Activities ────────────────────────────────────────
+    # ── Industry context (formerly restricted activities) ───────────
+    # Elevated-context industries surface as MEDIUM operational signals
+    # with a contextual briefing — never CRITICAL, never hard-stops.
+    # The buyer reads the briefing and decides whether the industry is
+    # workable for their use case.
     restricted = safe_get(check, "restricted_activities") or {}
-    for item in restricted.get("prohibited", []):
-        hard_stops.append(f"Prohibited activity: {item.get('category', 'Unknown')}")
+    for item in restricted.get("elevated_industries", restricted.get("prohibited", [])):
         _add(signals, category_scores, "Operational",
-             f"Prohibited activity detected: {item.get('category', '')}",
-             RiskLevel.CRITICAL, "restricted_activities", 25)
-    for item in restricted.get("restricted", []):
+             f"Industry context: {item.get('category', '')} — see briefing for required controls",
+             RiskLevel.MEDIUM, "industry_context", 7)
+    for item in restricted.get("regulated_industries", restricted.get("restricted", [])):
         _add(signals, category_scores, "Operational",
-             f"Restricted activity detected: {item.get('category', '')}",
-             RiskLevel.HIGH, "restricted_activities", 10)
+             f"Regulated industry: {item.get('category', '')} — standard CDD + sector controls",
+             RiskLevel.LOW, "industry_context", 3)
 
-    # ── FATF Screening ───────────────────────────────────────────────
+    # ── FATF Screening (contextual signal only — no hard stop) ──────
     fatf = safe_get(check, "fatf_screening") or {}
     fatf_risk = (fatf.get("risk_level") or "").lower()
     if fatf_risk in ("high", "critical"):
-        hard_stops.append("FATF predicate-offence screening: High risk match")
         _add(signals, category_scores, "Media & Screening",
-             "FATF screening returned high-risk match",
-             RiskLevel.CRITICAL, "fatf_screening", 25)
+             "FATF screening: high-risk match — enhanced due diligence advised",
+             RiskLevel.HIGH, "fatf_screening", 12)
     elif fatf_risk == "medium":
         _add(signals, category_scores, "Media & Screening",
              "FATF screening returned medium-risk match",
@@ -818,14 +819,13 @@ def _score_media_charity(
                  f"Trustee '{name}': {hits} adverse media hit(s)",
                  RiskLevel.MEDIUM, "adverse_trustees", min(hits * 5, 10))
 
-    # FATF screening
+    # FATF screening — contextual HIGH signal, never a hard stop.
     if fatf_org:
         fatf_risk = (fatf_org.get("risk_level") or "").lower()
         if fatf_risk in ("high", "critical"):
-            hard_stops.append("FATF screening: High risk match for organisation")
             _add(signals, scores, "Media & Screening",
-                 "FATF predicate-offence match (organisation)",
-                 RiskLevel.CRITICAL, "fatf_org", 25)
+                 "FATF predicate-offence match (organisation) — enhanced due diligence advised",
+                 RiskLevel.HIGH, "fatf_org", 12)
         elif fatf_risk == "medium":
             _add(signals, scores, "Media & Screening",
                  "FATF screening: medium risk for organisation",
@@ -834,10 +834,9 @@ def _score_media_charity(
     for name, screen in (fatf_trustees or {}).items():
         t_risk = (screen.get("risk_level") or "").lower()
         if t_risk in ("high", "critical"):
-            hard_stops.append(f"FATF screening: High risk match for trustee '{name}'")
             _add(signals, scores, "Media & Screening",
-                 f"FATF match for trustee '{name}'",
-                 RiskLevel.CRITICAL, "fatf_trustee", 20)
+                 f"FATF match for trustee '{name}' — enhanced due diligence advised",
+                 RiskLevel.HIGH, "fatf_trustee", 10)
 
 
 # ── Transparency scoring (shared) ───────────────────────────────────────────
