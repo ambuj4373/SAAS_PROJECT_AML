@@ -631,9 +631,25 @@ def run_company_check_node(state: dict) -> dict:
             online_presence_fn=search_online_presence,
             fatf_screen_fn=screen_entity,
         )
+
+        # ── Industry-aware compliance guidance ─────────────────────────
+        # Translates SIC codes into a buyer-actionable checklist:
+        # documents to request, registers to cross-check, regime-specific
+        # red flags to test for. This is the unique-value layer that
+        # turns the report from "data aggregation" into "decision support".
+        try:
+            from core.document_requirements import requirements_for
+            sic_codes = (result.get("profile") or {}).get("sic_codes") or []
+            status = (result.get("profile") or {}).get("status") or ""
+            guidance = requirements_for(sic_codes, company_status=status)
+            result["compliance_guidance"] = guidance.to_dict()
+        except Exception as ce:
+            log.warning("Compliance guidance failed: %s", ce)
+            result["compliance_guidance"] = {}
+
         updates["company_check"] = result
 
-        # Add FCA details to company_check
+        # Add FCA details to company_check if present
         fca_details = state.get("fca_details")
         if fca_details:
             updates["company_check"]["fca_details"] = fca_details
