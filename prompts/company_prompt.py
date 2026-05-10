@@ -142,12 +142,12 @@ Report findings. If "osint_confidence": "low", mark links as "⚠️ Unverified"
 ## 5. Business & Payment Profile
 Describe business model: B2B/B2C/Mixed, payment pattern, chargeback risk.
 
-## 6. Restricted Activities & HROB Assessment
+## 6. Restricted Activities & High-Risk Onboarding Assessment
 
 ### 6A. Restricted Activities
 Report pre-computed restricted_activities results.
 
-### 6B. High Risk Onboarding (HROB) Verticals
+### 6B. High Risk Onboarding (high-risk onboarding) Verticals
 Report pre-computed hrob_verticals results.
 
 ## 7. Adverse Media & Reputation

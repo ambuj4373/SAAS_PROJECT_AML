@@ -57,19 +57,21 @@ def start_run(
     *,
     email: Optional[str] = None,
     bypass_used: bool = False,
+    website_url: Optional[str] = None,
 ) -> None:
     """Insert the run row and kick off the pipeline in a worker thread."""
     db.insert_run(run_id, entity_type, entity_id, email=email, bypass_used=bypass_used)
     t = threading.Thread(
         target=_execute_pipeline,
-        args=(run_id, entity_type, entity_id),
+        args=(run_id, entity_type, entity_id, website_url),
         daemon=True,
         name=f"probitas-run-{run_id[:8]}",
     )
     t.start()
 
 
-def _execute_pipeline(run_id: str, entity_type: str, entity_id: str) -> None:
+def _execute_pipeline(run_id: str, entity_type: str, entity_id: str,
+                      website_url: Optional[str] = None) -> None:
     """Run the existing reports/ pipeline, streaming progress to the queue."""
     from reports import generate_charity_report, generate_company_report
 
@@ -109,6 +111,7 @@ def _execute_pipeline(run_id: str, entity_type: str, entity_id: str) -> None:
         if entity_type == "charity":
             bundle = generate_charity_report(
                 entity_id,
+                website_override=website_url or "",
                 on_stage_start=on_start,
                 on_stage_end=on_end,
                 on_rate_limit=on_rate_limit,
@@ -117,6 +120,7 @@ def _execute_pipeline(run_id: str, entity_type: str, entity_id: str) -> None:
         elif entity_type == "company":
             bundle = generate_company_report(
                 entity_id,
+                website_url=website_url or "",
                 on_stage_start=on_start,
                 on_stage_end=on_end,
                 on_rate_limit=on_rate_limit,

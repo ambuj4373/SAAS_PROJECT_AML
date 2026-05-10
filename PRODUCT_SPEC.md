@@ -441,7 +441,24 @@ Honest about limits, offering a real reply path, branded as the product, not the
 
 ---
 
-## 14. What happens next
+## 14. Known issues + deferred work
+
+These came out of first-pass user testing of the live frontend. They're deliberately deferred to keep the current commit focused; each is real and tracked.
+
+| Issue | What's wrong today | Fix shape | Effort |
+|---|---|---|---|
+| **Trustees table** shows "no Companies House link" for every trustee | The current enrichment looks for trustees' *Companies House* directorships, but charity trustees usually aren't on CH. The right data is *other charity trusteeships*, which the Charity Commission shows on each charity's page but not via the public API. | Either scrape the public CC web pages (per-charity trustee section) or enrich from the bulk CC datasets (download CSV, build a name → charities index in SQLite). The latter is more robust. | ~1 day |
+| **Visual polish in the report** — basic tables, no charts, no maps | The report renders markdown straight; the user expects financial-trend charts, geographic risk maps, beautiful tables. | Add a small charting layer (recharts or Chart.js) and a UK/world country map (D3 or react-simple-maps) keyed off the country-risk dict. Style the markdown tables with a richer set of CSS rules. | ~1 day |
+| **Social-media OSINT misses real accounts** | The current scrape uses Tavily/Serper text searches and often returns nothing; even when an account exists, we don't surface the link. | Two-pronged: (a) parse `og:` and `link rel="me"` tags directly from the entity website if we have it; (b) add a manual website-override input on the preview page (now SHIPPED in this commit) so the user can hand us the right URL. | (a) ~half day, (b) DONE |
+| **Company pipeline returning Unknown entity for valid numbers** (e.g. 13211214 = Wise PLC) | The pipeline's `run_company_check_node` either threw silently or returned no `company_name` for some companies. `fetch_company_full_profile` works correctly when called directly — so the loss happens inside the pipeline node's exception handling. | Add structured error capture inside `run_company_check_node`; expose the failure reason via the bundle's `errors` field; surface it on the report viewer. | ~2 hours |
+| **`Read time` and `cost` exposed to users** | Internal pipeline timings and our LLM cost showing in the report viewer header — confusing and reveals our margins. | SHIPPED in this commit — those fields removed from the user-facing meta and right rail. | DONE |
+| **HRCOB references in narrative** | "HRCOB" and "HROB" are internal jargon from the codebase's previous incarnation, leaking into customer-facing report text. | SHIPPED in this commit — all uppercase HRCOB/HROB labels replaced with neutral terms ("Core Controls", "High-Risk Onboarding"); internal data-key references kept so the pipeline data still flows. | DONE |
+| **Stripe Checkout** | Paid path returns 402 for now; admin bypass code is the only way to start a run. | Wire Stripe Hosted Checkout, webhook handler triggers `runner.start_run` on `checkout.session.completed`; admin bypass stays for testing. | ~half day |
+| **PDF download + email delivery** | "Download PDF" and "Email me a copy" buttons are placeholders. | `@react-pdf/renderer` server-side or Puppeteer; Resend transactional email with the signed report link. | ~half day |
+
+---
+
+## 15. What happens next
 
 Decisions are locked. Build sequence:
 

@@ -116,6 +116,7 @@ class StartRunBody(BaseModel):
     entity_id: str
     bypass_code: str | None = None
     email: str | None = None
+    website_url: str | None = None  # user-supplied override for OSINT stage
 
 
 @app.post("/api/runs/start")
@@ -147,7 +148,9 @@ def start_run(body: StartRunBody) -> dict:
     run_id = "r_" + secrets.token_urlsafe(8).replace("-", "").replace("_", "").lower()[:12]
     runner.start_run(
         run_id, entity_type, entity_id,
-        email=body.email, bypass_used=True,
+        email=body.email,
+        bypass_used=True,
+        website_url=body.website_url,
     )
     log.info("Started run %s · %s/%s · bypass", run_id, entity_type, entity_id)
     return {"run_id": run_id, "status": "pending"}

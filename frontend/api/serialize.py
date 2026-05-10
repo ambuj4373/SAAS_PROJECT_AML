@@ -42,12 +42,18 @@ def bundle_to_dict(bundle: Any) -> dict:
         for blob_key in ("cc_printout", "uploaded_docs", "uploaded_gov_docs"):
             out["state"].pop(blob_key, None)
 
-    # asdict() loses @property fields (entity_name, etc.) — re-derive from state
+    # asdict() loses @property fields — re-derive entity_name from state.
+    # The actual keys vary by pipeline: charity uses state.entity_name and
+    # state.charity_data.charity_name; company uses state.company_check.company_name
+    # (see CompanyReportBundle.company_name property in reports/company.py).
     state = out.get("state") or {}
     if not out.get("entity_name"):
+        company_check = state.get("company_check") or {}
+        charity_data = state.get("charity_data") or {}
         out["entity_name"] = (
             state.get("entity_name")
-            or state.get("charity_data", {}).get("charity_name")
+            or charity_data.get("charity_name")
+            or company_check.get("company_name")
             or state.get("company_data", {}).get("name")
             or ""
         )

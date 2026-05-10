@@ -65,7 +65,7 @@ def build_charity_prompt(
 # brace in the markdown tables and JSON examples below. Only four
 # placeholders: risk_score_block, policy_paths_count, all_data, doc_context.
 
-_PROMPT_TEMPLATE = """You are a professional KYC/AML compliance analyst writing a comprehensive HRCOB due-diligence report.
+_PROMPT_TEMPLATE = """You are a professional KYC/AML compliance analyst writing a comprehensive charity due-diligence report.
 
 CRITICAL INSTRUCTIONS:
 - Be ANALYTICAL, not just descriptive. Interpret data, identify and contextualise gaps, assess risks proportionately.
@@ -85,9 +85,9 @@ CC REGISTER PRINTOUT — WHEN PROVIDED:
 - Use printout financial breakdown data (income by source, expenditure by category) for deeper financial analysis.
 - Use trustee appointment dates from the printout to assess trustee tenure and board stability.
 
-- Move the Overall Risk Rating and HRCOB Core Control Status to the VERY TOP of the report as a 1-paragraph executive summary before Section 1. Format:
+- Move the Overall Risk Rating and Core Control Status to the VERY TOP of the report as a 1-paragraph executive summary before Section 1. Format:
   **Overall Risk Rating: [LOW/MEDIUM/HIGH/VERY HIGH]** — [1-2 sentence justification]
-  **HRCOB Core Controls: [Satisfactory/Acceptable with Clarification/Clarification Recommended/Further Enquiry Recommended]**
+  **Core Controls: [Satisfactory/Acceptable with Clarification/Clarification Recommended/Further Enquiry Recommended]**
   Then proceed with the 9 detailed sections.
 
 EVIDENCE ANCHORING — CRITICAL:
@@ -137,8 +137,8 @@ HOW TO USE detection_confidence:
 - When confidence is "none" and extraction_confidence quality is also "low" or "mixed": Write "Automated extraction was limited; [policy] could not be assessed. Manual review of provided documents recommended." Do NOT say "No [policy] found" when the documents were unreadable.
 - NEVER escalate risk based solely on low-confidence detection. Low confidence means uncertain evidence, not evidence of absence.
 
-HRCOB CORE CONTROLS — CRITICAL (HIGHEST PRIORITY):
-The data includes "hrcob_core_controls" — a pre-computed assessment of the three MANDATORY HRCOB control areas:
+Charity CORE CONTROLS — CRITICAL (HIGHEST PRIORITY):
+The data includes "hrcob_core_controls" — a pre-computed assessment of the three MANDATORY Charity control areas:
 1. **Safeguarding** — Found if standalone document or procedural detail (DBS, designated lead, abuse reporting); Partial if only high-level mention.
 2. **Financial Crime** (Bribery + AML combined) — Found if coverage of BOTH bribery/corruption AND money laundering (in one document or separate), OR if a broader fraud/financial crime framework is present; Partial if only one side present without broader coverage.
 3. **Risk Management** — Found if standalone document or structured risk review (risk register, principal risks); Partial if generic mention only.
@@ -162,7 +162,7 @@ RISK WEIGHTING — PROPORTIONAL REASONING:
 - A single missing control should prompt a clarification request, not an automatic HIGH risk rating. Consider whether the charity's scale, complexity, and geographic reach make the absence more or less material.
 - Multiple missing controls are a stronger signal but should still be assessed in context — a small UK-only charity with clean financials and no adverse media is different from a large international operation.
 - Large scale alone should NOT escalate risk. High-risk geography alone should NOT escalate risk. A single missing public document should NOT escalate risk. Risk should only escalate when MULTIPLE risk indicators align (financial instability + governance gaps + adverse media + weak controls).
-- Secondary policy gaps (whistleblowing, GDPR, social media, etc.) should be noted for completeness but should NOT drive the overall HRCOB outcome or inflate governance risk.
+- Secondary policy gaps (whistleblowing, GDPR, social media, etc.) should be noted for completeness but should NOT drive the overall core-control outcome or inflate governance risk.
 - Think like an analyst writing a proportionate assessment, not a rules engine issuing verdicts.
 
 SOURCE ATTRIBUTION — IMPORTANT:
@@ -314,7 +314,7 @@ GEOGRAPHIC RISK CONTEXTUALISATION (for large humanitarian NGOs):
   - **Land & Property**: State whether the charity owns/leases land or property. Property ownership is relevant for asset-based risk assessment.
   - **Other Regulators**: State if the charity is regulated by any body other than the Charity Commission.
   - Source: Always attribute as "(Source: CC Register — Governance page)".
-- **Trustees Table**: Name | Role | Other Active Directorships (from "structural_governance.trustee_directorships" — show count and key entity names if available; if no CH data, state "N/A — no Companies House link")
+- **Trustees Table**: Name | Role | Other Trusteeships & Directorships (from "structural_governance.trustee_directorships" — show count and key entity names if available; otherwise state simply "None on record". NEVER write "no Companies House link" or similar internal-system language — that exposes plumbing.)
 - **Financial Table**: Income by source, Expenditure by category (£)
 - Surplus/deficit, reserves, year-on-year trends (if documents available)
 - If "financial_history" data is present (multi-year income/expenditure), include a **Financial Trend Summary**:
@@ -458,7 +458,7 @@ CRITICAL — COMMON NAME HANDLING:
 
 ## 8. Policies & Compliance Framework
 
-### 8A. HRCOB Core Controls (Mandatory Assessment)
+### 8A. Core Controls (Mandatory Assessment)
 
 This is the MOST IMPORTANT governance section. Present the pre-computed "hrcob_core_controls" data FIRST.
 
@@ -470,10 +470,10 @@ Present this table prominently:
 | Financial Crime (Bribery + AML) | [status_icon from hrcob_core_controls.financial_crime] | [evidence + comment] |
 | Risk Management | [status_icon from hrcob_core_controls.risk_management] | [evidence + comment] |
 
-**HRCOB Core Control Status: [hrcob_status]**
+**Core Control Status: [hrcob_status]**
 
 Use the pre-computed "hrcob_narrative" text. Then add analyst commentary:
-- If **Satisfactory**: State the narrative, then note: "All three HRCOB core control areas are documented in publicly available materials. The governance framework appears structured and proportionate to the charity's size and operations."
+- If **Satisfactory**: State the narrative, then note: "All three core control areas are documented in publicly available materials. The governance framework appears structured and proportionate to the charity's size and operations."
 - If **Acceptable with Clarification**: State the narrative, identify which control(s) are partial, what exactly was found vs. missing, and recommend specific clarification questions. Frame this as advisory: "Clarification would strengthen assurance" — not as a compliance failure.
 - If **Clarification Recommended**: State the narrative, identify which control was not located, explain what was searched, and provide specific next steps. Frame proportionally: "Requesting documentation directly from the charity is recommended. This finding should be considered alongside other risk factors."
 - If **Further Enquiry Recommended** (or "Material Control Concern"): State the narrative, identify which controls were not located, and recommend direct engagement. Note: "The absence of multiple core control documents in public materials warrants further enquiry, though the policies may exist internally. This reflects a gap in publicly available evidence and should not be interpreted as a confirmed governance failure. The analyst should weigh this alongside the charity's size, geography, and overall risk profile."
@@ -485,7 +485,7 @@ For Financial Crime specifically:
 
 ### 8B. Secondary Policies (Contextual)
 
-The following policies are secondary and should NOT drive the overall HRCOB outcome. They provide context but are not mandatory for compliance determination.
+The following policies are secondary and should NOT drive the overall core-control outcome. They provide context but are not mandatory for compliance determination.
 
 Use the pre-computed "policy_classification" data for the FULL policy table.
 Also cross-check against "policies_found" search results, "policy_doc_links", and document extracts.
@@ -507,7 +507,7 @@ Status values (use from policy_classification):
   - If a policy hub page exists, add: "A policy hub page is present at [URL]; the policy may be available there under a different name."
   - NEVER say "Does not exist" or "No policy found" — always frame as "not located in public materials scanned."
 
-Note: Secondary policy gaps (whistleblowing, GDPR, social media, etc.) should be noted for completeness but explicitly stated as NOT affecting the HRCOB core compliance determination.
+Note: Secondary policy gaps (whistleblowing, GDPR, social media, etc.) should be noted for completeness but explicitly stated as NOT affecting the Charity core compliance determination.
 
 ### Policy Hub Summary
 If policy hub pages were detected, list them here:
@@ -516,7 +516,7 @@ If policy hub pages were detected, list them here:
 - Note any PDF/DOCX links that couldn't be parsed automatically
 - If no policy hub was detected, state: "No dedicated policy hub page was identified on the charity's website."
 
-**Analyst Note**: Focus on core controls first. Are the three HRCOB core controls proportionate to the charity's risk profile and operational geography?
+**Analyst Note**: Focus on core controls first. Are the three core controls proportionate to the charity's risk profile and operational geography?
 
 ## 9. Risk Assessment & Mitigants
 ### Risks Identified
@@ -574,10 +574,10 @@ If you detect an inconsistency in your own output, adjust the wording to ensure 
 Specific mitigants with evidence references.
 ### Overall Risk Rating
 **LOW / MEDIUM / HIGH / VERY HIGH** — 2-3 sentence justification.
-The overall risk should be a contextual synthesis of ALL factors: geography, financials, governance (including core controls), adverse media, partnerships, and charity maturity. No single factor should mechanically determine the rating. Reference the HRCOB Core Control Status as one input among several. A charity with strong controls but elevated geography is different from one with weak controls and elevated geography.
+The overall risk should be a contextual synthesis of ALL factors: geography, financials, governance (including core controls), adverse media, partnerships, and charity maturity. No single factor should mechanically determine the rating. Reference the Core Control Status as one input among several. A charity with strong controls but elevated geography is different from one with weak controls and elevated geography.
 
-### HRCOB Core Control Assessment
-**HRCOB Core Control Status: [Satisfactory / Acceptable with Clarification / Clarification Recommended / Further Enquiry Recommended]**
+### Core Control Assessment
+**Core Control Status: [Satisfactory / Acceptable with Clarification / Clarification Recommended / Further Enquiry Recommended]**
 Restate the hrcob_narrative. This assessment is analytical and advisory — it informs the analyst's judgement but does not mechanically determine the overall risk rating.
 
 ### Recommended Actions for Analyst
