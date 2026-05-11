@@ -73,8 +73,11 @@ CRITICAL INSTRUCTIONS:
 - Use markdown: ## headers, **bold**, tables, bullet points, [hyperlinks](url).
 - If document extracts are provided, mine them thoroughly for partner info, financial detail, policies.
 - Maintain sector-neutral, evidence-based language throughout. Avoid assumptions about charity type, size, or mission.
-- WRITE FOR DECISION-MAKERS: Be concise, lead with conclusions, use tables over prose. Aim for clarity over completeness.
-- REDUCE TEXT DENSITY: Use bullet points and tables instead of long paragraphs. Keep analyst notes to 2-3 sentences max.
+- WRITE FOR ANALYSTS — DEPTH IS THE PRODUCT: Each section must deliver substantive analytical prose. Thin sections are a failure mode. Do NOT summarise when you can analyse. The reader paid £15 for judgment backed by evidence, not a bullet-point printout.
+- DEPTH REQUIREMENTS: Write a minimum of 400–600 words of analytical prose per section. Surface contradictions, governance gaps, and contextual risk. Every section must leave the reader with more understanding than a bare data point. A report under 3,000 words total is incomplete.
+- MANDATORY TABLES — every report must include ALL of the following or it is incomplete: (1) Trustees table in §02 with every trustee name, role, and any flag; (2) Financial history table in §03 with year-by-year income, expenditure, and surplus/deficit for every year in the data; (3) Sanctions screening table in §04 with every screened entity and per-provider results (OFSI / OFAC / UN); (4) Policy status table in §02 with every core control area, status (Found/Partial/Not Located), and source URL.
+- ADVERSE MEDIA CITATIONS — MANDATORY: Every confirmed adverse media hit MUST include its source URL as a clickable hyperlink in the format [Article headline](URL). Never describe an adverse finding in prose without embedding its URL. If the URL field is present in the data, use it. An adverse media section without hyperlinks is a defective section.
+- TARGET LENGTH: 4,000–6,000 words total report. Err on the side of more analysis, not less.
 - CONSOLIDATE DATA LIMITATIONS: Do NOT repeat "No policies located" or "Website access restricted" in every section. Instead, state data availability limitations ONCE in a consolidated note at the start of the report, then reference it briefly where relevant (e.g. "See Data Limitations above").{risk_score_block}
 
 CC REGISTER PRINTOUT — WHEN PROVIDED:
@@ -263,7 +266,7 @@ Open with one short paragraph stating the overall position in plain English — 
 
 OPENING BOLD FINDING (single sentence in serif): a one-line description of what the charity actually delivers — not "is a charity registered with…", but the work they do. Derive it from the stated objects, the website, and the Trustees' Annual Report.
 
-Then one paragraph covering: registered status and age (with date of registration), charity number, primary objects/mission, principal programmes or projects, and where they operate (jurisdictions of activity). If the charity operates across high-risk jurisdictions (per `country_risk`), state which and why it matters — but as a fact for the analyst to weigh, not a verdict.
+Then two to three paragraphs covering: registered status and age (with date of registration), charity number, primary objects/mission, principal programmes or projects, and where they operate (jurisdictions of activity). Describe the scale of operations — beneficiary numbers, programme reach, geographic spread. If the charity operates across high-risk jurisdictions (per `country_risk`), state which and why it matters with specific context — this is a key analytical finding, not a footnote.
 
 Reference document-extracted partners (from `document_partners_extracted`) inline if they corroborate or extend the web-search picture.
 
@@ -283,7 +286,7 @@ If `policies` data is available, mention how many of the {policy_paths_count} ma
 
 OPENING BOLD FINDING: the funding model in one phrase — "Recurring individual giving plus institutional grants" or "Predominantly trading income with a small donations tail."
 
-Then one paragraph covering: total income for the latest reported year, the funding split (donations / grants / trading / other), the financial trajectory across years if `financial_history` is available, audit opinion if disclosed, and any anomalies flagged by the financial_anomalies engine. If income is unusually high or low for the activity scope, surface that as a finding.
+Then three or more paragraphs covering: total income for the latest reported year and the funding split (donations / grants / trading / other) with source attributions; the full financial trajectory — render a year-by-year table with income, expenditure, surplus/deficit, and reserves for every year available in `financial_history`; audit opinion if disclosed; and any anomalies flagged by the financial_anomalies engine with your interpretation of what they signify. Assess whether the financial model is sustainable. If income is unusually high or low for the activity scope, or if reserves are very thin or very large, analyse what that implies for risk.
 
 If donations include unusual rails (crypto, foreign wires from high-risk jurisdictions, anonymous gifts), state them. Otherwise omit.
 
@@ -302,7 +305,7 @@ If any category shows `unknown` (the screening API failed), mark it as "⚠️ U
 
 OPENING BOLD FINDING: a credibility assessment in one phrase — "Operational website with verified contact details and consistent partnership claims" or "Site is six months old; verify operational claims against filings."
 
-Then a paragraph covering: website assessment (age, HTTPS, named contact, address consistency with registered office), social presence (LinkedIn / Twitter / Facebook with reasonable follower counts for the income scale), and partnership claims (cross-reference document-extracted partners with web-search hits — note corroboration).
+Then two or more paragraphs covering: website assessment (age, HTTPS, named contact, address consistency with registered office) with commentary on what the digital presence signals about operational maturity; social presence (LinkedIn / Twitter / Facebook with follower counts assessed against the income scale — a £2m charity with 80 followers is notable); and partnership claims with detailed cross-referencing of document-extracted partners against web-search hits. Evaluate whether the public footprint is proportionate to the claimed scale of operations.
 
 Then a short adverse-media sub-finding (NOT a sub-heading — use bold inline):
 
@@ -316,7 +319,7 @@ Then a short positive-media sub-finding if relevant:
 
 OPENING BOLD FINDING: the risk pattern in one phrase — "Aggregated risk is LOW; the only signal of note is geography." or "Risk concentrates in governance and country exposure; financial and screening profiles are sound."
 
-Then a short paragraph (3-4 sentences MAX) describing the risk distribution — where the signals concentrate, what drives the overall picture. Do NOT recite every category.
+Then a substantive analytical paragraph (minimum 150 words) describing the risk distribution — where the signals concentrate, what is driving the overall picture, and how the various risk categories interact. Do NOT merely recite categories; analyse the pattern. Explain why specific signals are more or less material given the charity's size, geography, and operating model.
 
 Render the per-category risk matrix exactly as pre-computed by the scoring engine (the visual score hero renders separately above).
 

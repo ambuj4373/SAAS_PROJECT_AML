@@ -131,6 +131,71 @@
 
   .rv-loading { color: var(--grey); padding: 80px 0; text-align: center; font-style: italic; }
   .rv-error { background: var(--risk-high-bg); border: 1px solid rgba(239,68,68,0.3); color: #B91C1C; padding: 24px; border-radius: 8px; margin: 40px 0; font-size: 14px; line-height: 1.5; }
+
+  /* ─── Key facts bar ──────────────────────────────────────────────── */
+  .kf-bar { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 0 0 36px; }
+  .kf-item { background: white; padding: 14px 18px; }
+  .kf-item--wide { grid-column: span 2; }
+  .kf-item__lbl { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--grey); margin-bottom: 5px; }
+  .kf-item__val { font-family: var(--display); font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; word-break: break-word; }
+
+  /* ─── Risk signals ───────────────────────────────────────────────── */
+  .sigs-blk { margin: 0 0 48px; }
+  .sigs-hdr { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey); margin: 0 0 14px; display: flex; align-items: center; justify-content: space-between; }
+  .sigs-list { display: flex; flex-direction: column; gap: 7px; }
+  .sig { display: grid; grid-template-columns: 10px 1fr auto; gap: 14px; padding: 12px 16px; border-radius: 8px; border: 1px solid transparent; align-items: start; }
+  .sig--crit, .sig--high { background: #FEF2F2; border-color: rgba(239,68,68,0.3); }
+  .sig--medium { background: #FFFBEB; border-color: rgba(245,158,11,0.25); }
+  .sig--low    { background: #ECFDF5; border-color: rgba(16,185,129,0.2); }
+  .sig__dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 3px; flex-shrink: 0; }
+  .sig--crit .sig__dot, .sig--high .sig__dot { background: #EF4444; }
+  .sig--medium .sig__dot { background: #F59E0B; }
+  .sig--low .sig__dot    { background: #10B981; }
+  .sig__body { min-width: 0; }
+  .sig__cat { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2px; }
+  .sig--crit .sig__cat, .sig--high .sig__cat { color: #991B1B; }
+  .sig--medium .sig__cat { color: #92400E; }
+  .sig--low .sig__cat    { color: #065F46; }
+  .sig__desc { font-size: 13.5px; color: var(--ink); line-height: 1.4; }
+  .sig__detail { font-size: 12px; color: var(--grey); margin-top: 3px; }
+  .sig__badge { font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; align-self: flex-start; }
+  .sig--crit .sig__badge, .sig--high .sig__badge { background: #EF4444; color: white; }
+  .sig--medium .sig__badge { background: #F59E0B; color: white; }
+  .sig--low .sig__badge    { background: #10B981; color: white; }
+
+  /* ─── Structured data sections ───────────────────────────────────── */
+  .ss { margin: 52px 0 0; }
+  .ss__head { display: flex; align-items: baseline; gap: 16px; justify-content: space-between; padding-bottom: 14px; margin-bottom: 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .ss__title { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+  .ss__meta { font-family: var(--mono); font-size: 11.5px; color: var(--grey); }
+  .dt { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .dt th { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--grey); padding: 0 14px 12px; text-align: left; border-bottom: 2px solid var(--ink-2); white-space: nowrap; }
+  .dt td { padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink-2); line-height: 1.45; }
+  .dt tr:last-child td { border-bottom: none; }
+  .dt tbody tr:hover td { background: var(--paper); }
+  .dt a { color: var(--indigo-deep); text-decoration: none; border-bottom: 1px solid var(--indigo-line); }
+  .dt a:hover { border-bottom-color: var(--indigo); }
+  .badge { display: inline-block; font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+  .badge--clear { background: #ECFDF5; color: #065F46; }
+  .badge--warn  { background: #FFFBEB; color: #92400E; }
+  .badge--hit   { background: #FEF2F2; color: #991B1B; }
+  .badge--info  { background: var(--indigo-tint); color: var(--indigo-deep); }
+  .badge--grey  { background: var(--paper); color: var(--grey); border: 1px solid var(--line); }
+
+  /* ─── Adverse media cards ─────────────────────────────────────────── */
+  .mc-list { display: flex; flex-direction: column; gap: 10px; }
+  .mc { padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px; background: white; }
+  .mc--relevant { border-left: 3px solid #EF4444; background: #FEF2F2; border-color: rgba(239,68,68,0.3); }
+  .mc--warn { border-left: 3px solid #F59E0B; }
+  .mc__hd { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 5px; }
+  .mc__title { font-family: var(--display); font-size: 14.5px; font-weight: 600; color: var(--ink); margin: 0; line-height: 1.35; flex: 1; }
+  .mc__title a { color: inherit; text-decoration: none; }
+  .mc__title a:hover { color: var(--indigo); text-decoration: underline; }
+  .mc__domain { font-family: var(--mono); font-size: 11.5px; color: var(--grey); margin-bottom: 8px; }
+  .mc__snippet { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; }
+  .mc__foot { margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .mc__link { font-family: var(--mono); font-size: 11px; color: var(--indigo-deep); padding: 2px 8px; border-radius: 4px; background: var(--indigo-tint); text-decoration: none; }
+  .mc__link:hover { background: var(--indigo-line); }
 </style>
 </head>
 <body>
@@ -167,6 +232,9 @@
         <p class="report__sub">A research dossier prepared from public registry data, sanctions screening across OFSI, OFAC and UN consolidated lists, and adverse-media review.</p>
         <div class="report__meta" id="rep-meta"></div>
       </header>
+
+      <!-- ── Key facts bar ──────────────────────────────────────── -->
+      <div id="kf-bar" class="kf-bar" style="display:none;"></div>
 
       <section class="rv-hero">
         <div class="rv-hero__top">
@@ -205,7 +273,37 @@
         </div>
       </section>
 
+      <!-- ── Risk signals ───────────────────────────────────────── -->
+      <div id="signals-blk" class="sigs-blk" style="display:none;"></div>
+
       <article class="narr" id="narrative"></article>
+
+      <!-- ── Trustees ───────────────────────────────────────────── -->
+      <section id="people-ss" class="ss" style="display:none;">
+        <div class="ss__head">
+          <h2 class="ss__title" id="people-ss-title"></h2>
+          <span class="ss__meta" id="people-ss-meta"></span>
+        </div>
+        <div id="people-ss-body"></div>
+      </section>
+
+      <!-- ── Adverse media ─────────────────────────────────────── -->
+      <section id="media-ss" class="ss" style="display:none;">
+        <div class="ss__head">
+          <h2 class="ss__title">Adverse media screening</h2>
+          <span class="ss__meta" id="media-ss-meta"></span>
+        </div>
+        <div id="media-ss-body" class="mc-list"></div>
+      </section>
+
+      <!-- ── Sanctions screening results ───────────────────────── -->
+      <section id="sanctions-ss" class="ss" style="display:none;">
+        <div class="ss__head">
+          <h2 class="ss__title">Sanctions screening results</h2>
+          <span class="ss__meta" id="sanctions-ss-meta"></span>
+        </div>
+        <div id="sanctions-ss-body"></div>
+      </section>
 
       <!-- Financial trend (Chart.js) — multi-year if available -->
       <section id="financial-section" style="display:none; margin: 56px 0 0; padding: 28px 32px; background: white; border: 1px solid var(--line); border-radius: 12px;">
@@ -561,6 +659,12 @@ function render(bundle) {
     renderFinancialChart(finData);
   }
 
+  renderKeyFacts(bundle);
+  renderRiskSignals(rs);
+  renderPeople(bundle);
+  renderAdverseMedia(bundle);
+  renderSanctionsSection(bundle);
+
   // TOC scroll-sync
   const obs = new IntersectionObserver(entries => {
     entries.forEach(entry => {
@@ -798,6 +902,349 @@ function formatGBP(v, prefix = '£', short = false) {
     return prefix + n.toFixed(0);
   }
   return prefix + n.toLocaleString('en-GB', { maximumFractionDigits: 0 });
+}
+
+// ─── Key facts bar ────────────────────────────────────────────────────
+function renderKeyFacts(bundle) {
+  const el = document.getElementById('kf-bar');
+  if (!el) return;
+  const isCompany = !!bundle.company_number;
+  const items = [];
+
+  if (isCompany) {
+    const p = bundle.state?.company_check?.profile || {};
+    const cc = bundle.state?.company_check || {};
+    if (p.status) items.push({ lbl: 'Status', val: p.status, badge: p.status === 'active' ? 'clear' : 'warn' });
+    if (p.date_of_creation) items.push({ lbl: 'Incorporated', val: p.date_of_creation.slice(0, 10) });
+    if (p.type) items.push({ lbl: 'Type', val: p.type });
+    const sic = (p.sic_codes || []).slice(0, 2).join(' · ');
+    if (sic) items.push({ lbl: 'SIC codes', val: sic });
+    const age = cc.company_age;
+    if (age?.years !== undefined) items.push({ lbl: 'Age', val: age.years + (age.years === 1 ? ' year' : ' years') });
+    const ro = p.registered_office || {};
+    const addr = [ro.address_line_1, ro.locality, ro.postal_code].filter(Boolean).join(', ');
+    if (addr) items.push({ lbl: 'Registered office', val: addr, wide: true });
+  } else {
+    const cd = bundle.state?.charity_data || {};
+    const statusLabel = cd.reg_status === 'R' ? 'Registered' : cd.reg_status === 'RM' ? 'Removed' : (cd.reg_status || '—');
+    items.push({ lbl: 'Status', val: statusLabel, badge: cd.reg_status === 'R' ? 'clear' : 'warn' });
+    if (cd.date_of_registration) items.push({ lbl: 'Registered', val: cd.date_of_registration.slice(0, 10) });
+    if (cd.charity_type) items.push({ lbl: 'Type', val: cd.charity_type });
+    if (cd.latest_income) items.push({ lbl: 'Latest income', val: '£' + Number(cd.latest_income).toLocaleString('en-GB') });
+    if (cd.latest_expenditure) items.push({ lbl: 'Latest expenditure', val: '£' + Number(cd.latest_expenditure).toLocaleString('en-GB') });
+    const numTrustees = cd.num_trustees || (bundle.state?.trustees || []).length;
+    if (numTrustees) items.push({ lbl: 'Trustees', val: numTrustees });
+    if (cd.employees) items.push({ lbl: 'Employees', val: Number(cd.employees).toLocaleString() });
+    if (cd.volunteers) items.push({ lbl: 'Volunteers', val: Number(cd.volunteers).toLocaleString() });
+    const addr = cd.address;
+    if (addr && typeof addr === 'string') items.push({ lbl: 'Address', val: addr, wide: true });
+    else if (addr && typeof addr === 'object') {
+      const a = Object.values(addr).filter(Boolean).join(', ');
+      if (a) items.push({ lbl: 'Address', val: a, wide: true });
+    }
+    if (cd.website) items.push({ lbl: 'Website', val: cd.website, link: cd.website });
+  }
+
+  if (!items.length) return;
+  el.style.display = 'grid';
+  el.innerHTML = items.map(item => `
+    <div class="kf-item${item.wide ? ' kf-item--wide' : ''}">
+      <div class="kf-item__lbl">${escape(item.lbl)}</div>
+      <div class="kf-item__val">${item.badge
+        ? `<span class="badge badge--${item.badge}">${escape(String(item.val))}</span>`
+        : item.link
+          ? `<a href="${escape(item.link)}" target="_blank" rel="noopener">${escape(String(item.val))}</a>`
+          : escape(String(item.val || '—'))
+      }</div>
+    </div>
+  `).join('');
+}
+
+// ─── Risk signals ─────────────────────────────────────────────────────
+function renderRiskSignals(rs) {
+  const el = document.getElementById('signals-blk');
+  if (!el) return;
+  const signals = (rs?.signals || []).filter(s => s && s.description);
+  if (!signals.length) return;
+
+  const sevOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+  const sorted = [...signals].sort((a, b) =>
+    (sevOrder[(a.severity || 'low').toLowerCase()] ?? 9) -
+    (sevOrder[(b.severity || 'low').toLowerCase()] ?? 9)
+  );
+  const highCrit = sorted.filter(s => ['critical', 'high'].includes((s.severity || '').toLowerCase())).length;
+  const med = sorted.filter(s => (s.severity || '').toLowerCase() === 'medium').length;
+
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="sigs-hdr">
+      <span>Risk signals · ${sorted.length} detected</span>
+      <span style="font-weight:400; color:${highCrit ? '#991B1B' : 'var(--grey)'}">
+        ${[highCrit ? `${highCrit} high/critical` : '', med ? `${med} medium` : ''].filter(Boolean).join(' · ')}
+      </span>
+    </div>
+    <div class="sigs-list">
+      ${sorted.map(sig => {
+        const sev = (sig.severity || 'low').toLowerCase();
+        const cls = sev === 'critical' ? 'crit' : (sev === 'high' ? 'high' : sev === 'medium' ? 'medium' : 'low');
+        const detail = sig.detail || sig.evidence || '';
+        return `
+          <div class="sig sig--${cls}">
+            <div class="sig__dot"></div>
+            <div class="sig__body">
+              <div class="sig__cat">${escape(sig.category || 'General')}</div>
+              <div class="sig__desc">${escape(sig.description || '')}</div>
+              ${detail ? `<div class="sig__detail">${escape(detail)}</div>` : ''}
+            </div>
+            <span class="sig__badge">${escape(sig.severity || sev)}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ─── Trustees / Directors ──────────────────────────────────────────────
+function renderPeople(bundle) {
+  const isCompany = !!bundle.company_number;
+  const el = document.getElementById('people-ss');
+  const titleEl = document.getElementById('people-ss-title');
+  const metaEl = document.getElementById('people-ss-meta');
+  const bodyEl = document.getElementById('people-ss-body');
+  if (!el || !bodyEl) return;
+
+  let rows = '';
+
+  if (isCompany) {
+    const directors = bundle.state?.company_check?.director_analysis?.directors || [];
+    if (!directors.length) return;
+    if (titleEl) titleEl.textContent = 'Directors & officers';
+    if (metaEl) metaEl.textContent = `${directors.length} records · Companies House`;
+    rows = directors.map(d => {
+      const name = escape(d.name || '—');
+      const appointed = escape((d.appointed_on || '').slice(0, 10) || '—');
+      const role = escape(d.role || 'Director');
+      const nat = escape(d.nationality || '—');
+      const dissolved = d.dissolved_companies || 0;
+      const appts = d.other_active_appointments || 0;
+      const flags = d.flags || [];
+      const dissolvBadge = dissolved >= 3
+        ? `<span class="badge badge--warn">${dissolved} dissolved</span> `
+        : dissolved > 0 ? `<span class="badge badge--grey">${dissolved} dissolved</span> ` : '';
+      const flagBadges = flags.slice(0, 2).map(f =>
+        `<span class="badge badge--warn">${escape(String(f).slice(0, 30))}</span>`
+      ).join(' ');
+      return `<tr>
+        <td><strong>${name}</strong><br/><span style="color:var(--grey);font-size:12px;">${role}</span></td>
+        <td>${appointed}</td>
+        <td>${nat}</td>
+        <td>${dissolvBadge}${flagBadges || (appts > 0 ? `${appts} other` : '<span style="color:var(--grey);">—</span>')}</td>
+      </tr>`;
+    }).join('');
+    bodyEl.innerHTML = `<table class="dt"><thead><tr>
+      <th>Name</th><th>Appointed</th><th>Nationality</th><th>Notes</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+  } else {
+    const trustees = bundle.state?.trustees || [];
+    const appts = bundle.state?.trustee_appointments || {};
+    const adverseTrustees = bundle.state?.adverse_trustees || {};
+    if (!trustees.length) return;
+    if (titleEl) titleEl.textContent = 'Trustees';
+    if (metaEl) metaEl.textContent = `${trustees.length} trustees · Charity Commission`;
+    rows = trustees.map(name => {
+      const appt = appts[name] || {};
+      const appointed = (appt.appointed_on || appt.date_of_appointment || '').slice(0, 10);
+      const role = appt.role || appt.officer_role || 'Trustee';
+      const relevantHits = (adverseTrustees[name] || []).filter(r => r._relevant).length;
+      const mediaFlag = relevantHits > 0
+        ? `<span class="badge badge--warn">${relevantHits} adverse media result${relevantHits > 1 ? 's' : ''}</span>`
+        : '';
+      return `<tr>
+        <td><strong>${escape(name)}</strong></td>
+        <td>${escape(role)}</td>
+        <td>${escape(appointed) || '<span style="color:var(--grey);">—</span>'}</td>
+        <td>${mediaFlag || '<span style="color:var(--grey);">—</span>'}</td>
+      </tr>`;
+    }).join('');
+    bodyEl.innerHTML = `<table class="dt"><thead><tr>
+      <th>Trustee name</th><th>Role</th><th>Appointed</th><th>Flags</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  el.style.display = 'block';
+}
+
+// ─── Adverse media cards ───────────────────────────────────────────────
+function renderAdverseMedia(bundle) {
+  const isCompany = !!bundle.company_number;
+  const el = document.getElementById('media-ss');
+  const metaEl = document.getElementById('media-ss-meta');
+  const bodyEl = document.getElementById('media-ss-body');
+  if (!el || !bodyEl) return;
+
+  const raw = isCompany
+    ? (bundle.state?.company_check?.adverse_media || bundle.state?.adverse_org || [])
+    : (bundle.state?.adverse_org || []);
+
+  const allItems = (raw || []).filter(a => a && a.title && a.url && !a._error);
+  if (!allItems.length) return;
+
+  const relevant = allItems.filter(a => a._relevant);
+  const screened = allItems.filter(a => !a._relevant).slice(0, 8);
+
+  if (metaEl) metaEl.textContent =
+    `${relevant.length} flagged relevant · ${allItems.length} total screened`;
+
+  const mkCard = (a, isRel) => {
+    let domain = '';
+    try { domain = new URL(a.url).hostname.replace(/^www\./, ''); } catch {}
+    const snippet = (a.content || '').slice(0, 300);
+    const cls = isRel ? 'mc mc--relevant' : 'mc';
+    return `
+      <div class="${cls}">
+        <div class="mc__hd">
+          <h3 class="mc__title">
+            <a href="${escape(a.url)}" target="_blank" rel="noopener noreferrer">${escape(a.title)}</a>
+          </h3>
+          ${isRel
+            ? '<span class="badge badge--hit">Relevant</span>'
+            : '<span class="badge badge--grey">Screened out</span>'}
+        </div>
+        ${domain ? `<div class="mc__domain">${escape(domain)}</div>` : ''}
+        ${snippet ? `<div class="mc__snippet">${escape(snippet)}${(a.content || '').length > 300 ? '…' : ''}</div>` : ''}
+        <div class="mc__foot">
+          <a href="${escape(a.url)}" target="_blank" rel="noopener noreferrer" class="mc__link">View source →</a>
+        </div>
+      </div>
+    `;
+  };
+
+  bodyEl.innerHTML = [...relevant, ...screened].slice(0, 20).map(a => mkCard(a, a._relevant)).join('');
+
+  // Trustee adverse media (charity only)
+  if (!isCompany) {
+    const adverseTrustees = bundle.state?.adverse_trustees || {};
+    const trusteeHits = Object.entries(adverseTrustees)
+      .filter(([, results]) => (results || []).some(r => r._relevant));
+    if (trusteeHits.length) {
+      const tBlock = `
+        <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--line);">
+          <div style="font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--grey);margin-bottom:16px;">
+            Trustee-level adverse media
+          </div>
+          ${trusteeHits.map(([name, results]) => {
+            const rel = (results || []).filter(r => r._relevant);
+            return `<div style="margin-bottom:20px;">
+              <div style="font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;">
+                ${escape(name)}
+                <span class="badge badge--warn" style="margin-left:8px;">${rel.length} relevant result${rel.length > 1 ? 's' : ''}</span>
+              </div>
+              ${rel.slice(0, 3).map(r => mkCard(r, true)).join('')}
+            </div>`;
+          }).join('')}
+        </div>
+      `;
+      bodyEl.innerHTML += tBlock;
+    }
+  }
+  el.style.display = 'block';
+}
+
+// ─── Sanctions screening results ──────────────────────────────────────
+function renderSanctionsSection(bundle) {
+  const isCompany = !!bundle.company_number;
+  const el = document.getElementById('sanctions-ss');
+  const metaEl = document.getElementById('sanctions-ss-meta');
+  const bodyEl = document.getElementById('sanctions-ss-body');
+  if (!el || !bodyEl) return;
+
+  const sc = isCompany
+    ? (bundle.state?.sanctions_screening || bundle.state?.company_check?.sanctions_screening || {})
+    : (bundle.state?.sanctions_screening || {});
+
+  const fatf = isCompany
+    ? (bundle.state?.company_check?.fatf_screening || {})
+    : (bundle.state?.fatf_org_screen || {});
+
+  const providers = sc.providers || [];
+  if (!providers.length && !fatf.risk_level) return;
+
+  const entityHits = sc.entity || [];
+  const trusteeMap = sc.trustees || {};
+  const allTrusteeHits = Object.values(trusteeMap).flat();
+  const totalHits = entityHits.length + allTrusteeHits.length;
+
+  if (metaEl) metaEl.textContent = providers.length
+    ? `${providers.join(' · ')} · ${totalHits === 0 ? 'all clear' : totalHits + ' potential hit(s)'}`
+    : 'FATF predicate screening only';
+
+  const entityName = bundle.entity_name || 'Subject entity';
+
+  const mkResult = (hits) => hits.length === 0
+    ? '<span class="badge badge--clear">Clear</span>'
+    : hits.map(h => `<span class="badge badge--hit">${escape(h.source || h.list || 'HIT')}</span>`).join(' ');
+
+  const mkMatched = (hits) => hits.length === 0 ? '<span style="color:var(--grey);">—</span>'
+    : hits.map(h => escape(h.matched_alias || h.primary_name || h.queried_name || '')).filter(Boolean).join('<br/>') || '<span style="color:var(--grey);">—</span>';
+
+  let tableRows = '';
+  if (providers.length) {
+    tableRows += `<tr>
+      <td><strong>${escape(entityName)}</strong></td>
+      <td>Entity</td>
+      <td>${mkResult(entityHits)}</td>
+      <td>${mkMatched(entityHits)}</td>
+    </tr>`;
+    const people = isCompany
+      ? (bundle.state?.company_check?.director_analysis?.directors || []).map(d => d.name).filter(Boolean)
+      : (bundle.state?.trustees || []);
+    people.forEach(name => {
+      const hits = trusteeMap[name] || [];
+      tableRows += `<tr>
+        <td>${escape(name)}</td>
+        <td>Person</td>
+        <td>${mkResult(hits)}</td>
+        <td>${mkMatched(hits)}</td>
+      </tr>`;
+    });
+  }
+
+  const fatfHtml = (() => {
+    if (!fatf.risk_level) return '';
+    const lvlClass = fatf.risk_level === 'High' ? 'badge--hit' :
+                     fatf.risk_level === 'Medium' ? 'badge--warn' :
+                     fatf.risk_level === 'Low' ? 'badge--clear' : 'badge--grey';
+    const cats = (fatf.fatf_categories_detected || []).slice(0, 6);
+    return `<div style="margin-top:${tableRows ? '20px' : '0'}; padding:16px 18px; border:1px solid var(--line); border-radius:8px; background:var(--paper);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--grey);">FATF Predicate Screening</span>
+        <span class="badge ${lvlClass}">${escape(fatf.risk_level)}</span>
+        ${fatf.is_match ? '<span class="badge badge--hit">Match detected</span>' : ''}
+      </div>
+      <p style="font-size:13.5px;color:var(--ink-2);line-height:1.55;margin:0 0 ${cats.length ? '12px' : '0'};">${escape(fatf.summary || 'No summary available.')}</p>
+      ${cats.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;">${cats.map(c => `<span class="badge badge--grey">${escape(c)}</span>`).join('')}</div>` : ''}
+    </div>`;
+  })();
+
+  bodyEl.innerHTML = `
+    ${tableRows ? `
+      <div style="margin-bottom:${fatfHtml ? '20px' : '0'};">
+        <div style="margin-bottom:14px;">
+          ${totalHits === 0
+            ? `<span class="badge badge--clear">All subjects clear</span> <span style="font-size:13px;color:var(--grey);margin-left:8px;">Screened against ${providers.join(', ')} consolidated lists</span>`
+            : `<span class="badge badge--hit">${totalHits} potential hit${totalHits > 1 ? 's' : ''} — manual verification required</span>`}
+        </div>
+        <table class="dt">
+          <thead><tr><th>Subject</th><th>Type</th><th>Result</th><th>Matched entry</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+        ${totalHits > 0 ? `<div style="margin-top:12px;padding:12px 16px;background:#FEF2F2;border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:13px;color:#991B1B;line-height:1.5;">
+          <strong>Action required:</strong> Fuzzy-match screening may produce false positives. Verify each potential hit against the official list entry before taking any compliance action.
+        </div>` : ''}
+      </div>
+    ` : ''}
+    ${fatfHtml}
+  `;
+  el.style.display = 'block';
 }
 </script>
 </body>

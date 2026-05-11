@@ -12,8 +12,7 @@ When UBO tracing hits a foreign entity, this module:
 import os
 import re
 from typing import Optional
-from api_clients.tavily_search import search_news, search_web
-from api_clients.serper_api import search_serper
+from api_clients.serper_search import serper_search_news as search_news, serper_search_web as search_serper, serper_search_web as search_web
 
 def research_foreign_entity(
     entity_name: str,
@@ -73,13 +72,14 @@ def _search_adverse_media(entity_name: str, country: str) -> list:
         
         if results:
             for result in results:
+                snippet = result.get("content", result.get("snippet", ""))
                 news_findings.append({
                     "headline": result.get("title", ""),
-                    "source": result.get("source", ""),
+                    "source": result.get("_source", ""),
                     "date": result.get("date", ""),
-                    "url": result.get("url", ""),
-                    "snippet": result.get("snippet", ""),
-                    "sentiment": _analyze_sentiment(result.get("snippet", "")),
+                    "url": result.get("url", result.get("link", "")),
+                    "snippet": snippet,
+                    "sentiment": _analyze_sentiment(snippet),
                     "severity": _assess_severity(result.get("title", ""))
                 })
         
@@ -117,21 +117,22 @@ def _perform_web_osint(entity_name: str, country: str) -> dict:
         
         if domain_results:
             for result in domain_results:
-                url = result.get("link", "")
-                if url and not "wikipedia" in url:
+                url = result.get("url", result.get("link", ""))
+                snippet = result.get("content", result.get("snippet", ""))
+                if url and "wikipedia" not in url:
                     web_intel["domain_found"] = True
                     web_intel["domain_url"] = url
-                    
+
                     # Extract domain
                     domain_match = re.search(r'https?://(?:www\.)?([a-zA-Z0-9.-]+)', url)
                     if domain_match:
                         web_intel["domain"] = domain_match.group(1)
-                    
+
                     # Check for HTTPS
                     web_intel["https_valid"] = url.startswith("https://")
-                    
+
                     # Credibility scoring
-                    web_intel["website_credibility"] = _score_domain_credibility(url, result.get("snippet", ""))
+                    web_intel["website_credibility"] = _score_domain_credibility(url, snippet)
         
         # Search for social media presence
         social_query = f'{entity_name} linkedin OR twitter OR facebook site:linkedin.com OR site:twitter.com'
@@ -140,9 +141,9 @@ def _perform_web_osint(entity_name: str, country: str) -> dict:
         if social_results:
             web_intel["social_media_presence"] = [
                 {
-                    "platform": _extract_platform(r.get("link", "")),
-                    "url": r.get("link", ""),
-                    "description": r.get("snippet", "")
+                    "platform": _extract_platform(r.get("url", r.get("link", ""))),
+                    "url": r.get("url", r.get("link", "")),
+                    "description": r.get("content", r.get("snippet", ""))
                 }
                 for r in social_results
             ]
@@ -168,7 +169,7 @@ def _identify_beneficial_owners(
         mgmt_results = search_serper(mgmt_query, max_results=5)
         
         for result in mgmt_results:
-            snippet = result.get("snippet", "")
+            snippet = result.get("content", result.get("snippet", ""))
             
             # Extract names (simple pattern matching)
             name_patterns = re.findall(r'(?:CEO|Founder|Director|Managing Director|Owner)[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)', snippet)

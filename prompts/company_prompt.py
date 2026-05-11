@@ -289,6 +289,13 @@ ABSOLUTE RULES (violation = report failure):
 7. If any category shows "unknown" it means the search API FAILED. Mark it as "⚠️ UNKNOWN — SYSTEM ERROR (data unavailable due to technical error)" in the table. NEVER say "No matches found" or "No issues detected" for failed searches.
 8. RISK SEVERITY RULE: Risk is determined by the MOST SEVERE single flag, NOT the average.
 
+DEPTH RULES (violation = thin report):
+9. DEPTH IS THE PRODUCT: Every section must contain substantive analytical prose, not a summary of data. The reader paid £15 for judgment backed by evidence.
+10. MINIMUM LENGTH: Write a minimum of 300–500 words per section. A full report under 2,500 words is incomplete.
+11. MANDATORY TABLES: (a) Directors table in §02 — every active director with role, appointed date, nationality, dissolved companies, and any flag; (b) Financial history table in §03 — every available filing year with turnover, profit/loss, and net assets; (c) Sanctions screening table in §04 — company and each director with OFSI / OFAC / UN results; (d) Risk matrix table in §06 — all pre-computed categories.
+12. ADVERSE MEDIA CITATIONS — MANDATORY: Every confirmed adverse media hit (where `_relevant` is true) MUST include the source URL as a clickable hyperlink: [Article headline](URL). Never describe an adverse finding without its URL.
+13. TARGET LENGTH: 3,000–5,000 words total report. Err on the side of more analysis.
+
 # Report Structure & Voice
 
 Write this report as a senior analyst at a research firm — register: Financial Times / Bloomberg Intelligence. Declarative sentences, active voice, no hedging legalese. The reader paid £15; they want a clear point of view backed by citable evidence, not a regulatory submission.
@@ -312,7 +319,7 @@ Tone example (do not copy verbatim, write fresh):
 
 OPENING BOLD FINDING (single sentence in serif): a one-line description of what this entity actually does — not "is a company registered with…", but what they DO. Derive it from `actual_industry`, the website signals, and SIC codes together.
 
-Then a single tight paragraph covering: legal name, status, age (with date of incorporation), registered office (flag a virtual office or mass-address only if it's materially relevant), industry / sector (use `actual_industry`, paired with `compliance_guidance.industry.regime_label`).
+Then two or more paragraphs covering: legal name, status, age (with date of incorporation), registered office with commentary on whether it is a virtual address or mass-address (and why that matters contextually), and industry / sector using `actual_industry` paired with `compliance_guidance.industry.regime_label`. Describe the nature of the business in enough depth that a reader unfamiliar with the sector understands what the entity actually does, who its customers are likely to be, and what the typical operating model is.
 
 After the prose, render the compliance guidance block exactly as given:
 
@@ -344,7 +351,7 @@ If the entity's status is dissolved/liquidated or there is a verified sanctions 
 
 OPENING BOLD FINDING: the business model in one phrase — "Recurring B2B SaaS subscription billing", "One-off B2C consumer e-commerce", "Project-based B2B professional services."
 
-Then one paragraph covering: business model (B2B / B2C / Mixed), revenue pattern (Recurring / One-off / Mixed), financial trajectory if accounts data is available (turnover, profit, latest filing year), and any chargeback or operational exposure observed.
+Then three or more paragraphs covering: business model (B2B / B2C / Mixed) with explanation of the customer relationship and how revenue is collected; revenue pattern (Recurring / One-off / Mixed) and what that implies for chargeback exposure; and the full financial trajectory — render a year-by-year table with turnover, profit/loss, and net assets for every filing year available in the accounts data. Assess the trend: is the business growing, shrinking, or erratic? Are margins compressing? Is net asset position improving? A financial history without interpretation is not analysis.
 
 After the paragraph, a short sub-finding lead-in (NOT a sub-heading — use bold inline):
 
@@ -377,7 +384,7 @@ Render the website OSINT block exactly as given:
 
 {website_block}
 
-After the block, a short analyst paragraph cross-referencing on-site evidence against the registered identity: site title / og:site_name vs legal name; on-site postcode vs registered office; social handle credibility (age, follower counts) for the claimed size. If the site is HTTPS-broken, <1 year old, or has no policy pages, surface that as a finding.
+After the block, write a substantive analyst paragraph (minimum 150 words) cross-referencing on-site evidence against the registered identity: site title / og:site_name vs legal name; on-site postcode vs registered office; social handle credibility (follower counts assessed against the claimed company size and age). Interpret what you find — a company claiming £5m revenue with a 6-month-old website and no policy pages is a materially different risk profile to an established firm with consistent public identity. If the site is HTTPS-broken, under one year old, or has no compliance pages, surface that as a finding with analytical context, not just a note.
 
 Then a short adverse-media sub-finding (NOT a sub-heading):
 
@@ -387,7 +394,7 @@ Then a short adverse-media sub-finding (NOT a sub-heading):
 
 OPENING BOLD FINDING: the risk pattern in one phrase — "Aggregated risk is LOW; the only signal of note is operational." or "Risk concentrates in operational and governance — the verifiable financial profile is sound."
 
-Then a short paragraph (3-4 sentences MAX) describing the risk distribution. Do NOT recite every category. Describe the PATTERN — where the signals concentrate, what's driving the overall picture.
+Then a substantive analytical paragraph (minimum 150 words) describing the risk distribution. Do NOT recite categories one by one. Describe the PATTERN — where signals concentrate, how they interact, and what they collectively imply about the entity's risk profile. Explain why specific findings are more or less material given the company's size, industry, and operating model. A generic risk summary is not acceptable.
 
 Render the per-category detail (the score visual is rendered separately above; this table is the breakdown):
 

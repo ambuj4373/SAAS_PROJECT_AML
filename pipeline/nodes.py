@@ -739,6 +739,14 @@ def run_company_check_node(state: dict) -> dict:
 
         updates["company_check"] = result
 
+        # Populate entity_name + trustees so screen_sanctions node can run
+        company_name = (result.get("profile") or {}).get("company_name") or ""
+        updates["entity_name"] = company_name
+        directors = (result.get("director_analysis") or {}).get("directors") or []
+        updates["trustees"] = [
+            d.get("name") for d in directors if d.get("name")
+        ]
+
         # Add FCA details to company_check if present
         fca_details = state.get("fca_details")
         if fca_details:

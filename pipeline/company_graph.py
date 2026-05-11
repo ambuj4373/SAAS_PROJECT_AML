@@ -1,7 +1,7 @@
 """
 pipeline/company_graph.py — LangGraph company sense-check pipeline.
 
-3-node graph: data collection → risk scoring → prompt generation.
+4-node graph: data collection → sanctions screening → risk scoring → prompt generation.
 """
 
 from __future__ import annotations
@@ -32,12 +32,14 @@ COMPANY_STATE_DEFAULTS: dict[str, Any] = {
 
 from pipeline.nodes import (
     run_company_check_node,
+    screen_sanctions,
     compute_company_risk_score,
     generate_company_prompt,
 )
 
 COMPANY_NODES = [
     ("company_check", run_company_check_node),
+    ("screen_sanctions", screen_sanctions),
     ("company_risk_score", compute_company_risk_score),
     ("generate_prompt", generate_company_prompt),
 ]
@@ -45,7 +47,7 @@ COMPANY_NODES = [
 COMPANY_STAGE_LABELS = {
     "company_check": {
         "icon": "📡",
-        "step": "1/3",
+        "step": "1/4",
         "title": "Retrieving company records & OSINT",
         "desc": (
             "Fetching full Companies House profile, officers, "
@@ -54,9 +56,20 @@ COMPANY_STAGE_LABELS = {
         ),
         "est_time": "~30s",
     },
+    "screen_sanctions": {
+        "icon": "🔍",
+        "step": "2/4",
+        "title": "Sanctions & watchlist screening",
+        "desc": (
+            "Screening the company and each director against "
+            "OFSI (UK Treasury), OFAC (US Treasury), and UN "
+            "consolidated sanctions lists."
+        ),
+        "est_time": "~5s",
+    },
     "company_risk_score": {
         "icon": "📊",
-        "step": "2/3",
+        "step": "3/4",
         "title": "Risk scoring",
         "desc": (
             "Computing numerical risk score (0–100) across "
@@ -67,7 +80,7 @@ COMPANY_STAGE_LABELS = {
     },
     "generate_prompt": {
         "icon": "🤖",
-        "step": "3/3",
+        "step": "4/4",
         "title": "Building analysis prompt",
         "desc": (
             "Assembling all intelligence and pre-computed verdicts "
