@@ -53,6 +53,7 @@ CHARITY_STATE_DEFAULTS: dict[str, Any] = {
     "social_links": {},
     "hrcob_core_controls": {},
     "partnership_results": [],
+    "fca_details": None,
     "fatf_org_screen": None,
     "fatf_trustee_screens": {},
     "search_failures": [],

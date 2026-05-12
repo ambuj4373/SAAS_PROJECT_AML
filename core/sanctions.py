@@ -29,6 +29,7 @@ Matching strategy
 from __future__ import annotations
 
 import logging
+import re
 import threading
 import unicodedata
 from abc import ABC, abstractmethod
@@ -97,12 +98,19 @@ class SanctionsHit:
 # ─── Name normalisation ────────────────────────────────────────────────────
 
 def _normalise(name: str) -> str:
-    """Case-fold, strip accents, collapse whitespace."""
+    """Case-fold, strip accents, strip punctuation, collapse whitespace.
+
+    Punctuation is replaced with a space so compound tokens like "AL-ZAHRANI"
+    split into two matchable tokens ("al", "zahrani") rather than one opaque
+    token ("al-zahrani,"). This also ensures trailing commas from list-format
+    names like "PUTIN, Vladimir" don't create "putin," as a token.
+    """
     if not name:
         return ""
     nfkd = unicodedata.normalize("NFKD", name)
     no_accents = "".join(c for c in nfkd if not unicodedata.combining(c))
-    return " ".join(no_accents.casefold().split())
+    no_punct = re.sub(r"[^\w\s]", " ", no_accents)
+    return " ".join(no_punct.casefold().split())
 
 
 # ─── Provider interface ────────────────────────────────────────────────────
@@ -212,16 +220,16 @@ class OfsiProvider(SanctionsProvider):
         for matched_norm, score, idx in results:
             _, original_name, entry = filtered[idx]
 
-            # Post-filter: reject single-word-alias false positives.
-            # If the indexed alias has FEWER distinctive tokens than the
-            # query, require at least 60% of the query's tokens to appear
-            # in the alias. This kills "Yaseer Ahmed" → "AHMED" while
-            # keeping "Putin" → "Vladimir PUTIN" (alias has more tokens
-            # than query, so the rule doesn't fire).
+            # Post-filter: require ≥60% of query tokens to appear in the alias.
+            # Applied unconditionally — the previous version only fired when
+            # the alias was shorter than the query, letting equal-length names
+            # that share only a surname (e.g. "AAMINAH AHMED" → "AFRAAH, Ahmed")
+            # slip through. Single-token queries (one-word names) are unaffected
+            # because 1/1 = 100% ≥ 60%.
             a_tokens = {t for t in matched_norm.split() if len(t) >= 2}
-            if a_tokens and len(a_tokens) < len(q_tokens):
+            if q_tokens:
                 common = q_tokens & a_tokens
-                if not q_tokens or len(common) / len(q_tokens) < 0.6:
+                if len(common) / len(q_tokens) < 0.6:
                     continue
 
             # Dedupe by Group ID — keep highest-scoring alias only
@@ -336,11 +344,11 @@ class OfacProvider(SanctionsProvider):
         for matched_norm, score, idx in results:
             _, original_name, entry = filtered[idx]
 
-            # Same false-positive guard as OfsiProvider
+            # Same false-positive guard as OfsiProvider (see comment there)
             a_tokens = {t for t in matched_norm.split() if len(t) >= 2}
-            if a_tokens and len(a_tokens) < len(q_tokens):
+            if q_tokens:
                 common = q_tokens & a_tokens
-                if not q_tokens or len(common) / len(q_tokens) < 0.6:
+                if len(common) / len(q_tokens) < 0.6:
                     continue
 
             if entry.ent_num in seen_ents:
@@ -455,10 +463,11 @@ class UnProvider(SanctionsProvider):
         for matched_norm, score, idx in results:
             _, original_name, entry = filtered[idx]
 
+            # Same false-positive guard as OfsiProvider (see comment there)
             a_tokens = {t for t in matched_norm.split() if len(t) >= 2}
-            if a_tokens and len(a_tokens) < len(q_tokens):
+            if q_tokens:
                 common = q_tokens & a_tokens
-                if not q_tokens or len(common) / len(q_tokens) < 0.6:
+                if len(common) / len(q_tokens) < 0.6:
                     continue
 
             if entry.data_id in seen_ids:
@@ -615,7 +624,7 @@ def screen_against_providers(
     schema: Schema,
     providers: Iterable[SanctionsProvider] | None = None,
     high_threshold: float = 88.0,
-    possible_threshold: float = 75.0,
+    possible_threshold: float = 80.0,
 ) -> list[SanctionsHit]:
     """Run a name through every provider and return the merged hits."""
     if providers is None:

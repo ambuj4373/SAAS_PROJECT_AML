@@ -10,6 +10,15 @@ import json
 import re
 import ssl
 
+# Inject system certificate store so Python trusts the same CAs as curl/browsers.
+# Required when a VPN or corporate proxy performs SSL inspection — without this,
+# every outbound HTTPS call fails with CERTIFICATE_VERIFY_FAILED.
+try:
+    import truststore
+    truststore.inject_into_ssl()
+except ImportError:
+    pass  # truststore optional; pip install truststore to enable
+
 import httpx
 from dotenv import load_dotenv
 from google import genai

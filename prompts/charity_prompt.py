@@ -75,7 +75,7 @@ CRITICAL INSTRUCTIONS:
 - Maintain sector-neutral, evidence-based language throughout. Avoid assumptions about charity type, size, or mission.
 - WRITE FOR ANALYSTS — DEPTH IS THE PRODUCT: Each section must deliver substantive analytical prose. Thin sections are a failure mode. Do NOT summarise when you can analyse. The reader paid £15 for judgment backed by evidence, not a bullet-point printout.
 - DEPTH REQUIREMENTS: Write a minimum of 400–600 words of analytical prose per section. Surface contradictions, governance gaps, and contextual risk. Every section must leave the reader with more understanding than a bare data point. A report under 3,000 words total is incomplete.
-- MANDATORY TABLES — every report must include ALL of the following or it is incomplete: (1) Trustees table in §02 with every trustee name, role, and any flag; (2) Financial history table in §03 with year-by-year income, expenditure, and surplus/deficit for every year in the data; (3) Sanctions screening table in §04 with every screened entity and per-provider results (OFSI / OFAC / UN); (4) Policy status table in §02 with every core control area, status (Found/Partial/Not Located), and source URL.
+- MANDATORY TABLES — every report must include ALL of the following or it is incomplete: (1) Trustees table in Section 2 with every trustee name, role, and any flag; (2) Financial history table in Section 3 with year-by-year income, expenditure, and surplus/deficit for every year in the data; (3) Sanctions screening table in Section 4 with every screened entity and per-provider results (OFSI / OFAC / UN); (4) Policy status table in Section 2 with every core control area, status (Found/Partial/Not Located), and source URL.
 - ADVERSE MEDIA CITATIONS — MANDATORY: Every confirmed adverse media hit MUST include its source URL as a clickable hyperlink in the format [Article headline](URL). Never describe an adverse finding in prose without embedding its URL. If the URL field is present in the data, use it. An adverse media section without hyperlinks is a defective section.
 - TARGET LENGTH: 4,000–6,000 words total report. Err on the side of more analysis, not less.
 - CONSOLIDATE DATA LIMITATIONS: Do NOT repeat "No policies located" or "Website access restricted" in every section. Instead, state data availability limitations ONCE in a consolidated note at the start of the report, then reference it briefly where relevant (e.g. "See Data Limitations above").{risk_score_block}
@@ -262,7 +262,7 @@ DO NOT use numbered or lettered sub-headings (no "2A", "2B"). The report has sev
 
 Open with one short paragraph stating the overall position in plain English — low / medium / high risk and the ONE thing driving it. No table here; this is the elevator pitch.
 
-## §01 · What they do
+## 01 · What they do
 
 OPENING BOLD FINDING (single sentence in serif): a one-line description of what the charity actually delivers — not "is a charity registered with…", but the work they do. Derive it from the stated objects, the website, and the Trustees' Annual Report.
 
@@ -270,7 +270,7 @@ Then two to three paragraphs covering: registered status and age (with date of r
 
 Reference document-extracted partners (from `document_partners_extracted`) inline if they corroborate or extend the web-search picture.
 
-## §02 · Who runs it
+## 02 · Who runs it
 
 OPENING BOLD FINDING: a one-line summary of the trustee and governance picture — e.g. "A nine-trustee board of established sector figures; controls framework satisfactory" or "Three-trustee board with one connected party; further governance documentation recommended."
 
@@ -282,7 +282,7 @@ Narrate the trustees and the controls framework as ONE story:
 
 If `policies` data is available, mention how many of the {policy_paths_count} mandatory policy paths were discovered, but keep the policy table out of the prose — it belongs as a brief inline reference, not its own section.
 
-## §03 · How they're funded
+## 03 · How they're funded
 
 OPENING BOLD FINDING: the funding model in one phrase — "Recurring individual giving plus institutional grants" or "Predominantly trading income with a small donations tail."
 
@@ -290,18 +290,18 @@ Then three or more paragraphs covering: total income for the latest reported yea
 
 If donations include unusual rails (crypto, foreign wires from high-risk jurisdictions, anonymous gifts), state them. Otherwise omit.
 
-## §04 · What the registers say
+## 04 · What the registers say
 
 OPENING BOLD FINDING: the screening result in one phrase — "No matches across OFSI, OFAC and UN consolidated lists; no high-risk jurisdiction exposure" or "Operates in two FATF-listed jurisdictions; sanctions screening clear."
 
 Then:
-- **Sanctions screening.** State the screening date. Walk OFSI / OFAC / UN consolidated lists for the organisation AND each named trustee. If clear, say so plainly with citations. If any hit, list it with source list, designation type, and entity-resolution status (Confirmed / Plausible / No Match).
+- **Sanctions List Screening.** State the screening date. Walk OFSI / OFAC / UN consolidated lists for the organisation AND each named trustee. If clear, say so plainly with citations. If any hit, list it with source list, designation type, and entity-resolution status (Confirmed / Plausible / No Match).
 - **Country-risk exposure.** If the charity operates in jurisdictions flagged on the FATF greylist / blacklist or EU tax blacklist, list them with the specific risk indicator. Otherwise omit.
 - **Restricted activities.** Report only if findings present; otherwise omit.
 
 If any category shows `unknown` (the screening API failed), mark it as "⚠️ UNKNOWN — SYSTEM ERROR (data unavailable due to technical error)". Never say "No matches found" for a failed search.
 
-## §05 · What they say publicly
+## 05 · What they say publicly
 
 OPENING BOLD FINDING: a credibility assessment in one phrase — "Operational website with verified contact details and consistent partnership claims" or "Site is six months old; verify operational claims against filings."
 
@@ -315,7 +315,7 @@ Then a short positive-media sub-finding if relevant:
 
 **Positive media & partnerships.** If credible positive coverage or named institutional partners are present, mention them in one or two sentences. Otherwise omit this paragraph entirely.
 
-## §06 · The risk picture
+## 06 · The risk picture
 
 OPENING BOLD FINDING: the risk pattern in one phrase — "Aggregated risk is LOW; the only signal of note is geography." or "Risk concentrates in governance and country exposure; financial and screening profiles are sound."
 
@@ -323,7 +323,7 @@ Then a substantive analytical paragraph (minimum 150 words) describing the risk 
 
 Render the per-category risk matrix exactly as pre-computed by the scoring engine (the visual score hero renders separately above).
 
-## §07 · What to do next
+## 07 · What to do next
 
 OPENING BOLD FINDING: the single most important action — "Verify the structure of the overseas partner organisation before approving the next disbursement."
 

@@ -152,6 +152,116 @@
   .rv-loading { color: var(--grey); padding: 80px 0; text-align: center; font-style: italic; }
   .rv-error { background: var(--risk-high-bg); border: 1px solid rgba(239,68,68,0.3); color: #B91C1C; padding: 24px; border-radius: 8px; margin: 40px 0; font-size: 14px; line-height: 1.5; }
 
+  /* ═══════════════════════════════════════════════════
+     COMPANY REPORT — RICH UI
+     Theme: clinical precision. Indigo grid, mono-forward.
+     ═══════════════════════════════════════════════════ */
+
+  .reveal-slide {
+    opacity: 0; transform: translateY(14px);
+    transition: opacity 380ms ease, transform 380ms ease;
+  }
+  .reveal-slide.is-visible { opacity: 1; transform: none; }
+  .reveal-slide:nth-child(2) { transition-delay: 50ms; }
+  .reveal-slide:nth-child(3) { transition-delay: 100ms; }
+  .reveal-slide:nth-child(4) { transition-delay: 150ms; }
+
+  .score-ring-wrap { position: relative; width: 108px; height: 108px; flex-shrink: 0; }
+  .score-ring-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .score-ring-inner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .score-ring-inner .rnum {
+    font-family: var(--display); font-size: 34px; font-weight: 700;
+    color: var(--ink); line-height: 1;
+  }
+  .score-ring-inner .rdenom { font-family: var(--mono); font-size: 10px; color: var(--grey-2); }
+
+  /* Company narrative cards — crisper, grid-ruled, indigo accent */
+  .narr > h2, .narr > h3, .narr > h4, .narr > p, .narr > ul, .narr > ol,
+  .narr > blockquote, .narr > table { display: none; }
+
+  .narr-card {
+    position: relative; overflow: hidden;
+    border: 1px solid var(--line); border-left: 3px solid var(--line);
+    border-radius: 10px; padding: 28px 36px; margin: 0 0 12px; background: white;
+    transition: border-left-color 200ms ease, box-shadow 200ms ease;
+  }
+  .narr-card:hover { border-left-color: var(--indigo); box-shadow: 0 2px 16px rgba(61,61,220,0.07); }
+  .narr-card.risk-medium { border-left-color: #F59E0B; background: linear-gradient(105deg,#FFFDF5 0%,white 48%); }
+  .narr-card.risk-high   { border-left-color: #EF4444; background: linear-gradient(105deg,#FFF5F5 0%,white 48%); }
+  .narr-card.risk-critical { border-left-color: #7C2D12; background: linear-gradient(105deg,#FEF2F2 0%,white 48%); }
+  .narr-card::after {
+    content: attr(data-sn);
+    position: absolute; bottom: -6px; right: 14px;
+    font-family: var(--mono); font-size: 80px; font-weight: 700;
+    color: rgba(61,61,220,0.04); line-height: 1;
+    pointer-events: none; letter-spacing: -0.04em; user-select: none;
+  }
+  /* Section label */
+  .narr-card__label {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--grey-3); margin-bottom: 4px;
+    transition: color 200ms ease;
+  }
+  .narr-card:hover .narr-card__label { color: var(--indigo); }
+  .narr-card.risk-medium .narr-card__label { color: #B45309; }
+  .narr-card.risk-high   .narr-card__label { color: #991B1B; }
+  .narr-card h2 {
+    display: block !important;
+    margin-top: 0 !important; padding-bottom: 0 !important; border-bottom: none !important;
+    font-size: 19px; letter-spacing: -0.01em; font-weight: 600;
+    font-family: var(--display); color: var(--ink); margin-bottom: 0; text-transform: none;
+  }
+  .narr-card h3 { display: block !important; font-size: 22px; margin-top: 4px; margin-bottom: 12px; }
+  .narr-card h4 { display: block !important; }
+  .narr-card p  { display: block !important; }
+  .narr-card ul, .narr-card ol { display: block !important; }
+  .narr-card blockquote { display: block !important; }
+  .narr-card table { display: table !important; }
+  .narr-card__finding {
+    font-family: var(--ui); font-size: 15.5px; font-weight: 500;
+    line-height: 1.58; color: var(--ink);
+    padding: 12px 16px; margin: 10px 0 20px;
+    border-left: 3px solid var(--indigo);
+    background: var(--indigo-tint); border-radius: 0 6px 6px 0;
+  }
+
+  /* Sanctions accordion — company version (same structure, indigo palette) */
+  .sanc-list { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+  .sanc-person { border: 1px solid var(--line); border-radius: 8px; background: white; overflow: hidden; }
+  .sanc-person--possible { border-color: rgba(245,158,11,0.4); }
+  .sanc-person--high     { border-color: rgba(239,68,68,0.45); background: #FEF2F2; }
+  .sanc-person__hd {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; cursor: pointer; user-select: none;
+  }
+  .sanc-person--clear .sanc-person__hd { cursor: default; }
+  .sanc-person__dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .sanc-person--clear    .sanc-person__dot { background: #10B981; }
+  .sanc-person--possible .sanc-person__dot { background: #F59E0B; }
+  .sanc-person--high     .sanc-person__dot { background: #EF4444; }
+  .sanc-person__info { flex: 1; min-width: 0; }
+  .sanc-person__name { font-weight: 600; font-size: 13.5px; color: var(--ink); }
+  .sanc-person__sub { font-family: var(--mono); font-size: 10px; color: var(--grey); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 1px; }
+  .sanc-person__badges { display: flex; gap: 4px; flex-wrap: wrap; }
+  .sanc-person__chev { flex-shrink: 0; color: var(--grey-2); transition: transform 200ms; }
+  .sanc-person[data-open="true"] .sanc-person__chev { transform: rotate(180deg); }
+  .sanc-person__body { border-top: 1px solid var(--line); padding: 12px 16px 14px; display: none; }
+  .sanc-person[data-open="true"] .sanc-person__body { display: block; }
+  .sanc-hit-row {
+    display: grid; grid-template-columns: 1fr auto auto;
+    gap: 5px 12px; padding: 8px 0;
+    border-bottom: 1px solid var(--line-soft); align-items: start; font-size: 12.5px;
+  }
+  .sanc-hit-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .sanc-hit-row__name { font-weight: 600; color: var(--ink); line-height: 1.3; }
+  .sanc-hit-row__regime { font-size: 11px; color: var(--grey); margin-top: 2px; }
+  .sanc-hit-row__src { font-family: var(--mono); font-size: 10.5px; color: var(--grey); }
+
   /* ─── Key facts bar ──────────────────────────────────────────────── */
   .kf-bar { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 0 0 36px; }
   .kf-item { background: white; padding: 14px 18px; }
@@ -260,9 +370,21 @@
         <div class="rv-hero__top">
           <div class="risk-hero">
             <div class="risk-hero__score">
-              <div class="risk-hero__num" id="risk-num">—</div>
+              <div class="score-ring-wrap">
+                <svg viewBox="0 0 108 108" fill="none">
+                  <circle cx="54" cy="54" r="42" stroke="var(--line)" stroke-width="7"/>
+                  <circle cx="54" cy="54" r="42" id="ring-arc"
+                    stroke="var(--indigo)" stroke-width="7" stroke-linecap="round"
+                    stroke-dasharray="264" stroke-dashoffset="264"
+                    transform="rotate(-90 54 54)"
+                    style="transition:stroke-dashoffset 940ms cubic-bezier(.4,0,.2,1),stroke 300ms ease;"/>
+                </svg>
+                <div class="score-ring-inner">
+                  <span class="rnum" id="risk-num">0</span>
+                  <span class="rdenom">/ 100</span>
+                </div>
+              </div>
               <div class="col gap-12">
-                <div class="risk-hero__denom">/ 100</div>
                 <div class="risk-hero__label">Overall risk</div>
                 <div class="risk-hero__pill" id="risk-pill">—</div>
               </div>
@@ -477,10 +599,10 @@ function styleNarrativeHeadings(container) {
       h2.classList.add('narr__verdict');
       return;
     }
-    // Pull a leading "§NN ·" or "§NN -" marker into data-marker, strip from text.
-    const m = text.match(/^(§\s*\d{1,2})\s*[·\-—]?\s*(.+)$/);
+    // Strip "§NN ·" or plain "NN ·" prefix entirely — section number is stored in data-secnum
+    const m = text.match(/^(?:§\s*)?(\d{1,2})\s*[·\-—]?\s*(.+)$/);
     if (m) {
-      h2.setAttribute('data-marker', m[1].replace(/\s+/g, ' '));
+      h2.setAttribute('data-secnum', m[1]);
       h2.textContent = m[2].trim();
     }
   });
@@ -539,6 +661,16 @@ function render(bundle) {
   const rs = bundle.state?.risk_score || {};
   const score = rs.overall_score ?? 0;
   const level = (rs.overall_level || 'Low').toString();
+  // Score ring arc
+  const arc = document.getElementById('ring-arc');
+  const ringColors = { low:'#10B981', medium:'#F59E0B', high:'#EF4444', critical:'#7C2D12' };
+  const ringColor = ringColors[(level || 'low').toLowerCase().replace(/\s+/g,'')] || '#3D3DDC';
+  if (arc) {
+    arc.style.stroke = ringColor;
+    requestAnimationFrame(() => setTimeout(() => {
+      arc.style.strokeDashoffset = String(264 * (1 - Math.min(score, 100) / 100));
+    }, 80));
+  }
   countUpTo(document.getElementById('risk-num'), Math.round(score));
   countUpTo(document.getElementById('rail-num'), Math.round(score));
 
@@ -596,6 +728,7 @@ function render(bundle) {
   narrativeEl.innerHTML = marked.parse(md);
   styleNarrativeHeadings(narrativeEl);
   applyDropCap(narrativeEl);
+  wrapNarrativeSections(narrativeEl, rs);
 
   // TOC from h2 headings in narrative
   const headings = document.querySelectorAll('#narrative h1, #narrative h2');
@@ -722,6 +855,58 @@ function render(bundle) {
       history.replaceState(null, '', `#${id}`);
     }
   }));
+
+  // Scroll-reveal
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('is-visible'); revealObs.unobserve(e.target); }
+    });
+  }, { rootMargin: '0px 0px -48px 0px', threshold: 0.04 });
+  document.querySelectorAll('.reveal-slide').forEach(el => revealObs.observe(el));
+}
+
+// ─── Narrative section cards ─────────────────────────────────────────
+function wrapNarrativeSections(container, rs) {
+  if (!container) return;
+  const children = Array.from(container.childNodes);
+  if (!children.length) return;
+  const sections = [];
+  let current = null;
+  children.forEach(node => {
+    if (node.nodeName === 'H2') { current = { heading: node, nodes: [] }; sections.push(current); }
+    else if (current) { current.nodes.push(node); }
+  });
+  const sigMap = {};
+  (rs?.signals || []).forEach(s => {
+    const cat = (s.category || '').toLowerCase().replace(/[^a-z]/g, '');
+    const sev = (s.severity || '').toLowerCase();
+    if (!sigMap[cat] || sev === 'critical' || (sev === 'high' && sigMap[cat] !== 'critical')) sigMap[cat] = sev;
+  });
+  const sectionRisk = (idx) => {
+    const maps = [null, 'governance', 'financial', 'media', 'transparency', 'operational', 'geography'];
+    const cat = maps[idx] || null;
+    return cat ? (sigMap[cat] || null) : null;
+  };
+  if (!sections.length) return;
+  container.innerHTML = '';
+  sections.forEach((sec, idx) => {
+    const card = document.createElement('div');
+    card.className = 'narr-card reveal-slide';
+    card.dataset.sn = String(idx + 1).padStart(2, '0');
+    const risk = sectionRisk(idx);
+    if (risk === 'critical' || risk === 'high') card.classList.add('risk-high');
+    else if (risk === 'medium') card.classList.add('risk-medium');
+    const secNum = sec.heading.getAttribute('data-secnum') || String(idx + 1);
+    const label = document.createElement('div');
+    label.className = 'narr-card__label';
+    label.textContent = `Section ${secNum}`;
+    card.appendChild(label);
+    card.appendChild(sec.heading);
+    sec.nodes.forEach(n => card.appendChild(n));
+    const firstP = card.querySelector('p');
+    if (firstP && (firstP.textContent || '').trim().length > 80) firstP.classList.add('narr-card__finding');
+    container.appendChild(card);
+  });
 }
 
 // ─── Interactive network rendering ───────────────────────────────────
@@ -1168,7 +1353,7 @@ function renderAdverseMedia(bundle) {
   el.style.display = 'block';
 }
 
-// ─── Sanctions screening results ──────────────────────────────────────
+// ─── Sanctions screening results (accordion) ──────────────────────────
 function renderSanctionsSection(bundle) {
   const isCompany = !!bundle.company_number;
   const el = document.getElementById('sanctions-ss');
@@ -1179,7 +1364,6 @@ function renderSanctionsSection(bundle) {
   const sc = isCompany
     ? (bundle.state?.sanctions_screening || bundle.state?.company_check?.sanctions_screening || {})
     : (bundle.state?.sanctions_screening || {});
-
   const fatf = isCompany
     ? (bundle.state?.company_check?.fatf_screening || {})
     : (bundle.state?.fatf_org_screen || {});
@@ -1189,67 +1373,81 @@ function renderSanctionsSection(bundle) {
 
   const entityHits = sc.entity || [];
   const trusteeMap = sc.trustees || {};
-  const allTrusteeHits = Object.values(trusteeMap).flat();
-  const totalHits = entityHits.length + allTrusteeHits.length;
+  const entityName = bundle.entity_name || 'Subject entity';
+  const people = isCompany
+    ? (bundle.state?.company_check?.director_analysis?.directors || []).map(d => d.name).filter(Boolean)
+    : (bundle.state?.trustees || []);
+
+  const allSubjects = [
+    { name: entityName, type: 'Entity', hits: entityHits },
+    ...people.map(name => ({ name, type: 'Person', hits: trusteeMap[name] || [] })),
+  ];
+  const totalHits = allSubjects.reduce((n, s) => n + s.hits.length, 0);
+  const anyHigh = allSubjects.some(s => s.hits.some(h => h.confidence === 'high'));
 
   if (metaEl) metaEl.textContent = providers.length
-    ? `${providers.join(' · ')} · ${totalHits === 0 ? 'all clear' : totalHits + ' potential hit(s)'}`
-    : 'FATF predicate screening only';
+    ? `${providers.join(' · ')} · ${totalHits === 0 ? 'all subjects clear' : totalHits + ' potential hit(s)'}`
+    : 'FATF screening only';
 
-  const entityName = bundle.entity_name || 'Subject entity';
-  const mkResult = (hits) => hits.length === 0
-    ? '<span class="badge badge--clear">Clear</span>'
-    : hits.map(h => `<span class="badge badge--hit">${escape(h.source || h.list || 'HIT')}</span>`).join(' ');
-  const mkMatched = (hits) => hits.length === 0 ? '<span style="color:var(--grey);">—</span>'
-    : hits.map(h => escape(h.matched_alias || h.primary_name || '')).filter(Boolean).join('<br/>') || '<span style="color:var(--grey);">—</span>';
-
-  let tableRows = '';
-  if (providers.length) {
-    tableRows += `<tr>
-      <td><strong>${escape(entityName)}</strong></td><td>Entity</td>
-      <td>${mkResult(entityHits)}</td><td>${mkMatched(entityHits)}</td>
-    </tr>`;
-    const people = isCompany
-      ? (bundle.state?.company_check?.director_analysis?.directors || []).map(d => d.name).filter(Boolean)
-      : (bundle.state?.trustees || []);
-    people.forEach(name => {
-      const hits = trusteeMap[name] || [];
-      tableRows += `<tr>
-        <td>${escape(name)}</td><td>Person</td>
-        <td>${mkResult(hits)}</td><td>${mkMatched(hits)}</td>
-      </tr>`;
-    });
-  }
+  const mkPersonCard = ({ name, type, hits }) => {
+    const hasHit = hits.length > 0;
+    const hasHigh = hits.some(h => h.confidence === 'high');
+    const cls = !hasHit ? 'sanc-person--clear' : (hasHigh ? 'sanc-person--high' : 'sanc-person--possible');
+    const badges = !hasHit
+      ? '<span class="badge badge--clear">Clear</span>'
+      : [...new Set(hits.map(h => h.source))].map(src =>
+          `<span class="badge badge--${hasHigh ? 'hit' : 'warn'}">${escape(src)}</span>`
+        ).join(' ');
+    const hitsHtml = hits.length ? `
+      <div class="sanc-person__body">
+        <div style="font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--grey);margin-bottom:10px;">
+          ${hits.length} potential match${hits.length > 1 ? 'es' : ''} — manual identity verification required
+        </div>
+        ${hits.map(h => `<div class="sanc-hit-row">
+          <div>
+            <div class="sanc-hit-row__name">${escape(h.primary_name || h.matched_alias || '')}</div>
+            <div class="sanc-hit-row__regime">${escape(h.regime || '')}</div>
+          </div>
+          <span class="badge badge--${h.confidence === 'high' ? 'hit' : 'warn'}">${escape(h.confidence || '')}</span>
+          <span class="sanc-hit-row__src">${escape(h.source || '')}</span>
+        </div>`).join('')}
+      </div>` : '';
+    const chev = hasHit ? `<svg class="sanc-person__chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>` : '';
+    return `<div class="sanc-person ${cls}" data-open="${hasHit ? 'true' : 'false'}">
+      <div class="sanc-person__hd" onclick="if(this.parentElement.querySelector('.sanc-person__body'))this.parentElement.dataset.open=this.parentElement.dataset.open==='true'?'false':'true'">
+        <div class="sanc-person__dot"></div>
+        <div class="sanc-person__info">
+          <div class="sanc-person__name">${escape(name)}</div>
+          <div class="sanc-person__sub">${escape(type)}</div>
+        </div>
+        <div class="sanc-person__badges">${badges}</div>
+        ${chev}
+      </div>
+      ${hitsHtml}
+    </div>`;
+  };
 
   const fatfHtml = (() => {
     if (!fatf.risk_level) return '';
-    const lvlClass = fatf.risk_level === 'High' ? 'badge--hit' :
-                     fatf.risk_level === 'Medium' ? 'badge--warn' :
-                     fatf.risk_level === 'Low' ? 'badge--clear' : 'badge--grey';
+    const lvlClass = fatf.risk_level === 'High' ? 'badge--hit' : fatf.risk_level === 'Medium' ? 'badge--warn' : fatf.risk_level === 'Low' ? 'badge--clear' : 'badge--grey';
     const cats = (fatf.fatf_categories_detected || []).slice(0, 6);
-    return `<div style="margin-top:${tableRows ? '20px' : '0'};padding:16px 18px;border:1px solid var(--line);border-radius:8px;background:var(--paper);">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
-        <span style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--grey);">FATF Predicate Screening</span>
+    return `<div style="margin-top:16px;padding:16px 18px;border:1px solid var(--line);border-radius:8px;background:var(--paper);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+        <span style="font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--grey);">FATF Predicate Screening</span>
         <span class="badge ${lvlClass}">${escape(fatf.risk_level)}</span>
         ${fatf.is_match ? '<span class="badge badge--hit">Match detected</span>' : ''}
       </div>
-      <p style="font-size:13.5px;color:var(--ink-2);line-height:1.55;margin:0 0 ${cats.length ? '12px' : '0'};">${escape(fatf.summary || '')}</p>
+      <p style="font-size:13.5px;color:var(--ink-2);line-height:1.55;margin:0 0 ${cats.length ? '10px' : '0'};">${escape(fatf.summary || 'No summary available.')}</p>
       ${cats.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;">${cats.map(c => `<span class="badge badge--grey">${escape(c)}</span>`).join('')}</div>` : ''}
     </div>`;
   })();
 
   bodyEl.innerHTML = `
-    ${tableRows ? `<div style="margin-bottom:${fatfHtml ? '20px' : '0'};">
-      <div style="margin-bottom:14px;">${totalHits === 0
-        ? `<span class="badge badge--clear">All subjects clear</span> <span style="font-size:13px;color:var(--grey);margin-left:8px;">Screened against ${providers.join(', ')}</span>`
-        : `<span class="badge badge--hit">${totalHits} potential hit${totalHits > 1 ? 's' : ''} — verify manually</span>`}</div>
-      <table class="dt"><thead><tr><th>Subject</th><th>Type</th><th>Result</th><th>Matched entry</th></tr></thead>
-      <tbody>${tableRows}</tbody></table>
-      ${totalHits > 0 ? `<div style="margin-top:12px;padding:12px 16px;background:#FEF2F2;border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:13px;color:#991B1B;line-height:1.5;">
-        <strong>Action required:</strong> Verify each potential hit against the official list entry before escalation.
-      </div>` : ''}
-    </div>` : ''}
+    ${providers.length ? `<div class="sanc-list">${allSubjects.map(mkPersonCard).join('')}</div>` : ''}
     ${fatfHtml}
+    ${anyHigh || totalHits > 0 ? `<div style="margin-top:14px;padding:12px 16px;background:#FEF2F2;border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:13px;color:#991B1B;line-height:1.5;">
+      <strong>Action required:</strong> Fuzzy-match screening may produce false positives. Verify each potential hit against the official sanctions list entry before taking any compliance action.
+    </div>` : ''}
   `;
   el.style.display = 'block';
 }

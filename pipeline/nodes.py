@@ -105,7 +105,7 @@ def fetch_registry_data(state: dict) -> dict:
         updates["entity_name"] = entity_name
         updates["website_url"] = (
             state.get("website_override")
-            or charity_data.get("web", "")
+            or charity_data.get("website", "")
         )
 
         # Trustees — CC API returns list[str] of names; older code assumed
@@ -152,6 +152,26 @@ def fetch_registry_data(state: dict) -> dict:
     except Exception as e:
         log.error(f"Registry data fetch failed: {e}")
         updates["errors"] = state.get("errors", []) + [str(e)]
+
+    # FCA check — runs here (not in run_analysis_engines) so that
+    # run_web_intelligence (node 3) can use is_fca_regulated for search strategy.
+    # Depends only on ch_data + website_url, both set above.
+    try:
+        ch_data_for_fca = updates.get("ch_data") or state.get("ch_data")
+        website_url_for_fca = updates.get("website_url") or state.get("website_url", "")
+        if website_url_for_fca and ch_data_for_fca:
+            from api_clients.fca_website_check import get_fca_status_for_company
+            sic_codes = ch_data_for_fca.get("sic_codes", [])
+            industry_category = ch_data_for_fca.get("industry_category", "")
+            updates["fca_details"] = get_fca_status_for_company(
+                ch_data_for_fca, website_url_for_fca,
+                sic_codes=sic_codes, industry_category=industry_category,
+            )
+        else:
+            updates["fca_details"] = None
+    except Exception as e:
+        log.warning(f"FCA check failed: {e}")
+        updates["fca_details"] = None
 
     updates["stage_timings"]["fetch_registry"] = round(time.time() - t0, 2)
     return updates
@@ -239,7 +259,7 @@ def run_web_intelligence(state: dict) -> dict:
     search_failures = []
 
     # ─── FCA AWARENESS ────────────────────────────────────────────────
-    fca_details = state.get("fca_details", {})
+    fca_details = state.get("fca_details") or {}
     is_fca_regulated = fca_details.get("industry_regulated", False)
 
     # ─── Deep website OSINT (charity pipeline) ────────────────────────
@@ -417,50 +437,24 @@ def run_analysis_engines(state: dict) -> dict:
         updates["financial_anomalies"] = {}
 
     # Country risk classification
+    # CC API stores countries under "countries" with a "country" field,
+    # not "areas_of_operation" / "aoo_name" (those keys never existed in the response).
     try:
-        areas = charity_data.get("areas_of_operation", [])
+        areas = charity_data.get("countries", [])
         classified = []
         for area in areas:
-            name = area.get("aoo_name", "")
+            name = area.get("country", "")
             if name:
                 risk = get_country_risk(name)
                 classified.append({
                     "country": name,
                     "risk_level": risk,
-                    "aoo_type": area.get("aoo_type", ""),
+                    "aoo_type": "",
                     "continent": area.get("continent", ""),
                 })
         updates["country_risk_classified"] = classified
     except Exception as e:
         log.warning(f"Country risk classification failed: {e}")
-
-    # FCA regulation check (if company linked to charity)
-    try:
-        website_url = state.get("website_url", "")
-        entity_name = state.get("entity_name", "")
-        ch_data = state.get("ch_data", {}) if ch_data is None else ch_data
-        ch_number = ch_data.get("company_number", "") if ch_data else ""
-        
-        # Get industry info for FCA regulated industry check
-        sic_codes = ch_data.get("sic_codes", []) if ch_data else []
-        industry_category = ch_data.get("industry_category", "") if ch_data else ""
-        
-        if website_url and ch_data:
-            from api_clients.fca_website_check import get_fca_status_for_company
-            fca_details = get_fca_status_for_company(
-                ch_data,
-                website_url,
-                sic_codes=sic_codes,
-                industry_category=industry_category,
-            )
-            updates["fca_details"] = fca_details
-            if fca_details.get("fca_found"):
-                log.info(f"FCA: ✅ Found on website for {entity_name}")
-        else:
-            updates["fca_details"] = None
-    except Exception as e:
-        log.warning(f"FCA check failed: {e}")
-        updates["fca_details"] = None
 
     updates["stage_timings"]["analysis_engines"] = round(time.time() - t0, 2)
     return updates
@@ -566,6 +560,7 @@ def compute_risk_score(state: dict) -> dict:
             cc_governance=_dict(state, "cc_governance"),
             ch_data=state.get("ch_data"),
             fca_details=state.get("fca_details"),
+            sanctions_screening=_dict(state, "sanctions_screening"),
         )
         updates["risk_score"] = score.model_dump()
     except Exception as e:

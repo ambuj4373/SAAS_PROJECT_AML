@@ -75,6 +75,7 @@ def score_charity(
     cc_governance: dict,
     ch_data: dict | None = None,
     fca_details: dict | None = None,
+    sanctions_screening: dict | None = None,
 ) -> RiskScore:
     """Compute a numerical risk score for a charity based on all analysis signals.
 
@@ -125,7 +126,11 @@ def score_charity(
         charity_data, cc_governance, signals, category_scores,
     )
 
-    # ── 7. FCA REGULATION ────────────────────────────────────────────
+    # ── 7. SANCTIONS SCREENING ──────────────────────────────────────
+    if sanctions_screening:
+        _score_sanctions(sanctions_screening, signals, category_scores, hard_stops)
+
+    # ── 8. FCA REGULATION ────────────────────────────────────────────
     fca = fca_details or {}
     if fca.get("found"):
         _add(signals, category_scores, "Governance",
@@ -887,7 +892,7 @@ def _score_operational_charity(
 ):
     """Score operational risk for a charity."""
     # Reporting status
-    status = charity_data.get("charity_reporting_status", "")
+    status = charity_data.get("reporting_status", "")
     if status and "not" in status.lower():
         _add(signals, scores, "Operational",
              f"Charity reporting status: {status}",
@@ -899,3 +904,76 @@ def _score_operational_charity(
         _add(signals, scores, "Operational",
              "No policies declared to Charity Commission",
              RiskLevel.MEDIUM, "declared_policies", 5)
+
+
+# ── Sanctions screening scoring ──────────────────────────────────────────────
+
+def _score_sanctions(sanctions: dict, signals: list, scores: dict, hard_stops: list):
+    """Score risk from sanctions screening results.
+
+    ``sanctions`` is the dict stored in state["sanctions_screening"]:
+        {
+          "entity": [hit_dict, ...],
+          "any_high_confidence": bool,
+          "<trustee_name>": [hit_dict, ...],
+          ...
+        }
+
+    Scoring intent:
+    - Direct entity hit (high confidence) → CRITICAL hard stop + 40 pts
+    - Direct entity hit (possible)        → HIGH signal + 20 pts
+    - Trustee high-confidence hit         → HIGH signal + 30 pts each (first two)
+    - Multiple trustees with high hits    → additional hard stop
+    - Trustee possible hit                → MEDIUM signal + 10 pts each (cap 2)
+    """
+    entity_hits: list[dict] = sanctions.get("entity", [])
+    # Trustees are stored under a "trustees" sub-key: {"trustees": {"name": [hits, ...]}}
+    trustee_results: dict[str, list[dict]] = sanctions.get("trustees", {})
+
+    # Entity direct match
+    entity_high = [h for h in entity_hits if h.get("confidence") == "high"]
+    entity_possible = [h for h in entity_hits if h.get("confidence") == "possible"]
+
+    if entity_high:
+        h = entity_high[0]
+        hard_stops.append(
+            f"High-confidence sanctions match on entity name: "
+            f"{h.get('primary_name')} ({h.get('source')} — {h.get('regime', '')})"
+        )
+        _add(signals, scores, "Media & Screening",
+             f"Entity directly matches sanctions list ({h.get('source')}) — "
+             f"{h.get('primary_name')} [{h.get('regime', '')}]",
+             RiskLevel.CRITICAL, "sanctions_entity", 40)
+    elif entity_possible:
+        _add(signals, scores, "Media & Screening",
+             f"Entity name: {len(entity_possible)} possible sanctions match(es) — manual verification required",
+             RiskLevel.HIGH, "sanctions_entity", 20)
+
+    # Trustee matches
+    trustee_high_names: list[str] = []
+    possible_count = 0
+    for trustee_name, hits in trustee_results.items():
+        high_hits = [h for h in hits if h.get("confidence") == "high"]
+        possible_hits = [h for h in hits if h.get("confidence") == "possible"]
+
+        if high_hits:
+            trustee_high_names.append(trustee_name)
+            h = high_hits[0]
+            regime = h.get("regime", "")
+            _add(signals, scores, "Media & Screening",
+                 f"Trustee '{trustee_name}': high-confidence sanctions name match — "
+                 f"{h.get('source')} ({regime or 'see list entry'}) — "
+                 f"identity verification required before proceeding",
+                 RiskLevel.HIGH, "sanctions_trustee", 30)
+        elif possible_hits and possible_count < 2:
+            possible_count += 1
+            _add(signals, scores, "Media & Screening",
+                 f"Trustee '{trustee_name}': {len(possible_hits)} possible sanctions name match(es) — "
+                 f"manual screening required",
+                 RiskLevel.MEDIUM, "sanctions_trustee", 10)
+
+    if len(trustee_high_names) >= 2:
+        hard_stops.append(
+            f"Multiple trustees ({len(trustee_high_names)}) with high-confidence sanctions matches: "
+            + ", ".join(trustee_high_names[:3])
+        )
