@@ -23,9 +23,13 @@ import re
 
 import requests
 
-from config import SERPER_API_KEY, get_ssl_verify
+from config import SERPER_API_KEYS, get_ssl_verify
 
 _SERPER_ENDPOINT = "https://google.serper.dev/news"
+
+# HTTP status codes that indicate this key's credits are exhausted or invalid.
+# On these we rotate to the next key; all other errors are surfaced normally.
+_CREDIT_EXHAUSTED_CODES = {402, 429}
 
 # ─── Adverse keywords (shared with tavily_search.py) ─────────────────────────
 ADVERSE_KEYWORDS = {
@@ -72,6 +76,45 @@ _COMPANY_NOISE = {
 }
 
 
+def _serper_post(
+    endpoint: str,
+    payload: dict,
+) -> requests.Response:
+    """POST to a Serper endpoint, rotating through SERPER_API_KEYS on credit exhaustion.
+
+    Tries each key in order. If a key returns a credit-exhausted status (402/429),
+    the next key is attempted. Raises the last exception if all keys fail.
+    """
+    if not SERPER_API_KEYS:
+        raise RuntimeError("No Serper API keys configured")
+
+    last_exc: Exception | None = None
+    for key in SERPER_API_KEYS:
+        try:
+            resp = requests.post(
+                endpoint,
+                json=payload,
+                headers={"X-API-KEY": key, "Content-Type": "application/json"},
+                timeout=20,
+                verify=get_ssl_verify(),
+            )
+            if resp.status_code in _CREDIT_EXHAUSTED_CODES:
+                last_exc = requests.HTTPError(
+                    f"Serper key ...{key[-6:]} returned {resp.status_code} — rotating",
+                    response=resp,
+                )
+                continue
+            resp.raise_for_status()
+            return resp
+        except requests.HTTPError as exc:
+            if exc.response is not None and exc.response.status_code in _CREDIT_EXHAUSTED_CODES:
+                last_exc = exc
+                continue
+            raise
+
+    raise last_exc or RuntimeError("All Serper API keys exhausted")
+
+
 def serper_search_news(
     query: str,
     *,
@@ -81,42 +124,27 @@ def serper_search_news(
     """Execute a Google News search via Serper.dev.
 
     Returns a list of dicts with keys: title, url, content (snippet), date.
-    Gracefully returns [] if the API key is missing or the request fails.
+    Automatically falls back to the next configured API key if one is exhausted.
+    Gracefully returns [] if no keys are configured or all requests fail.
     """
-    if not SERPER_API_KEY:
+    if not SERPER_API_KEYS:
         return []
 
-    headers = {
-        "X-API-KEY": SERPER_API_KEY,
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "q": query,
-        "gl": country,
-        "num": max_results,
-    }
+    payload = {"q": query, "gl": country, "num": max_results}
 
     try:
-        resp = requests.post(
-            _SERPER_ENDPOINT,
-            json=payload,
-            headers=headers,
-            timeout=20,
-            verify=get_ssl_verify(),
-        )
-        resp.raise_for_status()
+        resp = _serper_post(_SERPER_ENDPOINT, payload)
         data = resp.json()
-
-        results = []
-        for item in data.get("news", []):
-            results.append({
+        return [
+            {
                 "title": item.get("title", ""),
                 "url": item.get("link", ""),
                 "content": item.get("snippet", ""),
                 "date": item.get("date", ""),
                 "_source": "serper_news",
-            })
-        return results
+            }
+            for item in data.get("news", [])
+        ]
 
     except Exception as e:
         return [{
@@ -138,40 +166,25 @@ def serper_search_web(
     """Execute a Google Web search via Serper.dev.
 
     Returns results in the same shape as Tavily for compatibility.
+    Automatically falls back to the next configured API key if one is exhausted.
     """
-    if not SERPER_API_KEY:
+    if not SERPER_API_KEYS:
         return []
 
-    headers = {
-        "X-API-KEY": SERPER_API_KEY,
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "q": query,
-        "gl": country,
-        "num": max_results,
-    }
+    payload = {"q": query, "gl": country, "num": max_results}
 
     try:
-        resp = requests.post(
-            "https://google.serper.dev/search",
-            json=payload,
-            headers=headers,
-            timeout=20,
-            verify=get_ssl_verify(),
-        )
-        resp.raise_for_status()
+        resp = _serper_post("https://google.serper.dev/search", payload)
         data = resp.json()
-
-        results = []
-        for item in data.get("organic", []):
-            results.append({
+        return [
+            {
                 "title": item.get("title", ""),
                 "url": item.get("link", ""),
                 "content": item.get("snippet", ""),
                 "_source": "serper_web",
-            })
-        return results
+            }
+            for item in data.get("organic", [])
+        ]
 
     except Exception as e:
         return [{

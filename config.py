@@ -28,6 +28,9 @@ CH_API_KEY = os.getenv("CH_API_KEY", "")
 CHARITY_COMMISSION_API_KEY = os.getenv("CHARITY_COMMISSION_API_KEY", "")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 SERPER_API_KEY = os.getenv("SERPER_API_KEY", "")
+SERPER_API_KEY_2 = os.getenv("SERPER_API_KEY_2", "")
+# Ordered list of Serper keys — first valid key is tried first, fallback to next on credits exhausted
+SERPER_API_KEYS: list[str] = [k for k in [SERPER_API_KEY, SERPER_API_KEY_2] if k]
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
