@@ -594,11 +594,35 @@
       window.location.href = 'preview.html?type=charity&id=220949';
       return;
     }
-    // 8-digit numeric or alphanumeric (e.g. SC123456) = company; otherwise charity
-    const digitsOnly = q.replace(/[A-Za-z]/g, '');
-    const isCompany = digitsOnly.length >= 7 && /^[A-Za-z]{0,2}\d+$/.test(q);
-    const type = isCompany ? 'company' : 'charity';
-    window.location.href = `preview.html?type=${type}&id=${encodeURIComponent(q)}`;
+    
+    // Detect entity type: Charity (1-7 digits) vs Company (8 digits or SC/NI + 6 digits)
+    const match = q.match(/^([A-Z]*)(\d+)$/i);
+    if (!match) {
+      alert('Invalid entity number. Please enter a UK charity number (1-7 digits) or company number (8 digits or SC/NI prefix).');
+      return;
+    }
+    
+    const prefix = (match[1] || '').toUpperCase();
+    const digitsOnly = match[2];
+    
+    let entityType = null;
+    
+    // Charity: 1-7 digits, no prefix
+    if (prefix === '' && digitsOnly.length >= 1 && digitsOnly.length <= 7) {
+      entityType = 'charity';
+    }
+    // Company: 8 digits (numeric) or SC/NI + 6 digits
+    else if ((prefix === '' && digitsOnly.length === 8) || 
+             ((prefix === 'SC' || prefix === 'NI') && digitsOnly.length === 6)) {
+      entityType = 'company';
+    }
+    
+    if (!entityType) {
+      alert('Invalid entity number. Please enter a UK charity number (1-7 digits) or company number (8 digits or SC/NI prefix).');
+      return;
+    }
+    
+    window.location.href = `preview.html?type=${entityType}&id=${encodeURIComponent(q)}`;
   });
 
   document.querySelectorAll('.faq-q').forEach(btn => {
