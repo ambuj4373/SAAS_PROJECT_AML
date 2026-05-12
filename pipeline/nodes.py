@@ -735,7 +735,12 @@ def run_company_check_node(state: dict) -> dict:
         updates["company_check"] = result
 
         # Populate entity_name + trustees so screen_sanctions node can run
-        company_name = (result.get("profile") or {}).get("company_name") or ""
+        # company_name lives at result["company_name"] (top-level); profile["company_name"] is None
+        company_name = (
+            result.get("company_name")
+            or (result.get("profile") or {}).get("company_name")
+            or ""
+        )
         updates["entity_name"] = company_name
         directors = (result.get("director_analysis") or {}).get("directors") or []
         updates["trustees"] = [

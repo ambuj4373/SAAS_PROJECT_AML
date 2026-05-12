@@ -2327,6 +2327,7 @@ def build_risk_matrix(
     # Also treat FATF "Unknown" risk_level (from API failure) as a search failure
     if (fatf_screening.get("risk_level") or "").lower() == "unknown" or fatf_screening.get("_search_failed"):
         _fatf_search_failed = True
+    _fatf_risk = (fatf_screening.get("risk_level") or "low").lower()
     _web_search_failed = any(
         "web search" in e.lower() or "website content" in e.lower()
         for e in search_errors
